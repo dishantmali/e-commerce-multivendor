@@ -70,17 +70,17 @@ export const HomePage = () => {
 
         {/* Search Bar */}
         <form onSubmit={handleSearch} className="mb-16 max-w-3xl mx-auto">
-          <div className="flex gap-3 p-3 bg-[#fafbfb] rounded-[24px] border border-gray-100 shadow-sm focus-within:ring-4 focus-within:ring-[#185546]/10 focus-within:border-[#185546] transition-all">
+          <div className="flex flex-col sm:flex-row gap-3 p-2 sm:p-3 bg-[#fafbfb] rounded-[24px] border border-gray-100 shadow-sm focus-within:ring-4 focus-within:ring-[#185546]/10 focus-within:border-[#185546] transition-all">
             <input
               type="text"
               placeholder="Search by product name or vendor..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 px-5 py-3 rounded-xl text-[#1a1f1d] placeholder-gray-400 focus:outline-none bg-transparent font-medium text-[16px]"
+              className="flex-1 px-5 py-3 rounded-xl text-[#1a1f1d] placeholder-gray-400 focus:outline-none bg-transparent font-medium text-[16px] w-full"
             />
             <button
               type="submit"
-              className="bg-[#185546] text-white px-8 py-3 rounded-[16px] hover:bg-[#124236] transition-colors font-semibold shadow-sm active:scale-95 text-[15px]"
+              className="w-full sm:w-auto bg-[#185546] text-white px-8 py-3 rounded-[16px] hover:bg-[#124236] transition-colors font-semibold shadow-sm active:scale-95 text-[15px]"
             >
               Search
             </button>

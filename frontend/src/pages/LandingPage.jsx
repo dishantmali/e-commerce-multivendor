@@ -148,24 +148,24 @@ export const LandingPage = () => {
             Our platform powers successful marketplaces around the world
           </p>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-4">
-             <div className="flex flex-col items-center">
-               <div className="text-[44px] md:text-[56px] font-bold mb-1 tracking-tight">$250M+</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-6">
+             <div className="flex flex-col items-center text-center px-2">
+               <div className="text-[40px] sm:text-[44px] md:text-[56px] font-bold mb-2 tracking-tight leading-none">$250M+</div>
                <div className="text-[15px] font-bold mb-2">Total Transaction Volume</div>
                <div className="text-[13px] text-[#9fc7bd] max-w-[200px] leading-relaxed">Processed securely through our platform</div>
              </div>
-             <div className="flex flex-col items-center">
-               <div className="text-[44px] md:text-[56px] font-bold mb-1 tracking-tight">99.9%</div>
+             <div className="flex flex-col items-center text-center px-2">
+               <div className="text-[40px] sm:text-[44px] md:text-[56px] font-bold mb-2 tracking-tight leading-none">99.9%</div>
                <div className="text-[15px] font-bold mb-2">Payment Success Rate</div>
                <div className="text-[13px] text-[#9fc7bd] max-w-[200px] leading-relaxed">With Razorpay integration</div>
              </div>
-             <div className="flex flex-col items-center">
-               <div className="text-[44px] md:text-[56px] font-bold mb-1 tracking-tight">10,000+</div>
+             <div className="flex flex-col items-center text-center px-2">
+               <div className="text-[40px] sm:text-[44px] md:text-[56px] font-bold mb-2 tracking-tight leading-none">10k+</div>
                <div className="text-[15px] font-bold mb-2">Active Vendors</div>
                <div className="text-[13px] text-[#9fc7bd] max-w-[200px] leading-relaxed">Selling across 150+ countries</div>
              </div>
-             <div className="flex flex-col items-center">
-               <div className="text-[44px] md:text-[56px] font-bold mb-1 tracking-tight">4.8/5</div>
+             <div className="flex flex-col items-center text-center px-2">
+               <div className="text-[40px] sm:text-[44px] md:text-[56px] font-bold mb-2 tracking-tight leading-none">4.8/5</div>
                <div className="text-[15px] font-bold mb-2">Average Rating</div>
                <div className="text-[13px] text-[#9fc7bd] max-w-[200px] leading-relaxed">From verified buyers and sellers</div>
              </div>

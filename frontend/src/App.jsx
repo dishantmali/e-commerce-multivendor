@@ -19,7 +19,7 @@ const AppLayout = () => {
   return (
     <div className="flex flex-col min-h-screen">
       {!hideLayout && <Navbar />}
-      <main className="flex-1">
+      <main className="flex-1 overflow-x-hidden">
         <Routes>
           <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
