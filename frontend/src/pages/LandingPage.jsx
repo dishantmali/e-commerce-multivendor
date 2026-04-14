@@ -72,13 +72,13 @@ export const LandingPage = () => {
             </div>
 
             {/* Right Column (Hero Graphic) */}
-            <div className="flex-1 relative w-full lg:h-[500px] flex items-center justify-center lg:justify-end mt-12 lg:mt-0">
+            <div className="flex-1 relative w-full lg:h-[500px] flex items-center justify-center lg:justify-end mt-12 lg:mt-0 group cursor-default perspective-1000">
                {/* White Background Card */}
-               <div className="absolute right-0 top-10 w-[90%] max-w-[450px] h-[400px] bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] transform rotate-3 z-0 ring-1 ring-black/5"></div>
+               <div className="absolute right-0 top-10 w-[90%] max-w-[450px] h-[400px] bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] transform rotate-3 group-hover:rotate-6 group-hover:-translate-y-2 group-hover:translate-x-2 transition-all duration-500 ease-out z-0 ring-1 ring-black/5"></div>
                
                {/* Main Green Card */}
-               <div className="relative z-10 w-[85%] max-w-[400px] h-[380px] bg-gradient-to-br from-[#185546] to-[#124236] rounded-2xl p-8 shadow-2xl transform lg:-translate-x-12 ring-1 ring-white/10 flex flex-col">
-                  <div className="w-12 h-12 rounded-xl bg-white/10 mb-6 flex items-center justify-center">
+               <div className="relative z-10 w-[85%] max-w-[400px] h-[380px] bg-gradient-to-br from-[#185546] to-[#124236] rounded-2xl p-8 shadow-2xl transform lg:-translate-x-12 group-hover:lg:-translate-x-16 group-hover:-translate-y-4 group-hover:shadow-[0_40px_80px_-20px_rgba(24,85,70,0.4)] transition-all duration-500 ease-out ring-1 ring-white/10 flex flex-col">
+                  <div className="w-12 h-12 rounded-xl bg-white/10 mb-6 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-500 ease-out">
                     <div className="w-6 h-6 border-2 border-white/50 rounded-md"></div>
                   </div>
                   <h3 className="font-bold text-[22px] mb-2 text-white tracking-tight">Vendor Dashboard</h3>
@@ -86,12 +86,12 @@ export const LandingPage = () => {
                   
                   <div className="space-y-4 flex-1">
                      <div className="flex gap-4">
-                       <div className="h-[72px] flex-1 bg-white/5 rounded-xl border border-white/5"></div>
-                       <div className="h-[72px] flex-1 bg-white/5 rounded-xl border border-white/5"></div>
+                       <div className="h-[72px] flex-1 bg-white/5 rounded-xl border border-white/5 transform group-hover:-translate-y-1 hover:!bg-white/10 transition-all duration-500 delay-0 cursor-pointer"></div>
+                       <div className="h-[72px] flex-1 bg-white/5 rounded-xl border border-white/5 transform group-hover:-translate-y-1 hover:!bg-white/10 transition-all duration-500 delay-75 cursor-pointer"></div>
                      </div>
                      <div className="flex gap-4">
-                       <div className="h-[72px] flex-1 bg-white/5 rounded-xl border border-white/5"></div>
-                       <div className="h-[72px] flex-1 bg-white/5 rounded-xl border border-white/5"></div>
+                       <div className="h-[72px] flex-1 bg-white/5 rounded-xl border border-white/5 transform group-hover:-translate-y-1 hover:!bg-white/10 transition-all duration-500 delay-150 cursor-pointer"></div>
+                       <div className="h-[72px] flex-1 bg-white/5 rounded-xl border border-white/5 transform group-hover:-translate-y-1 hover:!bg-white/10 transition-all duration-500 delay-200 cursor-pointer"></div>
                      </div>
                   </div>
                </div>
