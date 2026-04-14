@@ -13,7 +13,7 @@ export const BuyerDashboard = () => {
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'buyer') {
-      navigate('/login')
+      navigate('/')
       return
     }
 
@@ -33,23 +33,23 @@ export const BuyerDashboard = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+        return 'bg-orange-50 text-orange-600 border-none'
       case 'sent_to_factory':
-        return 'bg-blue-100 text-blue-800 border-blue-200'
+        return 'bg-blue-50 text-blue-600 border-none'
       case 'shipped':
-        return 'bg-green-100 text-green-800 border-green-200'
+        return 'bg-[#eef7f4] text-[#185546] border-none'
       case 'delivered':
-        return 'bg-purple-100 text-purple-800 border-purple-200'
+        return 'bg-purple-50 text-purple-600 border-none'
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
+        return 'bg-gray-50 text-gray-600 border-none'
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-light flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#185546]"></div>
           <p className="text-gray-500 mt-4 font-medium">Loading your orders...</p>
         </div>
       </div>
@@ -57,11 +57,11 @@ export const BuyerDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-light">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen bg-white font-sans">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="mb-10">
-          <h1 className="text-3xl sm:text-4xl font-extrabold font-display text-dark tracking-tight">Purchase <span className="gradient-text">History</span></h1>
-          <p className="text-gray-500 mt-2 text-lg">Track your orders and past purchases.</p>
+          <h1 className="text-[40px] md:text-[48px] font-bold text-[#1a1f1d] leading-tight tracking-tight">Purchase <span className="text-[#185546]">History</span></h1>
+          <p className="text-gray-500 mt-2 text-[17px]">Track your orders and past purchases.</p>
         </div>
 
         {error && (
@@ -70,65 +70,65 @@ export const BuyerDashboard = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-12">
-          <Card className="!p-6 border-l-4 border-l-primary flex flex-col justify-center">
-            <p className="text-gray-500 font-bold uppercase text-xs tracking-wider">Total</p>
-            <p className="text-4xl font-black text-dark mt-2 font-display">{orders.length}</p>
-          </Card>
-          <Card className="!p-6 border-l-4 border-l-yellow-400 flex flex-col justify-center">
-            <p className="text-gray-500 font-bold uppercase text-xs tracking-wider">Pending</p>
-            <p className="text-4xl font-black text-yellow-600 mt-2 font-display">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6 mb-12">
+          <div className="p-6 border border-gray-100 rounded-2xl bg-white shadow-sm flex flex-col justify-center">
+            <p className="text-gray-400 font-medium uppercase text-[11px] tracking-wider">Total</p>
+            <p className="text-[32px] font-bold text-[#1a1f1d] mt-1">{orders.length}</p>
+          </div>
+          <div className="p-6 border border-gray-100 rounded-2xl bg-white shadow-sm flex flex-col justify-center">
+            <p className="text-gray-400 font-medium uppercase text-[11px] tracking-wider">Pending</p>
+            <p className="text-[32px] font-bold text-[#ef6b4c] mt-1">
               {orders.filter((o) => o.status === 'pending').length}
             </p>
-          </Card>
-          <Card className="!p-6 border-l-4 border-l-blue-400 flex flex-col justify-center">
-            <p className="text-gray-500 font-bold uppercase text-xs tracking-wider">Factory</p>
-            <p className="text-4xl font-black text-blue-600 mt-2 font-display">
+          </div>
+          <div className="p-6 border border-gray-100 rounded-2xl bg-white shadow-sm flex flex-col justify-center">
+            <p className="text-gray-400 font-medium uppercase text-[11px] tracking-wider">Factory</p>
+            <p className="text-[32px] font-bold text-blue-600 mt-1">
               {orders.filter((o) => o.status === 'sent_to_factory').length}
             </p>
-          </Card>
-          <Card className="!p-6 border-l-4 border-l-green-400 flex flex-col justify-center">
-            <p className="text-gray-500 font-bold uppercase text-xs tracking-wider">Shipped</p>
-            <p className="text-4xl font-black text-green-600 mt-2 font-display">
+          </div>
+          <div className="p-6 border border-gray-100 rounded-2xl bg-white shadow-sm flex flex-col justify-center">
+            <p className="text-gray-400 font-medium uppercase text-[11px] tracking-wider">Shipped</p>
+            <p className="text-[32px] font-bold text-[#185546] mt-1">
               {orders.filter((o) => o.status === 'shipped').length}
             </p>
-          </Card>
-          <Card className="!p-6 border-l-4 border-l-purple-400 flex flex-col justify-center">
-            <p className="text-gray-500 font-bold uppercase text-xs tracking-wider">Delivered</p>
-            <p className="text-4xl font-black text-purple-600 mt-2 font-display">
+          </div>
+          <div className="p-6 border border-gray-100 rounded-2xl bg-white shadow-sm flex flex-col justify-center">
+            <p className="text-gray-400 font-medium uppercase text-[11px] tracking-wider">Delivered</p>
+            <p className="text-[32px] font-bold text-purple-600 mt-1">
               {orders.filter((o) => o.status === 'delivered').length}
             </p>
-          </Card>
+          </div>
         </div>
 
-        <Card>
-          <h2 className="text-2xl font-bold text-dark mb-6 font-display">My Orders</h2>
+        <div className="border border-gray-100 shadow-sm rounded-[20px] bg-white p-8">
+          <h2 className="text-[22px] font-bold text-[#1a1f1d] mb-8">My Orders</h2>
 
           {orders.length > 0 ? (
-            <div className="overflow-x-auto rounded-2xl border border-gray-100 shadow-sm">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="text-left py-4 px-6 font-bold text-gray-500 uppercase tracking-wider text-xs">Product</th>
-                    <th className="text-left py-4 px-6 font-bold text-gray-500 uppercase tracking-wider text-xs">Price</th>
-                    <th className="text-left py-4 px-6 font-bold text-gray-500 uppercase tracking-wider text-xs">Vendor</th>
-                    <th className="text-left py-4 px-6 font-bold text-gray-500 uppercase tracking-wider text-xs">Status</th>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-50">
+                    <th className="pb-4 px-2 font-medium text-gray-400 uppercase tracking-wider text-[11px]">Product</th>
+                    <th className="pb-4 px-2 font-medium text-gray-400 uppercase tracking-wider text-[11px]">Price</th>
+                    <th className="pb-4 px-2 font-medium text-gray-400 uppercase tracking-wider text-[11px]">Vendor</th>
+                    <th className="pb-4 px-2 font-medium text-gray-400 uppercase tracking-wider text-[11px]">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
+                <tbody className="divide-y divide-gray-50">
                   {orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="py-5 px-6 font-bold text-dark">
+                    <tr key={order.id} className="hover:bg-[#fafbfb] transition-colors">
+                      <td className="py-6 px-2 font-medium text-[#1a1f1d] text-[15px]">
                         {order.product_details?.name || `Product #${order.product}`}
                       </td>
-                      <td className="py-5 px-6 text-primary font-bold">
-                        ₹{order.product_details?.price || '—'}
+                      <td className="py-6 px-2 text-[#185546] font-bold text-[15px]">
+                        ₹{parseFloat(order.product_details?.price || 0).toFixed(2)}
                       </td>
-                      <td className="py-5 px-6 text-gray-600">
+                      <td className="py-6 px-2 text-gray-500 text-[15px]">
                         {order.product_details?.vendor_shop || '—'}
                       </td>
-                      <td className="py-5 px-6">
-                        <span className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase border ${getStatusColor(order.status)}`}>
+                      <td className="py-6 px-2">
+                        <span className={`px-4 py-1.5 rounded-full text-[11px] font-bold uppercase ${getStatusColor(order.status)}`}>
                           {order.status.replace(/_/g, ' ')}
                         </span>
                       </td>
@@ -138,21 +138,21 @@ export const BuyerDashboard = () => {
               </table>
             </div>
           ) : (
-            <div className="flex items-center justify-center min-h-[400px]">
+            <div className="flex items-center justify-center min-h-[300px]">
               <div className="text-center">
                 <div className="text-6xl mb-6 opacity-80">🛍️</div>
-                <p className="text-dark font-display text-2xl font-bold mb-2">No orders yet</p>
-                <p className="text-gray-500 mb-8">Start shopping to see your orders here.</p>
+                <p className="text-[#1a1f1d] text-[20px] font-bold mb-2">No orders yet</p>
+                <p className="text-gray-500 mb-8 text-[15px]">Start shopping to see your orders here.</p>
                 <button
                   onClick={() => navigate('/home')}
-                  className="bg-primary text-white px-8 py-3 rounded-xl hover:bg-primary-hover shadow-lg shadow-primary/30 transition-colors font-bold active:scale-95"
+                  className="bg-[#ef6b4c] text-white px-8 py-3.5 rounded-lg hover:bg-[#d65a3d] transition-all font-semibold text-[15px]"
                 >
                   Start Exploring
                 </button>
               </div>
             </div>
           )}
-        </Card>
+        </div>
       </div>
     </div>
   )

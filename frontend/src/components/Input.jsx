@@ -8,16 +8,16 @@ export const Input = ({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-bold text-dark mb-2 uppercase tracking-wide">
+        <label className="block text-[11px] font-semibold text-gray-400 mb-2 uppercase tracking-wider">
           {label}
         </label>
       )}
       <input
         type={type}
-        className={`w-full px-5 py-4 rounded-xl border-2 border-gray-100 text-dark placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none font-medium bg-gray-50/50 ${className}`}
+        className={`w-full px-4 py-3.5 rounded-xl border border-gray-200 text-[#1a1f1d] placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-[#185546]/10 focus:border-[#185546] transition-all font-medium bg-[#fafbfb] focus:bg-white text-[15px] ${className}`}
         {...props}
       />
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {error && <p className="text-red-500 text-[13px] mt-1 font-medium">{error}</p>}
     </div>
   )
 }

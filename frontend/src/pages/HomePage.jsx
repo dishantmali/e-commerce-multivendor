@@ -15,12 +15,11 @@ export const HomePage = () => {
     const fetchProducts = async () => {
       try {
         const res = await api.get('/products/')
-        // Map backend fields to match what ProductCard expects
         const mapped = res.data.map((p) => ({
           id: p.id,
           name: p.name,
           price: p.price,
-          image: p.image, // full URL from backend
+          image: p.image,
           vendorName: p.vendor_shop,
           description: p.description,
         }))
@@ -60,26 +59,28 @@ export const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-light pt-8 pb-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold font-display text-dark mb-4">Discover <span className="gradient-text">Products</span></h1>
-          <p className="text-xl text-gray-500 font-light">Find exactly what you're looking for.</p>
+    <div className="min-h-screen bg-white font-sans pt-12 pb-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h1 className="text-[40px] md:text-[56px] font-bold text-[#1a1f1d] leading-tight tracking-tight mb-4">
+            Discover <span className="text-[#185546]">Products</span>
+          </h1>
+          <p className="text-[18px] text-gray-500">Find exactly what you're looking for from verified vendors.</p>
         </div>
 
         {/* Search Bar */}
-        <form onSubmit={handleSearch} className="mb-16 max-w-2xl mx-auto">
-          <div className="flex gap-2 p-2 bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100">
+        <form onSubmit={handleSearch} className="mb-16 max-w-3xl mx-auto">
+          <div className="flex gap-3 p-3 bg-[#fafbfb] rounded-[24px] border border-gray-100 shadow-sm focus-within:ring-4 focus-within:ring-[#185546]/10 focus-within:border-[#185546] transition-all">
             <input
               type="text"
-              placeholder="Search by name or vendor..."
+              placeholder="Search by product name or vendor..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 px-6 py-4 rounded-xl text-dark placeholder-gray-400 focus:outline-none bg-transparent"
+              className="flex-1 px-5 py-3 rounded-xl text-[#1a1f1d] placeholder-gray-400 focus:outline-none bg-transparent font-medium text-[16px]"
             />
             <button
               type="submit"
-              className="bg-dark text-white px-8 py-4 rounded-xl hover:bg-primary transition-colors font-semibold shadow-md active:scale-95"
+              className="bg-[#185546] text-white px-8 py-3 rounded-[16px] hover:bg-[#124236] transition-colors font-semibold shadow-sm active:scale-95 text-[15px]"
             >
               Search
             </button>
@@ -88,7 +89,7 @@ export const HomePage = () => {
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value)}
-              className="px-4 py-2 rounded-xl text-dark font-medium border border-gray-200 bg-white focus:outline-none focus:border-primary shadow-sm"
+              className="px-5 py-2.5 rounded-xl text-[#1a1f1d] font-semibold border border-gray-100 bg-[#fafbfb] focus:outline-none focus:ring-2 focus:ring-[#185546]/20 transition-all text-[14px] cursor-pointer"
             >
               <option value="newest">Sort by: Newest Arrivals</option>
               <option value="price_asc">Price: Low to High</option>
@@ -99,21 +100,21 @@ export const HomePage = () => {
 
         {/* Loading State */}
         {loading && (
-          <div className="flex items-center justify-center min-h-96">
+          <div className="flex items-center justify-center min-h-[40vh]">
             <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-              <p className="text-gray-500 mt-4 font-medium">Loading products...</p>
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#185546]"></div>
+              <p className="text-gray-500 mt-4 font-medium text-[15px]">Loading the latest catalog...</p>
             </div>
           </div>
         )}
 
         {/* Error State */}
         {error && !loading && (
-          <div className="flex items-center justify-center min-h-96">
-            <div className="text-center">
-              <div className="text-6xl mb-6 opacity-80">⚠️</div>
-              <p className="text-dark font-display text-2xl font-bold mb-2">Something went wrong</p>
-              <p className="text-gray-500">{error}</p>
+          <div className="flex items-center justify-center min-h-[40vh]">
+            <div className="text-center p-12 border border-gray-100 rounded-[24px] bg-[#fafbfb]">
+              <div className="text-5xl mb-4 opacity-50">⚠️</div>
+              <p className="text-[#1a1f1d] text-[22px] font-bold mb-2">Wait, something went wrong</p>
+              <p className="text-gray-500 text-[15px]">{error}</p>
             </div>
           </div>
         )}
@@ -132,11 +133,11 @@ export const HomePage = () => {
                 ))}
               </div>
             ) : (
-              <div className="flex items-center justify-center min-h-96">
-                <div className="text-center">
-                  <div className="text-8xl mb-6 opacity-80">📦</div>
-                  <p className="text-dark font-display text-2xl font-bold mb-2">No products found</p>
-                  <p className="text-gray-500">Try adjusting your search terms</p>
+              <div className="flex items-center justify-center min-h-[40vh]">
+                <div className="text-center p-16 border border-gray-100 rounded-[24px] bg-[#fafbfb] w-full max-w-2xl">
+                  <div className="text-6xl mb-6 opacity-30">🔍</div>
+                  <p className="text-[#1a1f1d] text-[24px] font-bold mb-2">No products found</p>
+                  <p className="text-gray-500 text-[16px]">Try adjusting your search terms or filters.</p>
                 </div>
               </div>
             )}

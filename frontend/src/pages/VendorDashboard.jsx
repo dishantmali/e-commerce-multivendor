@@ -41,7 +41,7 @@ export const VendorDashboard = () => {
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'vendor') {
-      navigate('/login')
+      navigate('/')
       return
     }
     fetchProducts()
@@ -71,19 +71,34 @@ export const VendorDashboard = () => {
     }
   }
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-orange-50 text-orange-600 border-none'
+      case 'sent_to_factory':
+        return 'bg-blue-50 text-blue-600 border-none'
+      case 'shipped':
+        return 'bg-[#eef7f4] text-[#185546] border-none'
+      case 'delivered':
+        return 'bg-purple-50 text-purple-600 border-none'
+      default:
+        return 'bg-gray-50 text-gray-600 border-none'
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-light">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-8">
-            <h1 className="text-3xl sm:text-4xl font-extrabold font-display text-dark tracking-tight">Vendor <span className="gradient-text">Command Center</span></h1>
-            <p className="text-gray-500 mt-2 text-lg">Manage your products and dispatch orders seamlessly.</p>
+    <div className="min-h-screen bg-white font-sans">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="mb-10">
+            <h1 className="text-[40px] md:text-[48px] font-bold text-[#1a1f1d] leading-tight tracking-tight">Vendor <span className="text-[#185546]">Command Center</span></h1>
+            <p className="text-gray-500 mt-2 text-[17px]">Manage your products and dispatch orders seamlessly.</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
           <div className="lg:w-64 flex-shrink-0">
-            <Card className="sticky top-28 bg-white/60">
-              <nav className="space-y-3 relative">
+            <div className="sticky top-28 bg-white border border-gray-100 shadow-sm rounded-[20px] p-4">
+              <nav className="space-y-2 relative">
                 {[
                   { id: 'products', name: 'Inventory', icon: '📦' },
                   { id: 'add-product', name: 'New Product', icon: '➕' },
@@ -92,54 +107,54 @@ export const VendorDashboard = () => {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`w-full text-left px-5 py-4 rounded-xl flex items-center gap-3 font-semibold transition-all duration-300 ${
+                    className={`w-full text-left px-5 py-3.5 rounded-xl flex items-center gap-3 font-semibold transition-all duration-200 text-[15px] ${
                       activeTab === item.id
-                        ? 'bg-primary text-white shadow-lg shadow-primary/30 active:scale-95'
-                        : 'text-gray-600 hover:bg-white hover:shadow-sm active:scale-95'
+                        ? 'bg-[#185546] text-white shadow-md'
+                        : 'text-gray-500 hover:text-[#1a1f1d] hover:bg-[#fafbfb]'
                     }`}
                   >
                     <span>{item.icon}</span> {item.name}
                   </button>
                 ))}
               </nav>
-            </Card>
+            </div>
           </div>
 
           {/* Main Content */}
           <div className="flex-1">
             {activeTab === 'products' && (
-              <Card>
+              <div className="border border-gray-100 shadow-sm rounded-[20px] bg-white p-8">
                 <div className="flex justify-between items-center mb-8">
-                    <h2 className="text-3xl font-bold font-display text-dark">Live Inventory</h2>
-                    <span className="bg-primary/10 text-primary font-bold px-4 py-1.5 rounded-lg">{products.length} Items</span>
+                    <h2 className="text-[22px] font-bold text-[#1a1f1d]">Live Inventory</h2>
+                    <span className="bg-[#eef7f4] text-[#185546] font-bold px-4 py-1.5 rounded-full text-[13px]">{products.length} Items</span>
                 </div>
 
                 {loadingProducts ? (
                   <div className="flex items-center justify-center py-16">
                     <div className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                      <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-[#185546]"></div>
                       <p className="text-gray-500 mt-4 font-medium">Loading inventory...</p>
                     </div>
                   </div>
                 ) : products.length > 0 ? (
-                  <div className="overflow-x-auto rounded-2xl border border-gray-100 shadow-sm">
-                    <table className="w-full text-left">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="py-5 px-6 font-semibold text-gray-500 uppercase tracking-wider text-xs">Product Name</th>
-                          <th className="py-5 px-6 font-semibold text-gray-500 uppercase tracking-wider text-xs">Price</th>
-                          <th className="py-5 px-6 font-semibold text-gray-500 uppercase tracking-wider text-xs text-right">Actions</th>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-gray-50">
+                          <th className="pb-4 px-2 font-medium text-gray-400 uppercase tracking-wider text-[11px]">Product Name</th>
+                          <th className="pb-4 px-2 font-medium text-gray-400 uppercase tracking-wider text-[11px]">Price</th>
+                          <th className="pb-4 px-2 font-medium text-gray-400 uppercase tracking-wider text-[11px] text-right">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100 bg-white">
+                      <tbody className="divide-y divide-gray-50">
                         {products.map((product) => (
-                          <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="py-5 px-6 font-bold text-dark">{product.name}</td>
-                            <td className="py-5 px-6 text-primary font-bold">₹{product.price}</td>
-                            <td className="py-5 px-6 text-right">
+                          <tr key={product.id} className="hover:bg-[#fafbfb] transition-colors">
+                            <td className="py-6 px-2 font-medium text-[#1a1f1d] text-[15px]">{product.name}</td>
+                            <td className="py-6 px-2 text-[#185546] font-bold text-[15px]">₹{parseFloat(product.price).toFixed(2)}</td>
+                            <td className="py-6 px-2 text-right">
                               <button
                                 onClick={() => handleDeleteProduct(product.id)}
-                                className="text-red-500 bg-red-50 hover:bg-red-500 hover:text-white px-4 py-2 rounded-lg font-bold text-sm transition-colors active:scale-95"
+                                className="text-red-500 bg-red-50 hover:bg-red-500 hover:text-white px-4 py-2 rounded-lg font-semibold text-[13px] transition-colors"
                               >
                                 Delete
                               </button>
@@ -150,13 +165,13 @@ export const VendorDashboard = () => {
                     </table>
                   </div>
                 ) : (
-                  <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-300">
-                    <div className="text-6xl mb-4 opacity-50">📋</div>
-                    <p className="text-dark font-bold text-xl mb-2">No products loaded</p>
-                    <p className="text-gray-500">Your inventory is empty. Add a product to get started.</p>
+                  <div className="text-center py-16 bg-[#fafbfb] rounded-2xl border border-dashed border-gray-200">
+                    <div className="text-5xl mb-4 opacity-50">📋</div>
+                    <p className="text-[#1a1f1d] font-bold text-xl mb-2">No products loaded</p>
+                    <p className="text-gray-500 text-[15px]">Your inventory is empty. Add a product to get started.</p>
                   </div>
                 )}
-              </Card>
+              </div>
             )}
 
             {activeTab === 'add-product' && (
@@ -164,16 +179,16 @@ export const VendorDashboard = () => {
             )}
 
             {activeTab === 'orders' && (
-              <Card>
+              <div className="border border-gray-100 shadow-sm rounded-[20px] bg-white p-8">
                 <div className="flex justify-between items-center mb-8">
-                    <h2 className="text-3xl font-bold font-display text-dark">Order Queue</h2>
-                    <span className="bg-fuchsia-100 text-fuchsia-700 font-bold px-4 py-1.5 rounded-lg">{orders.length} Active</span>
+                    <h2 className="text-[22px] font-bold text-[#1a1f1d]">Order Queue</h2>
+                    <span className="bg-[#eef7f4] text-[#185546] font-bold px-4 py-1.5 rounded-full text-[13px]">{orders.length} Active</span>
                 </div>
 
                 {loadingOrders ? (
                   <div className="flex items-center justify-center py-16">
                     <div className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                      <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-[#185546]"></div>
                       <p className="text-gray-500 mt-4 font-medium">Loading orders...</p>
                     </div>
                   </div>
@@ -181,66 +196,59 @@ export const VendorDashboard = () => {
                   <div className="space-y-6">
                     {orders.map((order) => (
                       <div key={order.id} className="bg-white border text-left border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                        {order.status === 'shipped' && <div className="absolute top-0 right-0 w-2 h-full bg-emerald-400"></div>}
-                        {order.status === 'sent_to_factory' && <div className="absolute top-0 right-0 w-2 h-full bg-green-400"></div>}
-                        {order.status === 'pending' && <div className="absolute top-0 right-0 w-2 h-full bg-yellow-400"></div>}
+                        {order.status === 'shipped' && <div className="absolute top-0 left-0 w-1.5 h-full bg-[#185546]"></div>}
+                        {order.status === 'sent_to_factory' && <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>}
+                        {order.status === 'pending' && <div className="absolute top-0 left-0 w-1.5 h-full bg-[#ef6b4c]"></div>}
+                        {order.status === 'delivered' && <div className="absolute top-0 left-0 w-1.5 h-full bg-purple-500"></div>}
 
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pl-2">
                           <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                                <h3 className="font-bold text-xl text-dark font-display">
+                            <div className="flex items-center gap-4 mb-2">
+                                <h3 className="font-bold text-[18px] text-[#1a1f1d]">
                                   {order.product_details?.name || `Product #${order.product}`}
                                 </h3>
-                                <span className={`text-xs px-2.5 py-1 rounded-full font-bold uppercase ${
-                                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800'
-                                  : order.status === 'sent_to_factory' ? 'bg-green-100 text-green-800'
-                                  : order.status === 'shipped' ? 'bg-emerald-100 text-emerald-800'
-                                  : 'bg-purple-100 text-purple-800'
-                                }`}>
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${getStatusColor(order.status)}`}>
                                   {order.status.replace(/_/g, ' ')}
                                 </span>
                             </div>
-                            <div className="text-gray-500 grid md:grid-cols-2 gap-4 mt-4 text-sm bg-gray-50 p-4 rounded-xl">
+                            <div className="text-gray-500 grid md:grid-cols-2 gap-4 mt-4 text-[14px] bg-[#fafbfb] p-4 rounded-xl border border-gray-50">
                                 <div>
-                                  <p className="mb-1"><strong className="text-dark">Buyer:</strong> {order.buyer_name} ({order.buyer_email})</p>
-                                  <p><strong className="text-dark">Quantity:</strong> {order.quantity}</p>
+                                  <p className="mb-2"><strong className="text-[#1a1f1d]">Buyer:</strong> {order.buyer_name} ({order.buyer_email})</p>
+                                  <p><strong className="text-[#1a1f1d]">Quantity:</strong> {order.quantity}</p>
                                 </div>
                                 <div>
-                                  <p className="mb-1"><strong className="text-dark">Address:</strong> {order.address}</p>
-                                  <p><strong className="text-dark">Phone:</strong> {order.phone}</p>
+                                  <p className="mb-2"><strong className="text-[#1a1f1d]">Address:</strong> {order.address}</p>
+                                  <p><strong className="text-[#1a1f1d]">Phone:</strong> {order.phone}</p>
                                 </div>
                             </div>
                           </div>
                           <div className="flex flex-col items-end gap-3 w-full md:w-auto">
                             {order.status === 'pending' && (
-                              <Button
-                                size="md"
+                              <button
                                 onClick={() => handleUpdateStatus(order.id, 'sent_to_factory')}
-                                className="w-full md:w-auto bg-dark text-white"
+                                className="w-full md:w-auto bg-[#1a1f1d] text-white px-5 py-2.5 rounded-lg hover:bg-black transition-colors font-semibold text-[14px]"
                               >
                                 Dispatch to Factory 🏭
-                              </Button>
+                              </button>
                             )}
                             {order.status === 'sent_to_factory' && (
-                              <Button
-                                size="md"
+                              <button
                                 onClick={() => handleUpdateStatus(order.id, 'shipped')}
-                                className="w-full md:w-auto bg-blue-600 text-white hover:bg-blue-700"
+                                className="w-full md:w-auto bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-[14px]"
                               >
                                 Mark as Shipped 🚚
-                              </Button>
+                              </button>
                             )}
                             {order.status === 'shipped' && (
-                              <Button
-                                size="md"
+                              <button
                                 onClick={() => handleUpdateStatus(order.id, 'delivered')}
-                                className="w-full md:w-auto bg-emerald-600 text-white hover:bg-emerald-700"
+                                className="w-full md:w-auto bg-[#185546] text-white px-5 py-2.5 rounded-lg hover:bg-[#124236] transition-colors font-semibold text-[14px]"
                               >
                                 Factory: Mark Delivered ✅
-                              </Button>
+                              </button>
                             )}
                             {order.status === 'delivered' && (
-                              <span className="text-purple-600 font-bold px-4 py-2 bg-purple-50 rounded-lg border border-purple-200">
+                              <span className="text-purple-600 font-bold px-4 py-2 bg-purple-50 rounded-lg text-[14px]">
                                 Delivered 🎉
                               </span>
                             )}
@@ -250,11 +258,11 @@ export const VendorDashboard = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-300">
-                    <p className="text-gray-500">No active orders right now.</p>
+                  <div className="text-center py-16 bg-[#fafbfb] rounded-2xl border border-dashed border-gray-200">
+                    <p className="text-gray-500 text-[15px]">No active orders right now.</p>
                   </div>
                 )}
-              </Card>
+              </div>
             )}
           </div>
         </div>
@@ -293,7 +301,6 @@ function AddProductForm({ onSuccess }) {
     setLoading(true)
 
     try {
-      // Use FormData for multipart file upload
       const data = new FormData()
       data.append('name', formData.name)
       data.append('price', formData.price)
@@ -327,9 +334,9 @@ function AddProductForm({ onSuccess }) {
   }
 
   return (
-    <Card>
-      <h2 className="text-3xl font-bold font-display text-dark mb-2">Create New Product</h2>
-      <p className="text-gray-500 mb-8">Fill in the details to list your item on the marketplace.</p>
+    <div className="border border-gray-100 shadow-sm rounded-[20px] bg-white p-8">
+      <h2 className="text-[22px] font-bold text-[#1a1f1d] mb-2">Create New Product</h2>
+      <p className="text-gray-500 mb-8 text-[15px]">Fill in the details to list your item on the marketplace.</p>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 font-medium px-4 py-3 rounded-lg mb-6 flex items-center gap-3">
@@ -339,9 +346,9 @@ function AddProductForm({ onSuccess }) {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="mb-6">
-          <label className="block text-sm font-bold text-dark mb-3 uppercase tracking-wide">Product Image</label>
+          <label className="block text-[11px] font-semibold text-gray-400 mb-3 uppercase tracking-wider">Product Image</label>
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
-            <div className={`w-32 h-32 flex-shrink-0 rounded-2xl border-2 border-dashed flex items-center justify-center overflow-hidden transition-all ${imagePreview ? 'border-primary' : 'border-gray-300 bg-gray-50'}`}>
+            <div className={`w-32 h-32 flex-shrink-0 rounded-2xl border-2 border-dashed flex items-center justify-center overflow-hidden transition-all ${imagePreview ? 'border-[#185546]' : 'border-gray-200 bg-gray-50'}`}>
               {imagePreview ? (
                 <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
               ) : (
@@ -358,59 +365,63 @@ function AddProductForm({ onSuccess }) {
               />
               <label
                 htmlFor="image-upload"
-                className="cursor-pointer bg-white border border-gray-200 text-dark font-bold px-6 py-3 rounded-xl hover:bg-gray-50 hover:border-gray-300 shadow-sm active:scale-95 transition-all inline-block"
+                className="cursor-pointer bg-white border border-gray-200 text-[#1a1f1d] font-semibold px-6 py-2.5 rounded-lg hover:bg-gray-50 transition-colors inline-block text-[14px]"
               >
                 Choose Image
               </label>
-              <p className="text-gray-400 text-sm mt-3 font-medium">Recommended size: 800x800px</p>
+              <p className="text-gray-400 text-[13px] mt-3">Recommended size: 800x800px</p>
             </div>
           </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
             <div className="md:col-span-1">
-            <label className="block text-sm font-bold text-dark mb-2 uppercase tracking-wide">Product Title</label>
+            <label className="block text-[11px] font-semibold text-gray-400 mb-2 uppercase tracking-wider">Product Title</label>
             <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-5 py-4 rounded-xl border-2 border-gray-100 text-dark focus:border-primary focus:ring-4 focus:ring-primary/20 bg-gray-50 focus:bg-white transition-all outline-none font-semibold text-lg"
+                className="w-full px-5 py-3.5 rounded-xl border border-gray-200 text-[#1a1f1d] focus:border-[#185546] focus:ring-4 focus:ring-[#185546]/10 bg-[#fafbfb] focus:bg-white transition-all outline-none font-medium text-[15px]"
                 placeholder="e.g. Vintage Leather Boots"
             />
             </div>
 
             <div className="md:col-span-1">
-            <label className="block text-sm font-bold text-dark mb-2 uppercase tracking-wide">Price (₹)</label>
+            <label className="block text-[11px] font-semibold text-gray-400 mb-2 uppercase tracking-wider">Price (₹)</label>
             <input
                 type="number"
                 name="price"
                 value={formData.price}
                 onChange={handleChange}
                 required
-                className="w-full px-5 py-4 rounded-xl border-2 border-gray-100 text-dark focus:border-primary focus:ring-4 focus:ring-primary/20 bg-gray-50 focus:bg-white transition-all outline-none font-semibold text-lg"
+                className="w-full px-5 py-3.5 rounded-xl border border-gray-200 text-[#1a1f1d] focus:border-[#185546] focus:ring-4 focus:ring-[#185546]/10 bg-[#fafbfb] focus:bg-white transition-all outline-none font-medium text-[15px]"
                 placeholder="0.00"
             />
             </div>
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-dark mb-2 uppercase tracking-wide">Story & Details</label>
+          <label className="block text-[11px] font-semibold text-gray-400 mb-2 uppercase tracking-wider">Story & Details</label>
           <textarea
             name="description"
             value={formData.description}
             onChange={handleChange}
             rows="5"
-            className="w-full px-5 py-4 rounded-xl border-2 border-gray-100 text-dark focus:border-primary focus:ring-4 focus:ring-primary/20 bg-gray-50 focus:bg-white transition-all outline-none font-medium"
+            className="w-full px-5 py-3.5 rounded-xl border border-gray-200 text-[#1a1f1d] focus:border-[#185546] focus:ring-4 focus:ring-[#185546]/10 bg-[#fafbfb] focus:bg-white transition-all outline-none text-[15px]"
             placeholder="Describe what makes this product amazing..."
           ></textarea>
         </div>
 
-        <Button type="submit" size="lg" className="px-10 h-14 w-full md:w-auto shadow-xl" disabled={loading}>
+        <button 
+          type="submit" 
+          disabled={loading}
+          className="w-full md:w-auto bg-[#ef6b4c] text-white px-8 py-3.5 rounded-lg hover:bg-[#d65a3d] transition-all font-semibold text-[15px] shadow-sm disabled:opacity-70"
+        >
           {loading ? 'Publishing...' : 'Publish Product 🚀'}
-        </Button>
+        </button>
       </form>
-    </Card>
+    </div>
   )
 }

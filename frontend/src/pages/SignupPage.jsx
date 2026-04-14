@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Button } from '../components/Button'
 import { Input } from '../components/Input'
-import { Card } from '../components/Card'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import toast from 'react-hot-toast'
@@ -32,7 +30,6 @@ export const SignupPage = () => {
     setLoading(true)
 
     try {
-      // Build registration payload
       const payload = {
         name: formData.name,
         email: formData.email,
@@ -40,16 +37,13 @@ export const SignupPage = () => {
         role: formData.role,
       }
 
-      // Include vendor fields if vendor role
       if (formData.role === 'vendor') {
         payload.shop_name = formData.shop_name
         payload.contact_details = formData.contact_details
       }
 
-      // Register the user
       await api.post('/auth/register/', payload)
 
-      // Auto-login after successful registration
       const loginRes = await api.post('/auth/login/', {
         email: formData.email,
         password: formData.password,
@@ -61,7 +55,6 @@ export const SignupPage = () => {
     } catch (err) {
       const msg = err.response?.data
       if (typeof msg === 'object') {
-        // Combine all field errors into a readable string
         const errors = Object.entries(msg)
           .map(([key, val]) => {
             const fieldErrors = Array.isArray(val) ? val.join(', ') : val
@@ -78,24 +71,20 @@ export const SignupPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-light flex items-center justify-center px-4 relative overflow-hidden py-12">
-      {/* Dynamic Backgrounds */}
-      <div className="absolute top-10 left-10 w-96 h-96 bg-primary/20 rounded-full blur-[100px] -z-10 mix-blend-multiply" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-fuchsia-300/30 rounded-full blur-[100px] -z-10 mix-blend-multiply" />
-
-      <Card className="w-full max-w-xl card-glass shadow-2xl !p-6 sm:!p-10 border border-white/40">
+    <div className="min-h-screen bg-[#fafbfb] flex items-center justify-center px-4 font-sans py-12">
+      <div className="w-full max-w-[500px] bg-white shadow-sm border border-gray-100 rounded-[24px] p-8 sm:p-10">
         <div className="text-center mb-8">
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-dark mb-3 font-display">Create Account</h1>
-            <p className="text-gray-500 text-lg">Join us as a buyer or vendor</p>
+            <h1 className="text-[32px] sm:text-[36px] font-bold text-[#1a1f1d] mb-2 leading-tight tracking-tight">Create Account</h1>
+            <p className="text-gray-500 text-[15px]">Join MarketHub as a buyer or vendor</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 font-medium px-4 py-3 rounded-lg mb-6 flex items-center gap-3">
+          <div className="bg-red-50 border border-red-200 text-red-600 font-medium px-4 py-3 rounded-xl mb-6 flex items-center gap-3 text-[14px]">
             <span>⚠️</span> {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <Input
             label="Full Name"
             type="text"
@@ -104,7 +93,7 @@ export const SignupPage = () => {
             value={formData.name}
             onChange={handleChange}
             required
-            className="h-14 font-medium bg-white/50 focus:bg-white"
+            className="!bg-white"
           />
 
           <Input
@@ -115,7 +104,7 @@ export const SignupPage = () => {
             value={formData.email}
             onChange={handleChange}
             required
-            className="h-14 font-medium bg-white/50 focus:bg-white"
+            className="!bg-white"
           />
 
           <Input
@@ -126,25 +115,25 @@ export const SignupPage = () => {
             value={formData.password}
             onChange={handleChange}
             required
-            className="h-14 font-medium bg-white/50 focus:bg-white"
+            className="!bg-white"
           />
 
-          <div className="pt-2">
-            <label className="block text-sm font-bold text-dark mb-3 uppercase tracking-wide">
+          <div className="pt-2 pb-2">
+            <label className="block text-[11px] font-semibold text-gray-400 mb-3 uppercase tracking-wider">
               I want to join as:
             </label>
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
                 onClick={() => setFormData(prev => ({ ...prev, role: 'buyer' }))}
-                className={`py-4 rounded-xl border-2 font-bold transition-all ${formData.role === 'buyer' ? 'border-primary bg-primary/5 text-primary' : 'border-gray-200 text-gray-500 hover:border-gray-300 bg-white/50'}`}
+                className={`py-3.5 rounded-xl border-2 font-bold transition-all text-[15px] ${formData.role === 'buyer' ? 'border-[#185546] bg-[#eef7f4] text-[#185546]' : 'border-gray-100 text-gray-500 hover:border-gray-200 hover:bg-gray-50 bg-white'}`}
               >
                 🛍️ Buyer
               </button>
               <button
                 type="button"
                 onClick={() => setFormData(prev => ({ ...prev, role: 'vendor' }))}
-                className={`py-4 rounded-xl border-2 font-bold transition-all ${formData.role === 'vendor' ? 'border-primary bg-primary/5 text-primary' : 'border-gray-200 text-gray-500 hover:border-gray-300 bg-white/50'}`}
+                className={`py-3.5 rounded-xl border-2 font-bold transition-all text-[15px] ${formData.role === 'vendor' ? 'border-[#185546] bg-[#eef7f4] text-[#185546]' : 'border-gray-100 text-gray-500 hover:border-gray-200 hover:bg-gray-50 bg-white'}`}
               >
                 🏪 Vendor
               </button>
@@ -153,8 +142,8 @@ export const SignupPage = () => {
 
           {/* Vendor-specific fields */}
           {formData.role === 'vendor' && (
-            <div className="space-y-6 p-6 bg-primary/5 rounded-2xl border border-primary/20 transition-all">
-              <p className="text-sm font-bold text-primary uppercase tracking-wide">Vendor Details</p>
+            <div className="space-y-4 p-5 sm:p-6 bg-[#fafbfb] rounded-[16px] border border-gray-100 animate-in slide-in-from-top-2 duration-300">
+              <p className="text-[11px] font-bold text-[#185546] uppercase tracking-wider">Vendor Details</p>
               <Input
                 label="Shop Name"
                 type="text"
@@ -163,10 +152,10 @@ export const SignupPage = () => {
                 value={formData.shop_name}
                 onChange={handleChange}
                 required
-                className="h-14 font-medium bg-white/80 focus:bg-white"
+                className="!bg-white"
               />
               <div className="w-full">
-                <label className="block text-sm font-bold text-dark mb-2 uppercase tracking-wide">
+                <label className="block text-[11px] font-semibold text-gray-400 mb-2 uppercase tracking-wider">
                   Contact Details
                 </label>
                 <textarea
@@ -176,26 +165,30 @@ export const SignupPage = () => {
                   required
                   rows="3"
                   placeholder="Phone, address, or other contact info..."
-                  className="w-full px-5 py-4 rounded-xl border-2 border-gray-100 text-dark placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none font-medium bg-white/80"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[#1a1f1d] placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-[#185546]/10 focus:border-[#185546] transition-all font-medium bg-white text-[15px]"
                 />
               </div>
             </div>
           )}
 
-          <Button type="submit" fullWidth size="lg" className="h-14 text-lg mt-4 font-bold shadow-xl shadow-primary/30" disabled={loading}>
+          <button 
+            type="submit" 
+            className="w-full bg-[#ef6b4c] text-white hover:bg-[#d65a3d] py-3.5 rounded-xl font-bold text-[15px] shadow-sm transition-all active:scale-[0.99] mt-6 disabled:opacity-75" 
+            disabled={loading}
+          >
             {loading ? 'Creating Account...' : 'Create Account'}
-          </Button>
+          </button>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <p className="text-center text-gray-500 font-medium">
+        <div className="mt-8 pt-6 border-t border-gray-100">
+          <p className="text-center text-gray-500 text-[14.5px]">
             Already have an account?{' '}
-            <Link to="/login" className="text-primary font-bold hover:underline">
+            <Link to="/login" className="text-[#185546] font-bold hover:underline transition-all">
               Sign in securely
             </Link>
           </p>
         </div>
-      </Card>
+      </div>
     </div>
   )
 }
