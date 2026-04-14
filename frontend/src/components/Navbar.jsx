@@ -27,26 +27,15 @@ export const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <Link to="/home" className="text-dark/80 hover:text-primary font-medium hover:-translate-y-0.5 transition-all">
-              Explore
-            </Link>
-            {isAuthenticated && user?.role === 'vendor' && (
-              <Link to="/vendor" className="text-dark/80 hover:text-primary font-medium hover:-translate-y-0.5 transition-all">
-                Vendor Dashboard
-              </Link>
-            )}
-            {isAuthenticated && user?.role === 'buyer' && (
-              <Link to="/buyer" className="text-dark/80 hover:text-primary font-medium hover:-translate-y-0.5 transition-all">
-                My Orders
-              </Link>
-            )}
           </div>
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
               <>
-                <span className="font-semibold px-4 py-1.5 rounded-full bg-primary/10 text-primary">{user?.name}</span>
+                <Link to={user?.role === 'vendor' ? '/vendor' : '/buyer'} className="font-semibold px-4 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                  {user?.name}
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="bg-gray-100 text-dark px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors font-bold active:scale-95 shadow-sm"
@@ -91,24 +80,17 @@ export const Navbar = () => {
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
         <div className="md:hidden absolute top-20 left-0 w-full bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-xl overflow-hidden py-4 px-6 flex flex-col gap-4">
-            <Link onClick={() => setMobileMenuOpen(false)} to="/home" className="text-dark font-bold text-lg py-2 border-b border-gray-100">
-              Explore Products
-            </Link>
-            {isAuthenticated && user?.role === 'vendor' && (
-              <Link onClick={() => setMobileMenuOpen(false)} to="/vendor" className="text-dark font-bold text-lg py-2 border-b border-gray-100">
-                Vendor Dashboard
-              </Link>
-            )}
-            {isAuthenticated && user?.role === 'buyer' && (
-              <Link onClick={() => setMobileMenuOpen(false)} to="/buyer" className="text-dark font-bold text-lg py-2 border-b border-gray-100">
-                My Orders
-              </Link>
-            )}
             
             <div className="mt-4 flex flex-col gap-3">
               {isAuthenticated ? (
                 <>
-                  <div className="text-primary font-bold mb-2 text-center">Hello, {user?.name}</div>
+                  <Link 
+                    onClick={() => setMobileMenuOpen(false)}
+                    to={user?.role === 'vendor' ? '/vendor' : '/buyer'} 
+                    className="text-primary font-bold mb-2 text-center hover:underline block"
+                  >
+                    {user?.name}
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="w-full bg-gray-100 text-dark px-4 py-3 rounded-xl transition-colors font-bold"

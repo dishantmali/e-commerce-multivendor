@@ -57,7 +57,7 @@ export const SignupPage = () => {
       const { access, refresh } = loginRes.data
       const userData = await login(access, refresh)
       toast.success('Account created successfully!')
-      navigate(userData.role === 'vendor' ? '/vendor' : '/buyer')
+      navigate('/home')
     } catch (err) {
       const msg = err.response?.data
       if (typeof msg === 'object') {

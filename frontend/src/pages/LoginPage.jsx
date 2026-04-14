@@ -28,7 +28,7 @@ export const LoginPage = () => {
       // Login stores tokens and fetches user profile
       const userData = await login(access, refresh)
       toast.success(`Welcome back, ${userData.name}!`)
-      navigate(userData.role === 'vendor' ? '/vendor' : '/buyer')
+      navigate('/home')
     } catch (err) {
       const msg = err.response?.data
       if (msg?.detail) {
