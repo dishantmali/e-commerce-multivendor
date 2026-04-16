@@ -32,7 +32,7 @@ export const Footer = () => {
           <h4 className="text-lg font-bold mb-4 uppercase tracking-wider">Newsletter</h4>
           <p className="text-gray-400 text-sm mb-4">Subscribe to get updates on new arrivals.</p>
           <div className="flex">
-            <input type="email" placeholder="Email Address" className="px-4 py-2 w-full text-black outline-none" />
+            <input type="email" placeholder="Email Address" className="px-4 py-2 w-full text-black bg-white outline-none" />
             <button className="bg-[#fe4c50] px-4 font-bold hover:bg-[#e04347] transition-colors">SEND</button>
           </div>
         </div>
