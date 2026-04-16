@@ -1,3 +1,76 @@
+from django.contrib import admin
+from .models import (
+    CustomUser,
+    VendorProfile,
+    Product,
+    Category,
+    Order,
+    OrderItem,
+    Cart,
+    CartItem
+)
 
 
-# Register your models here.
+# ---------------- USER ---------------- #
+@admin.register(CustomUser)
+class CustomUserAdmin(admin.ModelAdmin):
+    list_display = ('id', 'email', 'name', 'role', 'is_staff')
+    list_filter = ('role', 'is_staff')
+    search_fields = ('email', 'name')
+
+
+# ---------------- VENDOR ---------------- #
+@admin.register(VendorProfile)
+class VendorProfileAdmin(admin.ModelAdmin):
+    list_display = ('id', 'shop_name', 'user', 'is_approved')
+    list_filter = ('is_approved',)
+    search_fields = ('shop_name', 'user__email')
+
+
+# ---------------- CATEGORY ---------------- #
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'parent')
+    search_fields = ('name',)
+
+
+# ---------------- PRODUCT ---------------- #
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'vendor', 'price', 'status', 'created_at')
+    list_filter = ('status', 'category')
+    search_fields = ('name',)
+
+    # 🔥 Quick approve from admin panel
+    actions = ['approve_products']
+
+    def approve_products(self, request, queryset):
+        queryset.update(status='approved')
+    approve_products.short_description = "Approve selected products"
+
+
+# ---------------- ORDER ITEM ---------------- #
+class OrderItemInline(admin.TabularInline):
+    model = OrderItem
+    extra = 0
+
+
+# ---------------- ORDER ---------------- #
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'total_price', 'status', 'payment_status', 'created_at')
+    list_filter = ('status', 'payment_status')
+    search_fields = ('user__email',)
+    inlines = [OrderItemInline]
+
+
+# ---------------- CART ---------------- #
+class CartItemInline(admin.TabularInline):
+    model = CartItem
+    extra = 0
+
+
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user')
+    inlines = [CartItemInline]

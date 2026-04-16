@@ -1,9 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-
+from django.conf import settings
 
 class CustomUser(AbstractUser):
     ROLE_CHOICES = (
+        ('admin', 'Admin'),
         ('buyer', 'Buyer'),
         ('vendor', 'Vendor'),
     )
@@ -19,30 +20,69 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.email
-
-
+    
 class VendorProfile(models.Model):
     user = models.OneToOneField(
         CustomUser,
         on_delete=models.CASCADE,
-        related_name='vendor_profile')
+        related_name='vendor_profile'
+    )
     shop_name = models.CharField(max_length=255)
     contact_details = models.TextField()
 
+    logo = models.ImageField(upload_to='vendor_logos/', null=True, blank=True)
+    address = models.TextField(null=True, blank=True)
+    phone = models.CharField(max_length=20, null=True, blank=True)
+
+    is_approved = models.BooleanField(default=False)
+
     def __str__(self):
         return self.shop_name
+    
+class Category(models.Model):
+    name = models.CharField(max_length=255)
+    parent = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
 
+    def __str__(self):
+        return self.name
 
 class Product(models.Model):
     vendor = models.ForeignKey(
         VendorProfile,
         on_delete=models.CASCADE,
-        related_name='products')
+        related_name='products'
+    )
+
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+
     name = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.ImageField(
-        upload_to='product_images/')
+    image = models.ImageField(upload_to='product_images/')
     description = models.TextField()
+
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    )
+
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
+
+    created_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -51,63 +91,91 @@ class Product(models.Model):
 class Order(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending'),
-        ('sent_to_factory', 'Sent to Factory'),
+        ('confirmed', 'Confirmed'),
         ('shipped', 'Shipped'),
         ('delivered', 'Delivered'),
+        ('cancelled', 'Cancelled'),
     )
+
     PAYMENT_STATUS_CHOICES = (
         ('pending', 'Pending'),
         ('paid', 'Paid'),
         ('failed', 'Failed'),
     )
 
-    # Valid status transitions: vendor can only move forward through the flow
-    VALID_TRANSITIONS = {
-        'pending': ['sent_to_factory'],
-        'sent_to_factory': ['shipped'],
-        'shipped': ['delivered'],
-        'delivered': [],
-    }
-
-    buyer = models.ForeignKey(
-        CustomUser,
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='orders')
-    vendor = models.ForeignKey(
-        VendorProfile,
-        on_delete=models.CASCADE,
-        related_name='orders_received')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField(default=1)
+        related_name='orders'
+    )
 
-    address = models.TextField()
-    phone = models.CharField(max_length=20)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default='pending')
+        default='pending'
+    )
 
-    # Razorpay payment fields
-    razorpay_order_id = models.CharField(max_length=255, blank=True, null=True)
-    razorpay_payment_id = models.CharField(
-        max_length=255, blank=True, null=True)
-    razorpay_signature = models.CharField(
-        max_length=255, blank=True, null=True)
     payment_status = models.CharField(
         max_length=20,
         choices=PAYMENT_STATUS_CHOICES,
-        default='pending')
+        default='pending'
+    )
 
-    # Timestamps for status transitions
+    # Address details
+    address = models.TextField()
+    phone = models.CharField(max_length=20)
+
+    # Razorpay fields
+    razorpay_order_id = models.CharField(max_length=255, blank=True, null=True)
+    razorpay_payment_id = models.CharField(max_length=255, blank=True, null=True)
+    razorpay_signature = models.CharField(max_length=255, blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
-    sent_to_factory_at = models.DateTimeField(null=True, blank=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
     shipped_at = models.DateTimeField(null=True, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
 
-    def can_transition_to(self, new_status):
-        """Check if a status transition is valid."""
-        return new_status in self.VALID_TRANSITIONS.get(self.status, [])
+    def __str__(self):
+        return f"Order {self.id} - {self.user.email}"
+    
+class OrderItem(models.Model):
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='items'
+    )
+
+    product = models.ForeignKey(
+        'Product',
+        on_delete=models.CASCADE
+    )
+
+    vendor = models.ForeignKey(
+        'VendorProfile',
+        on_delete=models.CASCADE
+    )
+
+    quantity = models.PositiveIntegerField(default=1)
+
+    price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return f"Order {self.id} - {self.product.name}"
+        return f"{self.product.name} (x{self.quantity})"
+
+class Cart(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+
+class Banner(models.Model):
+    title = models.CharField(max_length=255)
+    image = models.ImageField(upload_to='banners/')
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.title

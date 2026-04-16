@@ -1,81 +1,48 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react'
-import api from '../api/axios'
+import { createContext, useState, useEffect, useContext } from 'react';
+import api from '../api/axios';
 
-// eslint-disable-next-line react-refresh/only-export-components
-export const AuthContext = createContext()
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // On mount, check if we have tokens and fetch user profile
   useEffect(() => {
-    const initAuth = async () => {
-      const accessToken = localStorage.getItem('access_token')
-      const savedUser = localStorage.getItem('user')
-
-      if (accessToken && savedUser) {
+    const fetchUser = async () => {
+      const token = localStorage.getItem('access');
+      if (token) {
         try {
-          // Verify token is still valid by calling /me
-          const res = await api.get('/auth/me/')
-          const userData = res.data
-          localStorage.setItem('user', JSON.stringify(userData))
-          setUser(userData)
-        } catch {
-          // Token expired and refresh also failed — clear everything
-          localStorage.removeItem('access_token')
-          localStorage.removeItem('refresh_token')
-          localStorage.removeItem('user')
-          setUser(null)
+          const res = await api.get('/auth/me/');
+          setUser(res.data);
+        } catch (error) {
+          localStorage.removeItem('access');
+          localStorage.removeItem('refresh');
         }
       }
-      setLoading(false)
-    }
-    initAuth()
-  }, [])
+      setLoading(false);
+    };
+    fetchUser();
+  }, []);
 
-  const login = useCallback(async (accessToken, refreshToken) => {
-    localStorage.setItem('access_token', accessToken)
-    localStorage.setItem('refresh_token', refreshToken)
+  const login = async (access, refresh) => {
+    localStorage.setItem('access', access);
+    localStorage.setItem('refresh', refresh);
+    const res = await api.get('/auth/me/');
+    setUser(res.data);
+    return res.data; // <-- Added this line so we can route smartly after login
+  };
 
-    // Fetch user profile from /me endpoint
-    try {
-      const res = await api.get('/auth/me/')
-      const userData = res.data
-      localStorage.setItem('user', JSON.stringify(userData))
-      setUser(userData)
-      return userData
-    } catch (err) {
-      // If /me fails, clear tokens
-      localStorage.removeItem('access_token')
-      localStorage.removeItem('refresh_token')
-      throw err
-    }
-  }, [])
+  const logout = () => {
+    localStorage.removeItem('access');
+    localStorage.removeItem('refresh');
+    setUser(null);
+  };
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
-    localStorage.removeItem('user')
-    setUser(null)
-  }, [])
+  return (
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout, loading }}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
+};
 
-  const value = {
-    user,
-    loading,
-    login,
-    logout,
-    isAuthenticated: !!user,
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-// eslint-disable-next-line react-refresh/only-export-components
-export const useAuth = () => {
-  const context = React.useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
-  }
-  return context
-}
+export const useAuth = () => useContext(AuthContext);

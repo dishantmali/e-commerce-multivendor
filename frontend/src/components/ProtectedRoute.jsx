@@ -1,48 +1,28 @@
-import { Navigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export const ProtectedRoute = ({ children, requiredRole }) => {
-  const { isAuthenticated, user, loading } = useAuth()
+  const { isAuthenticated, user, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="text-gray-600 mt-4">Loading...</p>
-        </div>
-      </div>
-    )
+  if (loading) return <div>Loading...</div>;
+  
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  
+  if (requiredRole && user?.role !== requiredRole && user?.role !== 'admin') {
+    return <Navigate to="/" replace />;
   }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />
-  }
-
-  if (requiredRole && user?.role !== requiredRole) {
-    return <Navigate to="/" replace />
-  }
-
-  return children
-}
+  
+  return children;
+};
 
 export const PublicRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth()
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="text-gray-600 mt-4">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
+  const { isAuthenticated, user } = useAuth();
+  
   if (isAuthenticated) {
-    return <Navigate to="/home" replace />
+    if (user?.role === 'admin') return <Navigate to="/admin" replace />;
+    if (user?.role === 'vendor') return <Navigate to="/vendor" replace />;
+    return <Navigate to="/" replace />;
   }
-
-  return children
-}
+  
+  return children;
+};
