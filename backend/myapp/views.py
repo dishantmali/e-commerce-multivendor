@@ -5,7 +5,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied, ValidationError
-
+from django.db import transaction
 from .models import CustomUser, Product, Order, VendorProfile, OrderItem , Category , Cart , CartItem
 from .serializers import (
     RegisterSerializer, CustomUserSerializer, ProductSerializer,
@@ -51,9 +51,15 @@ class HomePageView(APIView):
 
 # ---------------- Product APIs ---------------- #
 class ProductListView(generics.ListAPIView):
-    queryset = Product.objects.filter(status='approved')
     serializer_class = ProductSerializer
-    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        queryset = Product.objects.filter(status='approved')
+        category_id = self.request.query_params.get('category')
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+
+        return queryset
 
 
 class ProductDetailView(generics.RetrieveAPIView):
@@ -465,30 +471,31 @@ class CheckoutView(APIView):
         if not items:
             return Response({"error": "Cart is empty"}, status=400)
 
-        address = request.data.get('address')
-        phone = request.data.get('phone')
+        with transaction.atomic():
 
-        total = 0
-        for item in items:
-            total += item.product.price * item.quantity
-
-        order = Order.objects.create(
-            user=user,
-            address=address,
-            phone=phone,
-            total_price=total,
-            payment_status='pending'
-        )
-
-        for item in items:
-            OrderItem.objects.create(
-                order=order,
-                product=item.product,
-                vendor=item.product.vendor,
-                quantity=item.quantity,
-                price=item.product.price
+            # Step 1: Create Order
+            order = Order.objects.create(
+                user=user,
+                address=request.data.get('address'),
+                phone=request.data.get('phone'),
+                total_price=sum(item.product.price * item.quantity for item in items),
+                payment_status='pending'
             )
 
-        cart.items.all().delete()
+            # Step 2: Create OrderItems
+            for item in items:
+                OrderItem.objects.create(
+                    order=order,
+                    product=item.product,
+                    vendor=item.product.vendor,
+                    quantity=item.quantity,
+                    price=item.product.price
+                )
 
-        return Response({"message": "Order created", "order_id": order.id})
+            # Step 3: Clear Cart
+            cart.items.all().delete()
+
+        return Response({
+            "message": "Order created",
+            "order_id": order.id
+        })

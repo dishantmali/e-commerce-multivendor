@@ -18,7 +18,7 @@ export const CategoryPage = () => {
         setCategory(currentCat);
 
         // Fetch all products and filter locally (since your backend doesn't have a ?category filter endpoint yet)
-        const prodRes = await api.get('/products/');
+        const prodRes = await api.get(`/products/?category=${id}`);
         const filtered = prodRes.data.filter(p => p.category === parseInt(id));
         setProducts(filtered);
       } catch (err) {
