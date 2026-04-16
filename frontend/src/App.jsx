@@ -11,6 +11,7 @@ import { ProductDetailPage } from './pages/ProductDetailPage'
 import { BuyerDashboard } from './pages/BuyerDashboard'
 import { VendorDashboard } from './pages/VendorDashboard'
 import { Toaster } from 'react-hot-toast'
+import { AdminDashboard } from './pages/AdminDashboard'
 
 const AppLayout = () => {
   const location = useLocation()
@@ -24,6 +25,7 @@ const AppLayout = () => {
           <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
           <Route path="/signup" element={<PublicRoute><SignupPage /></PublicRoute>} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/home" element={<HomePage />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route

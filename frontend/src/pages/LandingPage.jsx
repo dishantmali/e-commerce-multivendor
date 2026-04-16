@@ -1,267 +1,422 @@
-import { useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import heroImage from '../assets/hero-big.jpeg'
 
-const CheckIcon = ({ className }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 6 9 17 4 12"></polyline>
-  </svg>
-)
+const featuredProducts = [
+  {
+    id: 1,
+    name: "Unbothered Elixir",
+    price: "4,500",
+    image: "https://images.pexels.com/photos/4465124/pexels-photo-4465124.jpeg?auto=compress&cs=tinysrgb&w=800",
+    category: "Wellness"
+  },
+  {
+    id: 2,
+    name: "Radiance Body Oil",
+    price: "3,200",
+    image: "https://images.pexels.com/photos/4465121/pexels-photo-4465121.jpeg?auto=compress&cs=tinysrgb&w=800",
+    category: "Bodycare"
+  },
+  {
+    id: 3,
+    name: "The Essential Balm",
+    price: "1,850",
+    image: "https://images.pexels.com/photos/4465829/pexels-photo-4465829.jpeg?auto=compress&cs=tinysrgb&w=800",
+    category: "Skincare"
+  }
+]
+
+/* ── Scroll Reveal (unchanged) ── */
+function useScrollReveal() {
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible')
+          }
+        })
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    )
+    const elements = document.querySelectorAll('.reveal-element, .reveal-image-wrapper, .line-reveal, .label-slide-in')
+    elements.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+}
+
+/* ── Parallax hero bg on scroll ── */
+function useParallax(ref) {
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const onScroll = () => {
+      const scrolled = window.scrollY
+      el.style.transform = `translateY(${scrolled * 0.25}px)`
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [ref])
+}
+
+/* ── Cursor glow follow ── */
+function useCursorGlow() {
+  useEffect(() => {
+    const glow = document.getElementById('cursor-glow')
+    if (!glow) return
+    const move = (e) => {
+      glow.style.left = e.clientX + 'px'
+      glow.style.top  = e.clientY + 'px'
+    }
+    const show = () => { glow.style.opacity = '1' }
+    const hide = () => { glow.style.opacity = '0' }
+    window.addEventListener('mousemove', move, { passive: true })
+    window.addEventListener('mouseenter', show)
+    window.addEventListener('mouseleave', hide)
+    return () => {
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mouseenter', show)
+      window.removeEventListener('mouseleave', hide)
+    }
+  }, [])
+}
+
+/* ── Scroll progress bar ── */
+function useScrollProgress() {
+  useEffect(() => {
+    const bar = document.getElementById('scroll-progress')
+    if (!bar) return
+    const onScroll = () => {
+      const total  = document.documentElement.scrollHeight - window.innerHeight
+      const pct    = total > 0 ? (window.scrollY / total) * 100 : 0
+      bar.style.width = pct + '%'
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+}
+
+/* ── Hero word-by-word stagger on load ── */
+function useHeroWords() {
+  useEffect(() => {
+    const words = document.querySelectorAll('.hero-word')
+    words.forEach((w, i) => {
+      setTimeout(() => w.classList.add('is-visible'), 200 + i * 130)
+    })
+  }, [])
+}
+
+/* ── Animated number counter when in view ── */
+function useCounterReveal() {
+  useEffect(() => {
+    const counters = document.querySelectorAll('[data-count]')
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !entry.target.dataset.done) {
+            entry.target.dataset.done = 'true'
+            const target = parseFloat(entry.target.dataset.count)
+            const suffix = entry.target.dataset.suffix || ''
+            const prefix = entry.target.dataset.prefix || ''
+            const duration = 1800
+            const start = performance.now()
+            const step = (now) => {
+              const elapsed = now - start
+              const progress = Math.min(elapsed / duration, 1)
+              const eased = 1 - Math.pow(1 - progress, 4)
+              const value = target < 10
+                ? (eased * target).toFixed(1)
+                : Math.floor(eased * target)
+              entry.target.textContent = prefix + value + suffix
+              if (progress < 1) requestAnimationFrame(step)
+            }
+            requestAnimationFrame(step)
+          }
+        })
+      },
+      { threshold: 0.5 }
+    )
+    counters.forEach((c) => observer.observe(c))
+    return () => observer.disconnect()
+  }, [])
+}
+
+/* ── Card tilt on mouse move ── */
+function useTiltCards() {
+  useEffect(() => {
+    const cards = document.querySelectorAll('.tilt-card')
+    const handlers = []
+    cards.forEach((card) => {
+      const onMove = (e) => {
+        const rect  = card.getBoundingClientRect()
+        const cx    = rect.left + rect.width  / 2
+        const cy    = rect.top  + rect.height / 2
+        const dx    = (e.clientX - cx) / (rect.width  / 2)
+        const dy    = (e.clientY - cy) / (rect.height / 2)
+        card.style.transform = `perspective(800px) rotateY(${dx * 6}deg) rotateX(${-dy * 6}deg) scale(1.02)`
+      }
+      const onLeave = () => {
+        card.style.transform = 'perspective(800px) rotateY(0deg) rotateX(0deg) scale(1)'
+      }
+      card.addEventListener('mousemove', onMove)
+      card.addEventListener('mouseleave', onLeave)
+      handlers.push({ card, onMove, onLeave })
+    })
+    return () => {
+      handlers.forEach(({ card, onMove, onLeave }) => {
+        card.removeEventListener('mousemove', onMove)
+        card.removeEventListener('mouseleave', onLeave)
+      })
+    }
+  }, [])
+}
 
 export const LandingPage = () => {
-  const [activeTab, setActiveTab] = useState('vendors')
+  const heroBgRef = useRef(null)
 
-  const vendorSteps = [
-    { num: '01', title: 'Create Your Store', desc: 'Sign up and set up your vendor profile with product listings, pricing, and inventory.' },
-    { num: '02', title: 'Receive Orders', desc: 'Get notified instantly when customers place orders. View all details in your dashboard.' },
-    { num: '03', title: 'Process & Ship', desc: 'Update order status from "Sent to Factory" to "Shipped" as you fulfill each order.' },
-    { num: '04', title: 'Get Paid', desc: 'Receive payments directly through Razorpay. Platform fee (5%) is automatically calculated.' },
-  ]
-  
-  const buyerSteps = [
-    { num: '01', title: 'Browse Products', desc: 'Explore products from verified vendors across multiple categories and countries.' },
-    { num: '02', title: 'Secure Checkout', desc: 'Complete your purchase with Razorpay\'s secure payment gateway. Multiple payment options available.' },
-    { num: '03', title: 'Track Your Order', desc: 'Monitor your order status in real-time from factory processing to shipment.' },
-    { num: '04', title: 'Receive & Review', desc: 'Get your products delivered and share your experience to help other buyers.' },
-  ]
-
-  const steps = activeTab === 'vendors' ? vendorSteps : buyerSteps
+  useScrollReveal()
+  useParallax(heroBgRef)
+  useCursorGlow()
+  useScrollProgress()
+  useHeroWords()
+  useCounterReveal()
+  useTiltCards()
 
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-800">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-b from-white to-[#fafbfb] pt-8 pb-20 lg:pt-12 lg:pb-32 w-full overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row items-center gap-16">
-            {/* Left Column */}
-            <div className="flex-1 w-full text-left z-10">
-              <div className="inline-block bg-[#eef7f4] text-[#188367] rounded-full px-4 py-1.5 text-sm font-semibold mb-8 border border-[#eef7f4]">
-                Trusted by 10,000+ vendors
-              </div>
-              <h1 className="text-6xl md:text-7xl font-bold leading-[1.1] tracking-tight mb-6 text-[#1a1f1d]">
-                Connect.<br/>
-                Sell.<br/>
-                <span className="text-[#188367] block mt-1">Scale.</span>
-              </h1>
-              <p className="text-gray-500 text-lg mb-10 max-w-xl leading-relaxed">
-                The multi-vendor marketplace platform that empowers independent sellers to reach buyers globally. Secure payments, order tracking, and growth tools—all in one place.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 mb-14">
-                <Link to="/signup" className="inline-flex justify-center items-center px-8 py-3.5 bg-[#ef6b4c] text-white font-semibold rounded-lg hover:bg-[#d65a3d] transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto text-[15px]">
-                  Start Selling Today
-                </Link>
-                <Link to="/home" className="inline-flex justify-center items-center px-8 py-3.5 bg-white text-[#1a1f1d] font-semibold border-2 border-[#185546] rounded-lg hover:bg-gray-50 transition-all w-full sm:w-auto text-[15px]">
-                  Browse Marketplace
-                </Link>
-              </div>
-              <div className="flex items-center gap-6 md:gap-12">
-                <div>
-                  <div className="text-3xl font-bold text-[#188367]">10K+</div>
-                  <div className="text-[11px] text-gray-400 mt-1 font-medium uppercase tracking-wider">Active Vendors</div>
-                </div>
-                <div className="w-[1px] h-10 bg-gray-200"></div>
-                <div>
-                  <div className="text-3xl font-bold text-[#188367]">50M+</div>
-                  <div className="text-[11px] text-gray-400 mt-1 font-medium uppercase tracking-wider">Transactions</div>
-                </div>
-                 <div className="w-[1px] h-10 bg-gray-200"></div>
-                <div>
-                  <div className="text-3xl font-bold text-[#188367]">150+</div>
-                  <div className="text-[11px] text-gray-400 mt-1 font-medium uppercase tracking-wider">Countries</div>
-                </div>
-              </div>
-            </div>
+    <div className="min-h-screen bg-[#F8F6F0] text-[#111111] overflow-x-hidden selection:bg-[#8E7A60] selection:text-[#F8F6F0]">
 
-            {/* Right Column (Hero Graphic) */}
-            <div className="flex-1 relative w-full lg:h-[500px] flex items-center justify-center lg:justify-end mt-12 lg:mt-0 group cursor-default perspective-1000">
-               {/* White Background Card */}
-               <div className="absolute right-0 top-10 w-[90%] max-w-[450px] h-[400px] bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] transform rotate-3 group-hover:rotate-6 group-hover:-translate-y-2 group-hover:translate-x-2 transition-all duration-500 ease-out z-0 ring-1 ring-black/5"></div>
-               
-               {/* Main Green Card */}
-               <div className="relative z-10 w-[85%] max-w-[400px] h-[380px] bg-gradient-to-br from-[#185546] to-[#124236] rounded-2xl p-8 shadow-2xl transform lg:-translate-x-12 group-hover:lg:-translate-x-16 group-hover:-translate-y-4 group-hover:shadow-[0_40px_80px_-20px_rgba(24,85,70,0.4)] transition-all duration-500 ease-out ring-1 ring-white/10 flex flex-col">
-                  <div className="w-12 h-12 rounded-xl bg-white/10 mb-6 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-500 ease-out">
-                    <div className="w-6 h-6 border-2 border-white/50 rounded-md"></div>
-                  </div>
-                  <h3 className="font-bold text-[22px] mb-2 text-white tracking-tight">Vendor Dashboard</h3>
-                  <p className="text-[14px] text-[#9fc7bd] mb-8 leading-relaxed">Track orders, manage inventory and grow your business.</p>
-                  
-                  <div className="space-y-4 flex-1">
-                     <div className="flex gap-4">
-                       <div className="h-[72px] flex-1 bg-white/5 rounded-xl border border-white/5 transform group-hover:-translate-y-1 hover:!bg-white/10 transition-all duration-500 delay-0 cursor-pointer"></div>
-                       <div className="h-[72px] flex-1 bg-white/5 rounded-xl border border-white/5 transform group-hover:-translate-y-1 hover:!bg-white/10 transition-all duration-500 delay-75 cursor-pointer"></div>
-                     </div>
-                     <div className="flex gap-4">
-                       <div className="h-[72px] flex-1 bg-white/5 rounded-xl border border-white/5 transform group-hover:-translate-y-1 hover:!bg-white/10 transition-all duration-500 delay-150 cursor-pointer"></div>
-                       <div className="h-[72px] flex-1 bg-white/5 rounded-xl border border-white/5 transform group-hover:-translate-y-1 hover:!bg-white/10 transition-all duration-500 delay-200 cursor-pointer"></div>
-                     </div>
-                  </div>
-               </div>
-            </div>
+      {/* ── Scroll progress bar ── */}
+      <div id="scroll-progress" />
+
+      {/* ── Cursor glow ── */}
+      <div id="cursor-glow" className="cursor-glow" style={{ opacity: 0 }} />
+
+      {/* 1. HERO SECTION */}
+      <section className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-[#EBE7DF]">
+        
+        {/* Background Image (Parallax) */}
+        <div ref={heroBgRef} className="absolute inset-0 w-full h-[120%] -top-[10%] hero-bg-parallax">
+          <img 
+            src={heroImage} 
+            alt="Hero Aesthetic" 
+            className="w-full h-full object-cover object-center opacity-40"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#F8F6F0] via-[#F8F6F0]/80 to-transparent" />
+        </div>
+
+        {/* 3D Abstract Wireframe */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] md:w-[1000px] md:h-[1000px] opacity-40 pointer-events-none abstract-3d-container z-0">
+          <div className="abstract-3d-shape">
+            <div className="abstract-ring ring-1" />
+            <div className="abstract-ring ring-2" />
+            <div className="abstract-ring ring-3" />
+            <div className="abstract-ring ring-4" />
           </div>
+        </div>
+
+        {/* Foreground Content */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 flex flex-col items-center text-center mt-32">
+
+          {/* Animated label */}
+          <span className="hero-word text-[12px] md:text-[14px] uppercase tracking-[0.4em] font-bold text-[#111111] mb-6 block">
+            Welcome to MarketHub
+          </span>
+
+          {/* Word-by-word heading */}
+          <h1 className="text-6xl md:text-8xl lg:text-[130px] font-serif leading-[0.85] tracking-tight text-[#111111] mb-8">
+            {['Curated'].map((word, i) => (
+              <span key={i} className="hero-word inline-block mr-[0.2em]" style={{ transitionDelay: `${330 + i * 130}ms` }}>
+                {word}
+              </span>
+            ))}
+            <br />
+            <span className="italic font-light hero-word inline-block" style={{ transitionDelay: '460ms' }}>
+              Commerce.
+            </span>
+          </h1>
+
+          <p className="hero-word text-lg md:text-xl font-medium text-[#111111]/80 max-w-xl mx-auto mb-14 leading-relaxed" style={{ transitionDelay: '620ms' }}>
+            Elevate your everyday. Discover premium goods from verified vendors, or launch your own minimalist storefront today.
+          </p>
+
+          <div className="hero-word flex flex-col sm:flex-row gap-6" style={{ transitionDelay: '760ms' }}>
+            <Link 
+              to="/home" 
+              className="btn-shimmer px-12 py-4 bg-[#111111] text-[#F8F6F0] text-sm font-medium tracking-[0.2em] uppercase transition-all duration-300 hover:bg-[#8E7A60]"
+            >
+              Shop The Collection
+            </Link>
+          </div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div className="hero-word absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 z-10" style={{ transitionDelay: '900ms' }}>
+          <span className="text-[10px] uppercase tracking-[0.3em] font-bold"></span>
+          <div className="w-[1px] h-10 bg-[#111111] origin-top" style={{ animation: 'scaleY 1.5s ease-in-out infinite' }} />
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
-        <div className="inline-block bg-[#eef7f4] text-[#188367] rounded-full px-4 py-1.5 text-sm font-semibold mb-6 border border-[#eef7f4]">
-          Platform Features
+      {/* 2. INFINITE MARQUEE */}
+      <section className="mt-24 border-y border-transparent bg-[#111111] text-[#F8F6F0] py-5 overflow-hidden flex marquee-track">
+        <div className="animate-marquee whitespace-nowrap flex font-serif text-3xl italic tracking-wide">
+          <span className="mx-12">Encrypted Razorpay Checkout</span> •&nbsp;
+          <span className="mx-12">Verified Vendors</span> •&nbsp;
+          <span className="mx-12">Real-time Order Tracking</span> •&nbsp;
+          <span className="mx-12">Automated Platform Fees</span> •&nbsp;
+          <span className="mx-12">Encrypted Razorpay Checkout</span> •&nbsp;
+          <span className="mx-12">Verified Vendors</span> •&nbsp;
         </div>
-        <h2 className="text-4xl md:text-[40px] leading-tight font-bold text-[#1a1f1d] mb-6 max-w-2xl tracking-tight">
-          Everything you need to <br className="hidden md:block" />run a successful marketplace
-        </h2>
-        <p className="text-gray-500 text-[17px] mb-16 max-w-2xl leading-relaxed">
-          From secure payments to order lifecycle management, we've built the tools you need to grow.
-        </p>
+      </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[
-            { icon: '👥', title: 'Dual-User Experience', desc: 'Separate, optimized workflows for buyers and vendors. Shop seamlessly or manage your entire business—all on one platform.' },
-            { icon: '🔒', title: 'Secure Payments', desc: 'Razorpay integration ensures safe, real-time transactions with automatic backend verification and fraud protection.' },
-            { icon: '📍', title: 'Complete Order Tracking', desc: 'Track every order from payment to delivery. Real-time updates on factory processing, shipping, and final delivery status.' },
-            { icon: '💰', title: 'Smart Monetization', desc: 'Built-in platform fee system with transparent 5% commission. Automated calculations and payout management.' },
-            { icon: '📊', title: 'Vendor Dashboard', desc: 'Comprehensive tools for inventory management, order processing, analytics, and customer communication.' },
-            { icon: '🛡️', title: 'Buyer Protection', desc: 'Secure shopping experience with order tracking, verified vendors, and customer support throughout the purchase journey.' },
-          ].map((feature, idx) => (
-            <div key={idx} className="p-8 border border-gray-100 rounded-[20px] hover:border-[#188367]/30 bg-white hover:shadow-xl hover:shadow-[#188367]/5 transition-all duration-300 group cursor-default">
-              <div className="w-12 h-12 rounded-xl bg-[#fafbfb] group-hover:bg-[#eef7f4] border border-gray-50 flex items-center justify-center mb-6 transition-colors shadow-sm">
-                <span className="text-2xl">{feature.icon}</span>
+      {/* 3. FEATURED PRODUCTS */}
+      <section id="features" className="py-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-16">
+          <div>
+            <span className="label-slide-in text-[12px] uppercase tracking-[0.3em] font-bold text-[#8E7A60] mb-3 block">Storefront</span>
+            <div className="line-reveal mb-4" />
+            <h2 className="reveal-element text-4xl md:text-5xl font-serif text-[#111111]">Featured Essentials.</h2>
+          </div>
+          <Link to="/home" className="hover-underline-anim text-sm font-medium tracking-[0.2em] uppercase pb-1 hover:text-[#8E7A60] transition-colors mt-6 md:mt-0">
+            View All Goods
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+          {featuredProducts.map((product, idx) => (
+            <div
+              key={product.id}
+              className={`reveal-element delay-${(idx + 1) * 100} tilt-card group cursor-pointer`}
+            >
+              <div className="relative aspect-[3/4] overflow-hidden bg-[#EBE7DF] mb-6 reveal-image-wrapper">
+                <img 
+                  src={product.image} 
+                  alt={product.name} 
+                  className="w-full h-full object-cover reveal-image group-hover:scale-105 transition-transform duration-1000 ease-out"
+                />
+                {/* Gradient overlay on hover */}
+                <div className="product-overlay absolute inset-0" />
+                <div className="absolute bottom-0 left-0 w-full p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out">
+                  <button
+                    onClick={() => window.location.href='/login'}
+                    className="btn-shimmer w-full bg-[#111111]/90 backdrop-blur-md text-[#F8F6F0] py-4 text-sm font-medium tracking-[0.2em] uppercase hover:bg-[#8E7A60] transition-colors"
+                  >
+                    Quick Add
+                  </button>
+                </div>
               </div>
-              <h3 className="text-lg font-bold text-[#1a1f1d] mb-3">{feature.title}</h3>
-              <p className="text-gray-500 text-[15px] leading-relaxed">
-                {feature.desc}
-              </p>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.2em] font-medium text-[#8E7A60] mb-2">{product.category}</p>
+                  <h3 className="text-xl font-serif text-[#111111]">{product.name}</h3>
+                </div>
+                <span className="text-md font-medium text-[#111111]">₹{product.price}</span>
+              </div>
             </div>
           ))}
         </div>
+      </section>
 
-        <div className="mt-14 text-center">
-          <Link to="/home" className="inline-flex justify-center items-center px-8 py-3.5 bg-[#185546] text-white font-semibold rounded-lg hover:bg-[#124236] transition-all shadow-md text-[15px]">
-            Explore All Features
-          </Link>
+      {/* ── STATS BAR (counter animation) ── */}
+      <section className="py-20 px-4 bg-[#EBE7DF]">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10 text-center reveal-element">
+          {[
+            { count: 10, suffix: 'K+', label: 'Active Vendors' },
+            { count: 50, suffix: 'M+', label: 'Transactions' },
+            { count: 150, suffix: '+',  label: 'Countries' },
+            { count: 4.8, suffix: '/5', label: 'Avg Rating' },
+          ].map(({ count, suffix, label }) => (
+            <div key={label}>
+              <div
+                className="text-4xl md:text-5xl font-serif text-[#111111] mb-2"
+                data-count={count}
+                data-suffix={suffix}
+              >
+                0{suffix}
+              </div>
+              <p className="text-[11px] uppercase tracking-[0.25em] font-bold text-[#8E7A60]">{label}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Trusted Section */}
-      <section className="bg-[#185546] py-24 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-[36px] font-bold mb-4 tracking-tight">Trusted by thousands of businesses</h2>
-          <p className="text-[#9fc7bd] text-lg mb-16 max-w-2xl mx-auto">
-            Our platform powers successful marketplaces around the world
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-6">
-             <div className="flex flex-col items-center text-center px-2">
-               <div className="text-[40px] sm:text-[44px] md:text-[56px] font-bold mb-2 tracking-tight leading-none">$250M+</div>
-               <div className="text-[15px] font-bold mb-2">Total Transaction Volume</div>
-               <div className="text-[13px] text-[#9fc7bd] max-w-[200px] leading-relaxed">Processed securely through our platform</div>
-             </div>
-             <div className="flex flex-col items-center text-center px-2">
-               <div className="text-[40px] sm:text-[44px] md:text-[56px] font-bold mb-2 tracking-tight leading-none">99.9%</div>
-               <div className="text-[15px] font-bold mb-2">Payment Success Rate</div>
-               <div className="text-[13px] text-[#9fc7bd] max-w-[200px] leading-relaxed">With Razorpay integration</div>
-             </div>
-             <div className="flex flex-col items-center text-center px-2">
-               <div className="text-[40px] sm:text-[44px] md:text-[56px] font-bold mb-2 tracking-tight leading-none">10k+</div>
-               <div className="text-[15px] font-bold mb-2">Active Vendors</div>
-               <div className="text-[13px] text-[#9fc7bd] max-w-[200px] leading-relaxed">Selling across 150+ countries</div>
-             </div>
-             <div className="flex flex-col items-center text-center px-2">
-               <div className="text-[40px] sm:text-[44px] md:text-[56px] font-bold mb-2 tracking-tight leading-none">4.8/5</div>
-               <div className="text-[15px] font-bold mb-2">Average Rating</div>
-               <div className="text-[13px] text-[#9fc7bd] max-w-[200px] leading-relaxed">From verified buyers and sellers</div>
-             </div>
+      {/* 4. EDITORIAL MANIFESTO SECTION */}
+      <section id="ethos" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+          
+          <div className="lg:col-span-5 reveal-element">
+            <span className="label-slide-in text-[12px] uppercase tracking-[0.3em] font-bold text-[#8E7A60] mb-4 block">Our Ethos</span>
+            <h2 className="text-4xl md:text-5xl font-serif mb-8 text-[#111111] leading-[1.1]">
+              A marketplace built for <br/><span className="italic text-[#8E7A60]">authenticity.</span>
+            </h2>
+            <p className="font-medium text-[#111111]/70 leading-relaxed mb-8 text-lg">
+              We provide the infrastructure for independent brands to thrive. From encrypted Razorpay checkouts to seamless vendor dashboards, we handle the complex logistics so creators can focus on crafting the extraordinary.
+            </p>
+            <Link 
+              to="/signup" 
+              className="hover-underline-anim inline-flex items-center gap-4 text-sm font-medium tracking-[0.2em] uppercase pb-2 hover:text-[#8E7A60] transition-colors"
+            >
+              Start Selling With Us
+              <span className="text-lg leading-none transition-transform duration-300 group-hover:translate-x-1">→</span>
+            </Link>
           </div>
+
+          <div className="lg:col-span-7 reveal-image-wrapper h-[70vh] w-full bg-[#EBE7DF]">
+            <img 
+              src="https://images.pexels.com/photos/1036622/pexels-photo-1036622.jpeg?auto=compress&cs=tinysrgb&w=1200" 
+              alt="Editorial Fashion" 
+              className="w-full h-full object-cover reveal-image"
+            />
+          </div>
+
         </div>
       </section>
 
-      {/* How it Works Section */}
-      <section id="how-it-works" className="bg-[#fafbfb] py-24 md:py-32 text-center">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="inline-block bg-[#fcf2ef] text-[#ef6b4c] rounded-full px-4 py-1.5 text-sm font-semibold mb-6">
-            How It Works
-          </div>
-          <h2 className="text-4xl md:text-[40px] font-bold text-[#1a1f1d] mb-4 tracking-tight">
-            Get started in minutes
+      {/* 5. DARK FOOTER CTA */}
+      <section className="bg-[#111111] text-[#F8F6F0] py-40 px-4 text-center mt-20 relative overflow-hidden">
+
+        {/* Subtle radial gradient bg */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse 70% 60% at 50% 100%, rgba(142,122,96,0.12) 0%, transparent 70%)'
+        }} />
+
+        <div className="relative max-w-4xl mx-auto">
+          <span className="label-slide-in text-[12px] uppercase tracking-[0.4em] font-bold text-[#8E7A60] mb-8 block">
+            Join The Movement
+          </span>
+
+          {/* Animated divider */}
+          <div className="line-reveal mx-auto mb-10" style={{ background: 'rgba(142,122,96,0.4)' }} />
+
+          <h2 className="text-5xl md:text-7xl font-serif mb-12 reveal-element delay-100">
+            Elevate your <span className="italic text-[#8E7A60]">standard.</span>
           </h2>
-          <p className="text-gray-500 text-[17px] mb-12">
-            Whether you're selling or buying, our platform makes it simple
-          </p>
-
-          <div className="inline-flex bg-white rounded-xl p-1.5 border border-gray-200 mb-16 shadow-sm">
-             <button 
-                onClick={() => setActiveTab('vendors')}
-                className={`px-8 py-2.5 rounded-lg text-[15px] font-semibold transition-all duration-200 ${activeTab === 'vendors' ? 'bg-[#185546] text-white shadow-md' : 'text-gray-500 hover:text-[#1a1f1d]'}`}
-             >
-               For Vendors
-             </button>
-             <button 
-                onClick={() => setActiveTab('buyers')}
-                className={`px-8 py-2.5 rounded-lg text-[15px] font-semibold transition-all duration-200 ${activeTab === 'buyers' ? 'bg-[#185546] text-white shadow-md' : 'text-gray-500 hover:text-[#1a1f1d]'}`}
-             >
-               For Buyers
-             </button>
+          
+          <div className="flex flex-col sm:flex-row justify-center gap-6 reveal-element delay-200">
+            <Link 
+              to="/home" 
+              className="btn-shimmer cta-pulse px-14 py-5 bg-[#F8F6F0] text-[#111111] text-sm font-medium tracking-[0.2em] uppercase hover:bg-[#8E7A60] hover:text-[#F8F6F0] transition-colors"
+            >
+              Enter Marketplace
+            </Link>
+            <Link 
+              to="/signup" 
+              className="btn-shimmer px-14 py-5 border border-[#F8F6F0]/30 text-[#F8F6F0] text-sm font-medium tracking-[0.2em] uppercase hover:bg-[#F8F6F0]/10 transition-colors"
+            >
+              Vendor Portal
+            </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
-             {steps.map((step, idx) => (
-               <div key={idx} className="p-8 border border-gray-100 rounded-[20px] bg-white shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-10px_rgba(0,0,0,0.1)] transition-all h-full">
-                  <div className="text-[40px] font-light text-[#b3cec6] mb-4 leading-none">{step.num}</div>
-                  <h3 className="text-lg font-bold text-[#1a1f1d] mb-3">{step.title}</h3>
-                  <p className="text-gray-500 text-[15px] leading-relaxed">{step.desc}</p>
-               </div>
-             ))}
-          </div>
-
-          <div className="mt-16">
-            <Link to="/signup" className="inline-flex justify-center items-center px-8 py-3.5 bg-[#ef6b4c] text-white font-semibold rounded-lg hover:bg-[#d65a3d] transition-all shadow-md text-[15px]">
-              Start Selling Now
+          <div className="mt-20 reveal-element delay-300">
+            <Link 
+              to="/admin" 
+              className="hover-underline-anim text-[10px] uppercase tracking-[0.3em] font-bold text-[#F8F6F0]/30 hover:text-[#8E7A60] transition-colors"
+            >
+              Platform Administration
             </Link>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section id="pricing" className="relative py-24 md:py-32 overflow-hidden bg-[#fafbfb]">
-         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-[1000px] h-[500px] bg-gradient-to-tr from-[#eef7f4] via-white to-[#fcf2ef] blur-[80px] -z-10 rounded-full opacity-80"></div>
-         
-         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
-            <div className="bg-white/90 backdrop-blur-2xl rounded-3xl p-10 md:p-16 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white w-full">
-               <h2 className="text-4xl md:text-[44px] font-bold text-[#1a1f1d] mb-6 leading-tight tracking-tight">
-                  Ready to grow your<br/> <span className="text-[#188367]">marketplace business?</span>
-               </h2>
-               <p className="text-gray-500 text-[17px] mb-10 max-w-xl mx-auto leading-relaxed">
-                  Join thousands of successful vendors and buyers on our platform. Start selling or shopping today with zero setup fees.
-               </p>
-               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 w-full">
-                  <Link to="/signup" className="inline-flex justify-center items-center px-8 py-4 bg-[#ef6b4c] text-white font-semibold rounded-lg hover:bg-[#d65a3d] transition-all shadow-md w-full sm:w-auto text-[15px]">
-                     Create Vendor Account
-                  </Link>
-                  <Link to="/home" className="inline-flex justify-center items-center px-8 py-4 bg-[#185546] text-white font-semibold rounded-lg hover:bg-[#124236] transition-all shadow-md w-full sm:w-auto text-[15px]">
-                     Browse Marketplace
-                  </Link>
-               </div>
-               <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-[14px] font-medium text-gray-500">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-[18px] h-[18px] rounded-full bg-[#188367] text-white flex items-center justify-center">
-                      <CheckIcon className="w-2.5 h-2.5" />
-                    </div>
-                    No credit card required
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-[18px] h-[18px] rounded-full bg-[#188367] text-white flex items-center justify-center">
-                      <CheckIcon className="w-2.5 h-2.5" />
-                    </div>
-                    Free to start
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-[18px] h-[18px] rounded-full bg-[#188367] text-white flex items-center justify-center">
-                      <CheckIcon className="w-2.5 h-2.5" />
-                    </div>
-                    24/7 support
-                  </div>
-               </div>
-            </div>
-         </div>
-      </section>
     </div>
   )
 }

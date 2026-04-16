@@ -1,427 +1,384 @@
-import { useState, useEffect, useCallback } from 'react'
+/* src/pages/VendorDashboard.jsx */
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card } from '../components/Card'
-import { Button } from '../components/Button'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import toast from 'react-hot-toast'
 
-export const VendorDashboard = () => {
-  const [activeTab, setActiveTab] = useState('products')
-  const [products, setProducts] = useState([])
-  const [orders, setOrders] = useState([])
-  const [loadingProducts, setLoadingProducts] = useState(true)
-  const [loadingOrders, setLoadingOrders] = useState(true)
-  const { user, isAuthenticated } = useAuth()
-  const navigate = useNavigate()
-
-  const fetchProducts = useCallback(async () => {
-    setLoadingProducts(true)
-    try {
-      const res = await api.get('/vendor/products/')
-      setProducts(res.data)
-    } catch {
-      toast.error('Failed to fetch products')
-    } finally {
-      setLoadingProducts(false)
-    }
-  }, [])
-
-  const fetchOrders = useCallback(async () => {
-    setLoadingOrders(true)
-    try {
-      const res = await api.get('/orders/')
-      setOrders(res.data)
-    } catch {
-      toast.error('Failed to fetch orders')
-    } finally {
-      setLoadingOrders(false)
-    }
-  }, [])
-
+/* ── fade-up on intersection ── */
+const useFadeIn = (delay = 0) => {
+  const ref = useRef(null)
+  const [visible, setVisible] = useState(false)
   useEffect(() => {
-    if (!isAuthenticated || user?.role !== 'vendor') {
-      navigate('/')
-      return
-    }
-    fetchProducts()
-    fetchOrders()
-  }, [isAuthenticated, user, navigate, fetchProducts, fetchOrders])
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold: 0.08 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+  return [ref, {
+    opacity: visible ? 1 : 0,
+    transform: visible ? 'translateY(0)' : 'translateY(16px)',
+    transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms`,
+  }]
+}
 
-  const handleDeleteProduct = async (productId) => {
-    if (!window.confirm('Are you sure you want to delete this product?')) return
-    try {
-      await api.delete(`/vendor/products/${productId}/`)
-      setProducts(products.filter((p) => p.id !== productId))
-      toast.success('Product deleted successfully')
-    } catch {
-      toast.error('Failed to delete product.')
-    }
-  }
-
-  const handleUpdateStatus = async (orderId, newStatus) => {
-    try {
-      await api.patch(`/vendor/orders/${orderId}/status/`, { status: newStatus })
-      setOrders(orders.map(o =>
-        o.id === orderId ? { ...o, status: newStatus } : o
-      ))
-      toast.success('Order status updated!')
-    } catch {
-      toast.error('Failed to update order status.')
-    }
-  }
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-orange-50 text-orange-600 border-none'
-      case 'sent_to_factory':
-        return 'bg-blue-50 text-blue-600 border-none'
-      case 'shipped':
-        return 'bg-[#eef7f4] text-[#185546] border-none'
-      case 'delivered':
-        return 'bg-purple-50 text-purple-600 border-none'
-      default:
-        return 'bg-gray-50 text-gray-600 border-none'
-    }
-  }
-
+/* ── tab content fade-slide ── */
+const TabPanel = ({ children }) => {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { const t = setTimeout(() => setMounted(true), 20); return () => clearTimeout(t) }, [])
   return (
-    <div className="min-h-screen bg-white font-sans">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="mb-10">
-            <h1 className="text-[40px] md:text-[48px] font-bold text-[#1a1f1d] leading-tight tracking-tight">Vendor <span className="text-[#185546]">Command Center</span></h1>
-            <p className="text-gray-500 mt-2 text-[17px]">Manage your products and dispatch orders seamlessly.</p>
-        </div>
-
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar */}
-          <div className="lg:w-64 flex-shrink-0">
-            <div className="sticky top-28 bg-white border border-gray-100 shadow-sm rounded-[20px] p-4">
-              <nav className="space-y-2 relative">
-                {[
-                  { id: 'products', name: 'Inventory', icon: '📦' },
-                  { id: 'add-product', name: 'New Product', icon: '➕' },
-                  { id: 'orders', name: 'Order Queue', icon: '🧾' },
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id)}
-                    className={`w-full text-left px-5 py-3.5 rounded-xl flex items-center gap-3 font-semibold transition-all duration-200 text-[15px] ${
-                      activeTab === item.id
-                        ? 'bg-[#185546] text-white shadow-md'
-                        : 'text-gray-500 hover:text-[#1a1f1d] hover:bg-[#fafbfb]'
-                    }`}
-                  >
-                    <span>{item.icon}</span> {item.name}
-                  </button>
-                ))}
-              </nav>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="flex-1">
-            {activeTab === 'products' && (
-              <div className="border border-gray-100 shadow-sm rounded-[20px] bg-white p-8">
-                <div className="flex justify-between items-center mb-8">
-                    <h2 className="text-[22px] font-bold text-[#1a1f1d]">Live Inventory</h2>
-                    <span className="bg-[#eef7f4] text-[#185546] font-bold px-4 py-1.5 rounded-full text-[13px]">{products.length} Items</span>
-                </div>
-
-                {loadingProducts ? (
-                  <div className="flex items-center justify-center py-16">
-                    <div className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-[#185546]"></div>
-                      <p className="text-gray-500 mt-4 font-medium">Loading inventory...</p>
-                    </div>
-                  </div>
-                ) : products.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-gray-50">
-                          <th className="pb-4 px-2 font-medium text-gray-400 uppercase tracking-wider text-[11px]">Product Name</th>
-                          <th className="pb-4 px-2 font-medium text-gray-400 uppercase tracking-wider text-[11px]">Price</th>
-                          <th className="pb-4 px-2 font-medium text-gray-400 uppercase tracking-wider text-[11px] text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-50">
-                        {products.map((product) => (
-                          <tr key={product.id} className="hover:bg-[#fafbfb] transition-colors">
-                            <td className="py-6 px-2 font-medium text-[#1a1f1d] text-[15px]">{product.name}</td>
-                            <td className="py-6 px-2 text-[#185546] font-bold text-[15px]">₹{parseFloat(product.price).toFixed(2)}</td>
-                            <td className="py-6 px-2 text-right">
-                              <button
-                                onClick={() => handleDeleteProduct(product.id)}
-                                className="text-red-500 bg-red-50 hover:bg-red-500 hover:text-white px-4 py-2 rounded-lg font-semibold text-[13px] transition-colors"
-                              >
-                                Delete
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="text-center py-16 bg-[#fafbfb] rounded-2xl border border-dashed border-gray-200">
-                    <div className="text-5xl mb-4 opacity-50">📋</div>
-                    <p className="text-[#1a1f1d] font-bold text-xl mb-2">No products loaded</p>
-                    <p className="text-gray-500 text-[15px]">Your inventory is empty. Add a product to get started.</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'add-product' && (
-              <AddProductForm onSuccess={() => { fetchProducts(); setActiveTab('products') }} />
-            )}
-
-            {activeTab === 'orders' && (
-              <div className="border border-gray-100 shadow-sm rounded-[20px] bg-white p-8">
-                <div className="flex justify-between items-center mb-8">
-                    <h2 className="text-[22px] font-bold text-[#1a1f1d]">Order Queue</h2>
-                    <span className="bg-[#eef7f4] text-[#185546] font-bold px-4 py-1.5 rounded-full text-[13px]">{orders.length} Active</span>
-                </div>
-
-                {loadingOrders ? (
-                  <div className="flex items-center justify-center py-16">
-                    <div className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-[#185546]"></div>
-                      <p className="text-gray-500 mt-4 font-medium">Loading orders...</p>
-                    </div>
-                  </div>
-                ) : orders.length > 0 ? (
-                  <div className="space-y-6">
-                    {orders.map((order) => (
-                      <div key={order.id} className="bg-white border text-left border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                        {order.status === 'shipped' && <div className="absolute top-0 left-0 w-1.5 h-full bg-[#185546]"></div>}
-                        {order.status === 'sent_to_factory' && <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>}
-                        {order.status === 'pending' && <div className="absolute top-0 left-0 w-1.5 h-full bg-[#ef6b4c]"></div>}
-                        {order.status === 'delivered' && <div className="absolute top-0 left-0 w-1.5 h-full bg-purple-500"></div>}
-
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pl-2">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-4 mb-2">
-                                <h3 className="font-bold text-[18px] text-[#1a1f1d]">
-                                  {order.product_details?.name || `Product #${order.product}`}
-                                </h3>
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${getStatusColor(order.status)}`}>
-                                  {order.status.replace(/_/g, ' ')}
-                                </span>
-                            </div>
-                            <div className="text-gray-500 grid md:grid-cols-2 gap-4 mt-4 text-[14px] bg-[#fafbfb] p-4 rounded-xl border border-gray-50">
-                                <div>
-                                  <p className="mb-2"><strong className="text-[#1a1f1d]">Buyer:</strong> {order.buyer_name} ({order.buyer_email})</p>
-                                  <p><strong className="text-[#1a1f1d]">Quantity:</strong> {order.quantity}</p>
-                                </div>
-                                <div>
-                                  <p className="mb-2"><strong className="text-[#1a1f1d]">Address:</strong> {order.address}</p>
-                                  <p><strong className="text-[#1a1f1d]">Phone:</strong> {order.phone}</p>
-                                </div>
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-3 w-full md:w-auto">
-                            {order.status === 'pending' && (
-                              <button
-                                onClick={() => handleUpdateStatus(order.id, 'sent_to_factory')}
-                                className="w-full md:w-auto bg-[#1a1f1d] text-white px-5 py-2.5 rounded-lg hover:bg-black transition-colors font-semibold text-[14px]"
-                              >
-                                Dispatch to Factory 🏭
-                              </button>
-                            )}
-                            {order.status === 'sent_to_factory' && (
-                              <button
-                                onClick={() => handleUpdateStatus(order.id, 'shipped')}
-                                className="w-full md:w-auto bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-[14px]"
-                              >
-                                Mark as Shipped 🚚
-                              </button>
-                            )}
-                            {order.status === 'shipped' && (
-                              <button
-                                onClick={() => handleUpdateStatus(order.id, 'delivered')}
-                                className="w-full md:w-auto bg-[#185546] text-white px-5 py-2.5 rounded-lg hover:bg-[#124236] transition-colors font-semibold text-[14px]"
-                              >
-                                Factory: Mark Delivered ✅
-                              </button>
-                            )}
-                            {order.status === 'delivered' && (
-                              <span className="text-purple-600 font-bold px-4 py-2 bg-purple-50 rounded-lg text-[14px]">
-                                Delivered 🎉
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-16 bg-[#fafbfb] rounded-2xl border border-dashed border-gray-200">
-                    <p className="text-gray-500 text-[15px]">No active orders right now.</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+    <div style={{
+      opacity: mounted ? 1 : 0,
+      transform: mounted ? 'translateY(0)' : 'translateY(14px)',
+      transition: 'opacity 0.45s ease, transform 0.45s ease',
+    }}>
+      {children}
     </div>
   )
 }
 
-function AddProductForm({ onSuccess }) {
-  const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    description: '',
-  })
-  const [imageFile, setImageFile] = useState(null)
-  const [imagePreview, setImagePreview] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+/* ── labelled field with staggered fade ── */
+const Field = ({ label, delay = 0, children }) => {
+  const [ref, style] = useFadeIn(delay)
+  return (
+    <div ref={ref} style={style}>
+      <label className="block text-[9px] uppercase tracking-[0.3em] font-bold text-[#8E7A60] mb-3">
+        {label}
+      </label>
+      {children}
+    </div>
+  )
+}
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+const inputCls = `w-full bg-transparent border-b border-[#111111]/20 py-3 text-[#111111]
+  font-serif text-lg placeholder:text-[#111111]/20 outline-none
+  focus:border-[#111111] transition-colors duration-300`
+
+export const VendorDashboard = () => {
+  const [activeTab, setActiveTab] = useState('products')
+  const [products, setProducts]   = useState([])
+  const [orders, setOrders]       = useState([])
+  const { user, isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+
+  /* form state */
+  const [formData, setFormData]       = useState({ name: '', price: '', description: '' })
+  const [imageFile, setImageFile]     = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+  const [submitting, setSubmitting]   = useState(false)
+  const [dragOver, setDragOver]       = useState(false)
+  const fileInputRef = useRef(null)
+
+  /* heading refs */
+  const [labelRef,   labelStyle]   = useFadeIn(0)
+  const [headingRef, headingStyle] = useFadeIn(120)
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [prodRes, orderRes] = await Promise.all([
+        api.get('/vendor/products/'),
+        api.get('/orders/'),
+      ])
+      setProducts(prodRes.data)
+      setOrders(orderRes.data)
+    } catch {
+      console.error('Sync failed')
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== 'vendor') { navigate('/'); return }
+    fetchData()
+  }, [isAuthenticated, user, navigate, fetchData])
+
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    try {
+      await api.patch(`/vendor/orders/${orderId}/status/`, { status: newStatus })
+      fetchData()
+      toast.success('Status synchronized')
+    } catch {
+      toast.error('Sync failed')
+    }
   }
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      setImageFile(file)
-      setImagePreview(URL.createObjectURL(file))
-    }
+  /* ── image helpers ── */
+  const applyImage = (file) => {
+    if (!file || !file.type.startsWith('image/')) return
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
-    setLoading(true)
-
+    if (!imageFile) { toast.error('Please add a product image'); return }
+    setSubmitting(true)
     try {
-      const data = new FormData()
-      data.append('name', formData.name)
-      data.append('price', formData.price)
-      data.append('description', formData.description)
-      if (imageFile) {
-        data.append('image', imageFile)
-      }
-
-      await api.post('/vendor/products/', data, {
+      const payload = new FormData()
+      payload.append('name',        formData.name)
+      payload.append('price',       formData.price)
+      payload.append('description', formData.description)
+      payload.append('image',       imageFile)
+      await api.post('/vendor/products/', payload, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-
+      toast.success('Product published')
       setFormData({ name: '', price: '', description: '' })
       setImageFile(null)
       setImagePreview(null)
-      toast.success('Product published successfully!')
-      if (onSuccess) onSuccess()
-    } catch (err) {
-      const msg = err.response?.data
-      if (typeof msg === 'object') {
-        const errors = Object.entries(msg)
-          .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
-          .join(' | ')
-        setError(errors || 'Failed to create product.')
-      } else {
-        setError('Failed to create product. Please try again.')
-      }
+      fetchData()
+      setActiveTab('products')
+    } catch {
+      toast.error('Failed to publish product')
     } finally {
-      setLoading(false)
+      setSubmitting(false)
     }
   }
 
   return (
-    <div className="border border-gray-100 shadow-sm rounded-[20px] bg-white p-8">
-      <h2 className="text-[22px] font-bold text-[#1a1f1d] mb-2">Create New Product</h2>
-      <p className="text-gray-500 mb-8 text-[15px]">Fill in the details to list your item on the marketplace.</p>
+    <div className="min-h-screen bg-[#F8F6F0] font-sans pt-32 pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 font-medium px-4 py-3 rounded-lg mb-6 flex items-center gap-3">
-          <span>⚠️</span> {error}
+        {/* ── Hero ── */}
+        <div className="mb-16">
+          <span ref={labelRef} style={labelStyle}
+            className="text-[10px] uppercase tracking-[0.4em] font-bold text-[#8E7A60] mb-4 block">
+            Studio
+          </span>
+          <h1 ref={headingRef} style={headingStyle}
+            className="text-6xl font-serif text-[#111111]">
+            Command <span className="italic">Center.</span>
+          </h1>
         </div>
-      )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="mb-6">
-          <label className="block text-[11px] font-semibold text-gray-400 mb-3 uppercase tracking-wider">Product Image</label>
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
-            <div className={`w-32 h-32 flex-shrink-0 rounded-2xl border-2 border-dashed flex items-center justify-center overflow-hidden transition-all ${imagePreview ? 'border-[#185546]' : 'border-gray-200 bg-gray-50'}`}>
-              {imagePreview ? (
-                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-4xl opacity-40">📸</span>
-              )}
-            </div>
-            <div>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                id="image-upload"
-                className="hidden"
-              />
-              <label
-                htmlFor="image-upload"
-                className="cursor-pointer bg-white border border-gray-200 text-[#1a1f1d] font-semibold px-6 py-2.5 rounded-lg hover:bg-gray-50 transition-colors inline-block text-[14px]"
-              >
-                Choose Image
-              </label>
-              <p className="text-gray-400 text-[13px] mt-3">Recommended size: 800x800px</p>
-            </div>
+        <div className="flex flex-col lg:flex-row gap-16">
+
+          {/* ── Sidebar ── */}
+          <div className="lg:w-48 flex-shrink-0">
+            <nav className="flex lg:flex-col gap-8 sticky top-40">
+              {[
+                { id: 'products', name: 'Inventory', count: products.length },
+                { id: 'orders',   name: 'Queue',     count: orders.length   },
+                { id: 'add',      name: 'List New',  count: null            },
+              ].map((item, i) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  style={{ animation: `fadeSlideIn 0.5s ease ${i * 100 + 200}ms both` }}
+                  className="text-left group transition-all duration-500"
+                >
+                  <p className={`text-[11px] uppercase tracking-[0.3em] font-bold transition-colors duration-300 ${
+                    activeTab === item.id ? 'text-[#111111]' : 'text-[#111111]/20 group-hover:text-[#111111]'
+                  }`}>
+                    {item.name}
+                  </p>
+                  {item.count !== null && (
+                    <span className="text-[10px] font-medium text-[#8E7A60]">{item.count} items</span>
+                  )}
+                  <div className="h-[1px] bg-[#111111] mt-2 transition-all duration-500"
+                    style={{ width: activeTab === item.id ? '100%' : '0px' }} />
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* ── Content ── */}
+          <div className="flex-1">
+
+            {/* INVENTORY */}
+            {activeTab === 'products' && (
+              <TabPanel key="products">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {products.length > 0 ? products.map((p, i) => (
+                    <div key={p.id}
+                      style={{ animation: `fadeSlideIn 0.55s ease ${i * 100}ms both` }}
+                      className="group relative aspect-square bg-[#EBE7DF] overflow-hidden rounded-lg cursor-pointer">
+                      {p.image && (
+                        <img src={p.image} alt=""
+                          className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-[900ms] ease-out" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#111111]/80 via-transparent to-transparent p-6 flex flex-col justify-end">
+                        <h3 className="text-white font-serif text-2xl group-hover:-translate-y-1 transition-transform duration-400">
+                          {p.name}
+                        </h3>
+                        <p className="text-white/60 text-xs uppercase tracking-widest mt-2 group-hover:text-white/80 transition-colors duration-400">
+                          ₹{parseFloat(p.price).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  )) : (
+                    <div style={{ animation: 'fadeSlideIn 0.5s ease 100ms both' }}
+                      className="col-span-2 py-20 text-center border border-dashed border-[#111111]/10 rounded-2xl">
+                      <p className="font-serif italic text-2xl text-[#111111]/20">No items in inventory yet.</p>
+                      <button onClick={() => setActiveTab('add')}
+                        className="mt-6 text-[11px] uppercase tracking-widest font-bold border-b border-[#111111] pb-1 hover:text-[#8E7A60] hover:border-[#8E7A60] transition-colors duration-300">
+                        Add First Product →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </TabPanel>
+            )}
+
+            {/* ORDERS */}
+            {activeTab === 'orders' && (
+              <TabPanel key="orders">
+                <div className="space-y-8">
+                  {orders.length > 0 ? orders.map((order, i) => (
+                    <div key={order.id}
+                      style={{ animation: `fadeSlideIn 0.5s ease ${i * 90}ms both` }}
+                      className="p-8 border border-[#111111]/5 bg-[#EBE7DF]/30 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-8 hover:bg-[#EBE7DF]/60 hover:shadow-sm transition-all duration-400">
+                      <div className="text-center md:text-left">
+                        <p className="text-[9px] uppercase tracking-[0.2em] font-bold text-[#8E7A60] mb-2">Order #{order.id}</p>
+                        <h3 className="text-2xl font-serif text-[#111111]">{order.product_details?.name}</h3>
+                        <p className="text-sm text-[#111111]/40 mt-1">To: {order.buyer_name} • {order.address}</p>
+                      </div>
+                      <div className="flex flex-col gap-4 w-full md:w-auto">
+                        <span className="text-center text-[10px] uppercase tracking-widest font-bold py-2 px-4 bg-[#111111] text-[#F8F6F0] rounded-full">
+                          {order.status.replace(/_/g, ' ')}
+                        </span>
+                        {order.status === 'pending' && (
+                          <button onClick={() => handleUpdateStatus(order.id, 'shipped')}
+                            className="text-[10px] uppercase tracking-widest font-bold border-b border-[#111111] pb-1 hover:text-[#8E7A60] hover:border-[#8E7A60] transition-colors duration-300">
+                            Dispatch Good →
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )) : (
+                    <div style={{ animation: 'fadeSlideIn 0.5s ease 100ms both' }} className="py-20 text-center">
+                      <p className="font-serif italic text-2xl text-[#111111]/20">No orders yet.</p>
+                    </div>
+                  )}
+                </div>
+              </TabPanel>
+            )}
+
+            {/* ADD PRODUCT */}
+            {activeTab === 'add' && (
+              <TabPanel key="add">
+                <div className="max-w-xl">
+                  <p style={{ animation: 'fadeSlideIn 0.5s ease 0ms both' }}
+                    className="font-serif italic text-3xl text-[#111111] mb-14 leading-snug">
+                    Introduce a new good<br />to the collection.
+                  </p>
+
+                  <form onSubmit={handleSubmit} className="space-y-10">
+
+                    {/* Image drop zone */}
+                    <Field label="Product Image" delay={80}>
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+                        onDragLeave={() => setDragOver(false)}
+                        onDrop={(e) => { e.preventDefault(); setDragOver(false); applyImage(e.dataTransfer.files[0]) }}
+                        className={`relative w-full aspect-video rounded-xl border-2 border-dashed cursor-pointer
+                          flex items-center justify-center overflow-hidden transition-all duration-300
+                          ${dragOver
+                            ? 'border-[#111111] bg-[#EBE7DF]/60 scale-[1.01]'
+                            : 'border-[#111111]/15 bg-[#EBE7DF]/30 hover:border-[#111111]/35 hover:bg-[#EBE7DF]/50'
+                          }`}
+                      >
+                        {imagePreview ? (
+                          <>
+                            <img src={imagePreview} alt="preview"
+                              className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" />
+                            <div className="absolute inset-0 bg-[#111111]/0 hover:bg-[#111111]/30 transition-all duration-300 flex items-center justify-center">
+                              <span className="opacity-0 hover:opacity-100 text-white text-[10px] uppercase tracking-widest font-bold transition-opacity duration-300">
+                                Change Image
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-center px-8 pointer-events-none">
+                            <p className="text-4xl mb-3 text-[#111111]/20">↑</p>
+                            <p className="text-[10px] uppercase tracking-[0.25em] font-bold text-[#111111]/25">
+                              Drop image here or click to browse
+                            </p>
+                            <p className="text-[9px] text-[#8E7A60]/60 mt-2 tracking-wider">PNG, JPG, WEBP</p>
+                          </div>
+                        )}
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => applyImage(e.target.files[0])}
+                          className="hidden"
+                        />
+                      </div>
+                    </Field>
+
+                    {/* Name */}
+                    <Field label="Product Name" delay={160}>
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
+                        required
+                        placeholder="e.g. Hand-loomed Silk Scarf"
+                        className={inputCls}
+                      />
+                    </Field>
+
+                    {/* Price */}
+                    <Field label="Price (₹)" delay={240}>
+                      <div className="relative">
+                        <span className="absolute left-0 top-3 font-serif text-lg text-[#111111]/25 pointer-events-none select-none">
+                          ₹
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={formData.price}
+                          onChange={e => setFormData(p => ({ ...p, price: e.target.value }))}
+                          required
+                          placeholder="0.00"
+                          className={`${inputCls} pl-5`}
+                        />
+                      </div>
+                    </Field>
+
+                    {/* Description */}
+                    <Field label="Story & Details" delay={320}>
+                      <textarea
+                        rows={4}
+                        value={formData.description}
+                        onChange={e => setFormData(p => ({ ...p, description: e.target.value }))}
+                        placeholder="Describe what makes this product special..."
+                        className={`${inputCls} resize-none`}
+                      />
+                    </Field>
+
+                    {/* Submit */}
+                    <div style={{ animation: 'fadeSlideIn 0.5s ease 420ms both' }}>
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className={`group flex items-center gap-4 text-[11px] uppercase tracking-[0.3em] font-bold
+                          transition-all duration-300
+                          ${submitting ? 'opacity-40 cursor-not-allowed' : 'hover:gap-6'}`}
+                      >
+                        <span className="w-10 h-[1px] bg-[#111111] transition-all duration-300 group-hover:w-14 group-hover:bg-[#8E7A60]" />
+                        <span className="transition-colors duration-300 group-hover:text-[#8E7A60]">
+                          {submitting ? 'Publishing...' : 'Publish Product'}
+                        </span>
+                      </button>
+                    </div>
+
+                  </form>
+                </div>
+              </TabPanel>
+            )}
+
           </div>
         </div>
+      </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-            <div className="md:col-span-1">
-            <label className="block text-[11px] font-semibold text-gray-400 mb-2 uppercase tracking-wider">Product Title</label>
-            <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className="w-full px-5 py-3.5 rounded-xl border border-gray-200 text-[#1a1f1d] focus:border-[#185546] focus:ring-4 focus:ring-[#185546]/10 bg-[#fafbfb] focus:bg-white transition-all outline-none font-medium text-[15px]"
-                placeholder="e.g. Vintage Leather Boots"
-            />
-            </div>
 
-            <div className="md:col-span-1">
-            <label className="block text-[11px] font-semibold text-gray-400 mb-2 uppercase tracking-wider">Price (₹)</label>
-            <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                required
-                className="w-full px-5 py-3.5 rounded-xl border border-gray-200 text-[#1a1f1d] focus:border-[#185546] focus:ring-4 focus:ring-[#185546]/10 bg-[#fafbfb] focus:bg-white transition-all outline-none font-medium text-[15px]"
-                placeholder="0.00"
-            />
-            </div>
-        </div>
-
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-400 mb-2 uppercase tracking-wider">Story & Details</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            rows="5"
-            className="w-full px-5 py-3.5 rounded-xl border border-gray-200 text-[#1a1f1d] focus:border-[#185546] focus:ring-4 focus:ring-[#185546]/10 bg-[#fafbfb] focus:bg-white transition-all outline-none text-[15px]"
-            placeholder="Describe what makes this product amazing..."
-          ></textarea>
-        </div>
-
-        <button 
-          type="submit" 
-          disabled={loading}
-          className="w-full md:w-auto bg-[#ef6b4c] text-white px-8 py-3.5 rounded-lg hover:bg-[#d65a3d] transition-all font-semibold text-[15px] shadow-sm disabled:opacity-70"
-        >
-          {loading ? 'Publishing...' : 'Publish Product 🚀'}
-        </button>
-      </form>
     </div>
   )
 }
