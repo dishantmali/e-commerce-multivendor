@@ -195,6 +195,47 @@ class AdminPendingVendorsView(generics.ListAPIView):
         ]
 
         return Response(data)
+    
+# Add this at the bottom of the Admin APIs section in views.py
+
+class AdminUserListView(generics.ListAPIView):
+    serializer_class = CustomUserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.role != 'admin':
+            raise PermissionDenied("Only admin can view users.")
+        # Returns only buyers (you could remove the filter to see vendors too)
+        return CustomUser.objects.filter(role='buyer').order_by('-date_joined')
+
+class AdminCategoryListCreateView(generics.ListCreateAPIView):
+    serializer_class = CategorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Category.objects.all()
+
+    def perform_create(self, serializer):
+        if self.request.user.role != 'admin':
+            raise PermissionDenied("Only admin can create categories.")
+        serializer.save()
+
+class AdminCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = CategorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Category.objects.all()
+
+    def perform_destroy(self, instance):
+        if self.request.user.role != 'admin':
+            raise PermissionDenied("Only admin can delete categories.")
+        instance.delete()
+
+class AdminOrderListView(generics.ListAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.role != 'admin':
+            raise PermissionDenied("Only admin can view global orders.")
+        return Order.objects.all().order_by('-created_at')
 
 # ---------------- Razorpay Payment APIs ---------------- #
 class CreateRazorpayOrderView(APIView):

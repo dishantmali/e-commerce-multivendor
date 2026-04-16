@@ -15,6 +15,8 @@ from .views import (
     # Admin
     AdminProductApprovalView, AdminVendorApprovalView,
     AdminPendingProductsView, AdminPendingVendorsView,
+    AdminUserListView, AdminCategoryListCreateView, 
+    AdminCategoryDetailView, AdminOrderListView,
     # Category
     CategoryListView,
     # Cart
@@ -42,9 +44,12 @@ urlpatterns = [
     # ---------------- ADMIN ---------------- #
     path('admin/products/pending/', AdminPendingProductsView.as_view(), name='admin_pending_products'),
     path('admin/products/<int:product_id>/action/', AdminProductApprovalView.as_view(), name='admin_product_action'),
-
     path('admin/vendors/pending/', AdminPendingVendorsView.as_view(), name='admin_pending_vendors'),
     path('admin/vendors/<int:vendor_id>/action/', AdminVendorApprovalView.as_view(), name='admin_vendor_action'),
+    path('admin/users/', AdminUserListView.as_view(), name='admin_users'),
+    path('admin/categories/', AdminCategoryListCreateView.as_view(), name='admin_categories_manage'),
+    path('admin/categories/<int:pk>/', AdminCategoryDetailView.as_view(), name='admin_category_detail'),
+    path('admin/orders/', AdminOrderListView.as_view(), name='admin_global_orders'),
 
     # ---------------- CATEGORY ---------------- #
     path('categories/', CategoryListView.as_view(), name='category_list'),
