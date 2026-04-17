@@ -301,19 +301,20 @@ class CreateRazorpayOrderView(APIView):
             }
         })
 
-
 class VerifyPaymentView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         user = request.user
 
+        # Ensure only buyers can place orders
         if user.role != 'buyer':
             return Response(
                 {"error": "Only buyers can verify payment."},
                 status=status.HTTP_403_FORBIDDEN
             )
 
+        # Get data from request
         razorpay_order_id = request.data.get('razorpay_order_id')
         razorpay_payment_id = request.data.get('razorpay_payment_id')
         razorpay_signature = request.data.get('razorpay_signature')
@@ -322,47 +323,55 @@ class VerifyPaymentView(APIView):
         phone = request.data.get('phone')
         quantity = int(request.data.get('quantity', 1))
 
+        # 1. VERIFY SIGNATURE FIRST
         try:
             razorpay_client.utility.verify_payment_signature({
                 'razorpay_order_id': razorpay_order_id,
                 'razorpay_payment_id': razorpay_payment_id,
                 'razorpay_signature': razorpay_signature,
             })
-        except:
-            return Response({"error": "Payment verification failed"}, status=400)
+        except Exception:
+            # If verification fails, stop here and return error
+            return Response({"error": "Payment verification failed. Invalid signature."}, status=status.HTTP_400_BAD_REQUEST)
 
-        product = Product.objects.get(id=product_id)
+        # 2. PROCEED ONLY IF VERIFIED
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return Response({"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
 
         total_amount = float(product.price) * quantity
 
-        order = Order.objects.create(
-            user=user,
-            address=address,
-            phone=phone,
-            status='pending',
-            payment_status='paid',
-            razorpay_order_id=razorpay_order_id,
-            razorpay_payment_id=razorpay_payment_id,
-            razorpay_signature=razorpay_signature,
-            total_price=total_amount
-        )
+        # Atomic transaction ensures both Order and OrderItem are created together
+        from django.db import transaction
+        with transaction.atomic():
+            order = Order.objects.create(
+                user=user,
+                address=address,
+                phone=phone,
+                status='pending',
+                payment_status='paid', # Set to paid only after successful verification
+                razorpay_order_id=razorpay_order_id,
+                razorpay_payment_id=razorpay_payment_id,
+                razorpay_signature=razorpay_signature,
+                total_price=total_amount
+            )
 
-        OrderItem.objects.create(
-            order=order,
-            product=product,
-            vendor=product.vendor,
-            quantity=quantity,
-            price=product.price
-        )
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                vendor=product.vendor,
+                quantity=quantity,
+                price=product.price
+            )
 
         serializer = OrderSerializer(order)
 
         return Response({
             "message": "Order placed successfully",
             "order": serializer.data
-        })
-
-
+        }, status=status.HTTP_201_CREATED)
+    
 # ---------------- Order APIs ---------------- #
 class OrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer

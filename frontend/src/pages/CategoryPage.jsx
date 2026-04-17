@@ -12,15 +12,13 @@ export const CategoryPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch all categories to get the name
         const catRes = await api.get('/categories/');
         const currentCat = catRes.data.find(c => c.id === parseInt(id));
         setCategory(currentCat);
 
-        // Fetch all products and filter locally (since your backend doesn't have a ?category filter endpoint yet)
+        // FIX: Let the backend do the filtering work
         const prodRes = await api.get(`/products/?category=${id}`);
-        const filtered = prodRes.data.filter(p => p.category === parseInt(id));
-        setProducts(filtered);
+        setProducts(prodRes.data); // No more local .filter() needed
       } catch (err) {
         console.error(err);
       } finally {

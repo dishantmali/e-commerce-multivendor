@@ -49,7 +49,7 @@ export const SignupPage = () => {
     <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center py-12 px-4">
       <div className="bg-white p-10 shadow-lg w-full max-w-md animate-fade-in border-t-4 border-[#fe4c50]">
         <h2 className="text-3xl font-bold text-[#1e1e27] mb-2 text-center">Create Account</h2>
-        <p className="text-gray-500 text-center mb-8">Join the ColoShop community</p>
+        <p className="text-gray-500 text-center mb-8">Join the MarketHub community</p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="flex gap-4 mb-6">

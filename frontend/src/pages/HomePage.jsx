@@ -1,6 +1,7 @@
 /* src/pages/HomePage.jsx */
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext' // Added Auth context import
 import api from '../api/axios'
 import toast from 'react-hot-toast'
 
@@ -8,6 +9,9 @@ export const HomePage = () => {
   const [data, setData] = useState({ categories: [], featured_products: [], new_products: [] })
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
+  
+  // Destructure auth states to fix reference errors
+  const { user, isAuthenticated } = useAuth() 
 
   useEffect(() => {
     const fetchHomepageData = async () => {
@@ -24,17 +28,32 @@ export const HomePage = () => {
   }, [])
 
   const handleAddToCart = async (e, productId) => {
-    e.stopPropagation()
-    try {
-      await api.post('/cart/add/', { product_id: productId, quantity: 1 })
-      toast.success("Added to cart!")
-    } catch {
-      toast.error("Please login to add items.")
-      navigate('/login')
-    }
-  }
+    e.stopPropagation();
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-10 w-10 border-4 border-[#fe4c50] border-t-transparent rounded-full"></div></div>
+    // Correctly checks role using auth state
+    if (isAuthenticated && user?.role === 'vendor' || user?.role === 'admin') {
+      toast.error(`${user.role.charAt(0).toUpperCase() + user.role.slice(1)}s cannot add items to the cart.`);
+      return;
+    }
+
+    try {
+      await api.post('/cart/add/', { product_id: productId, quantity: 1 });
+      toast.success("Added to cart!");
+    } catch (err) {
+      if (err.response?.status === 401) {
+        toast.error("Please login to add items.");
+        navigate('/login');
+      } else {
+        toast.error("Failed to add item to cart.");
+      }
+    }
+  };
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin h-10 w-10 border-4 border-[#fe4c50] border-t-transparent rounded-full"></div>
+    </div>
+  )
 
   const ProductGrid = ({ products }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
@@ -43,7 +62,10 @@ export const HomePage = () => {
           <div className="product-image-container relative aspect-[4/5] bg-gray-50 overflow-hidden">
             <img src={p.image} alt={p.name} className="w-full h-full object-cover mix-blend-multiply p-4" />
             {/* Hover Add to Cart Button */}
-            <div className="absolute bottom-0 left-0 w-full bg-[#fe4c50]/90 text-white text-center py-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 font-medium" onClick={(e) => handleAddToCart(e, p.id)}>
+            <div 
+              className="absolute bottom-0 left-0 w-full bg-[#fe4c50]/90 text-white text-center py-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 font-medium" 
+              onClick={(e) => handleAddToCart(e, p.id)}
+            >
               ADD TO CART
             </div>
           </div>
@@ -63,7 +85,7 @@ export const HomePage = () => {
         <div className="absolute inset-0 z-0 opacity-20 bg-[url('https://images.pexels.com/photos/974911/pexels-photo-974911.jpeg?auto=compress&cs=tinysrgb&w=1600')] bg-cover bg-center"></div>
         <div className="max-w-7xl mx-auto px-4 w-full relative z-10 animate-fade-in">
           <p className="text-[#fe4c50] font-semibold tracking-wider uppercase mb-2">Spring / Summer Collection 2026</p>
-          <h1 className="text-5xl md:text-7xl font-bold text-[#1e1e27] mb-6 leading-tight">Get up to 30% Off<br/>New Arrivals</h1>
+          <h1 className="text-5xl md:text-7xl font-bold text-[#1e1e27] mb-6 leading-tight">Get up to 30% Off<br />New Arrivals</h1>
           <button className="bg-[#fe4c50] text-white px-10 py-3 rounded-sm font-semibold hover:bg-[#e04347] transition-colors shadow-lg uppercase tracking-wider">Shop Now</button>
         </div>
       </div>
@@ -71,12 +93,12 @@ export const HomePage = () => {
       {/* Categories Section */}
       <div id="categories" className="max-w-7xl mx-auto px-4 py-20">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {data.categories.slice(0,3).map(cat => (
+          {data.categories.slice(0, 3).map(cat => (
             <Link key={cat.id} to={`/category/${cat.id}`} className="relative h-64 bg-gray-100 flex items-center justify-center group overflow-hidden rounded-sm">
-               {cat.image && <img src={cat.image} className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500" alt={cat.name}/>}
-               <div className="relative bg-white px-8 py-3 shadow-md group-hover:bg-[#fe4c50] group-hover:text-white transition-colors duration-300">
-                 <h2 className="text-xl font-bold uppercase tracking-wider">{cat.name}</h2>
-               </div>
+              {cat.image && <img src={cat.image} className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500" alt={cat.name} />}
+              <div className="relative bg-white px-8 py-3 shadow-md group-hover:bg-[#fe4c50] group-hover:text-white transition-colors duration-300">
+                <h2 className="text-xl font-bold uppercase tracking-wider">{cat.name}</h2>
+              </div>
             </Link>
           ))}
         </div>

@@ -49,7 +49,7 @@ export const CartPage = () => {
         key: orderData.razorpay_key_id,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: 'ColoShop Checkout',
+        name: 'MarketHub Checkout',
         description: 'Complete your purchase',
         order_id: orderData.razorpay_order_id,
         handler: async function (response) {

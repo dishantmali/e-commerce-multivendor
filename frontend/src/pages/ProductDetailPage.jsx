@@ -1,12 +1,14 @@
 /* src/pages/ProductDetailPage.jsx */
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext' // Import useAuth
 import api from '../api/axios'
 import toast from 'react-hot-toast'
 
 export const ProductDetailPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth() // Access the logged-in user
   const [product, setProduct] = useState(null)
   const [quantity, setQuantity] = useState(1)
 
@@ -15,6 +17,11 @@ export const ProductDetailPage = () => {
   }, [id])
 
   const handleAddToCart = async () => {
+    if (user?.role === 'vendor' || user?.role === 'admin') {
+      toast.error(`${user.role.charAt(0).toUpperCase() + user.role.slice(1)}s are not permitted to buy products.`)
+      return
+    }
+
     try {
       await api.post('/cart/add/', { product_id: product.id, quantity })
       toast.success("Added to cart!")
@@ -25,6 +32,11 @@ export const ProductDetailPage = () => {
   }
 
   const handleBuyNow = async () => {
+    
+    if (user?.role === 'vendor' || user?.role === 'admin') {
+      toast.error(`${user.role.charAt(0).toUpperCase() + user.role.slice(1)}s are not permitted to buy products.`)
+      return
+    }
     await handleAddToCart()
     navigate('/cart')
   }
@@ -56,12 +68,21 @@ export const ProductDetailPage = () => {
           </div>
 
           <div className="flex gap-4">
-            <button onClick={handleAddToCart} className="flex-1 bg-white text-[#1e1e27] border-2 border-[#1e1e27] py-3 font-bold uppercase tracking-wider hover:bg-[#1e1e27] hover:text-white transition-colors">
-              Add to Cart
-            </button>
-            <button onClick={handleBuyNow} className="flex-1 bg-[#fe4c50] text-white py-3 font-bold uppercase tracking-wider hover:bg-[#e04347] transition-colors shadow-md">
-              Buy Now
-            </button>
+            {/* Conditional UI: Disable or hide buttons for vendors */}
+            {user?.role === 'vendor' || user?.role === 'admin' ? (
+              <div className="flex-1 bg-gray-100 text-gray-400 py-3 text-center font-bold border-2 border-gray-200 cursor-not-allowed">
+                PURCHASING DISABLED FOR {user.role.charAt(0).toUpperCase() + user.role.slice(1)}s
+              </div>
+            ) : (
+              <>
+                <button onClick={handleAddToCart} className="flex-1 bg-white text-[#1e1e27] border-2 border-[#1e1e27] py-3 font-bold uppercase tracking-wider hover:bg-[#1e1e27] hover:text-white transition-colors">
+                  Add to Cart
+                </button>
+                <button onClick={handleBuyNow} className="flex-1 bg-[#fe4c50] text-white py-3 font-bold uppercase tracking-wider hover:bg-[#e04347] transition-colors shadow-md">
+                  Buy Now
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

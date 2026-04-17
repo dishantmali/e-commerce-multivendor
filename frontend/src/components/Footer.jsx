@@ -6,7 +6,7 @@ export const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
         <div>
           <h3 className="text-3xl font-bold tracking-tight mb-6">
-            Colo<span className="text-[#fe4c50]">Shop</span>
+            Market<span className="text-[#fe4c50]">Hub</span>
           </h3>
           <p className="text-gray-400 text-sm leading-relaxed">
             Your premium destination for the latest fashion trends and accessories. Quality guaranteed.
@@ -38,7 +38,7 @@ export const Footer = () => {
         </div>
       </div>
       <div className="text-center text-gray-500 text-sm border-t border-gray-800 pt-8">
-        © {new Date().getFullYear()} ColoShop Clone. All rights reserved.
+        © {new Date().getFullYear()} MarketHub Clone. All rights reserved.
       </div>
     </footer>
   );
