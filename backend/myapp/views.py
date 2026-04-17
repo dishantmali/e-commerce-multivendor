@@ -523,6 +523,7 @@ class VerifyPaymentView(APIView):
         phone = request.data.get('phone')
         quantity = int(request.data.get('quantity', 1))
 
+        # 1. Verify Razorpay Signature
         try:
             razorpay_client.utility.verify_payment_signature({
                 'razorpay_order_id': razorpay_order_id,
@@ -533,34 +534,50 @@ class VerifyPaymentView(APIView):
             return Response({"error": "Payment verification failed. Invalid signature."},
                             status=status.HTTP_400_BAD_REQUEST)
 
+        # 2. Atomic Transaction for Stock Check, Decrement, and Order Creation
         try:
-            product = Product.objects.get(id=product_id)
+            with transaction.atomic():
+                # Lock the product row using select_for_update() to prevent race conditions
+                product = Product.objects.select_for_update().get(id=product_id)
+
+                # Check if enough stock is available
+                if product.stock_quantity < quantity:
+                    return Response(
+                        {"error": f"Insufficient stock. Only {product.stock_quantity} available."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                # Decrement the stock quantity and save
+                product.stock_quantity -= quantity
+                product.save()
+
+                total_amount = float(product.price) * quantity
+
+                # Create Order
+                order = Order.objects.create(
+                    user=user,
+                    address=address,
+                    phone=phone,
+                    status='pending',
+                    payment_status='paid',
+                    razorpay_order_id=razorpay_order_id,
+                    razorpay_payment_id=razorpay_payment_id,
+                    razorpay_signature=razorpay_signature,
+                    total_price=total_amount
+                )
+
+                # Create OrderItem
+                OrderItem.objects.create(
+                    order=order,
+                    product=product,
+                    vendor=product.vendor,
+                    quantity=quantity,
+                    price=product.price
+                )
+
         except Product.DoesNotExist:
             return Response({"error": "Product not found."},
                             status=status.HTTP_404_NOT_FOUND)
-
-        total_amount = float(product.price) * quantity
-
-        with transaction.atomic():
-            order = Order.objects.create(
-                user=user,
-                address=address,
-                phone=phone,
-                status='pending',
-                payment_status='paid',
-                razorpay_order_id=razorpay_order_id,
-                razorpay_payment_id=razorpay_payment_id,
-                razorpay_signature=razorpay_signature,
-                total_price=total_amount
-            )
-
-            OrderItem.objects.create(
-                order=order,
-                product=product,
-                vendor=product.vendor,
-                quantity=quantity,
-                price=product.price
-            )
 
         serializer = OrderSerializer(order)
 
@@ -637,21 +654,35 @@ class AddToCartView(APIView):
         product_id = request.data.get('product_id')
         quantity = int(request.data.get('quantity', 1))
 
-        product = Product.objects.get(id=product_id, status='approved')
+        try:
+            product = Product.objects.get(id=product_id, status='approved')
+        except Product.DoesNotExist:
+            return Response({"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # 1. Immediate Stock Check
+        if product.stock_quantity <= 0:
+            return Response({"error": "This product is currently out of stock."}, status=status.HTTP_400_BAD_REQUEST)
 
         cart, _ = Cart.objects.get_or_create(user=request.user)
+        
+        # 2. Check existing cart quantity
+        item = CartItem.objects.filter(cart=cart, product=product).first()
+        current_qty = item.quantity if item else 0
+        new_qty = current_qty + quantity
 
-        item, created = CartItem.objects.get_or_create(
-            cart=cart,
-            product=product
-        )
+        # 3. Limit Check
+        if new_qty > product.stock_quantity:
+             return Response(
+                 {"error": f"Cannot add. Only {product.stock_quantity} available (You have {current_qty} in cart)."}, 
+                 status=status.HTTP_400_BAD_REQUEST
+             )
 
-        if not created:
-            item.quantity += quantity
+        # 4. Save
+        if item:
+            item.quantity = new_qty
+            item.save()
         else:
-            item.quantity = quantity
-
-        item.save()
+            CartItem.objects.create(cart=cart, product=product, quantity=new_qty)
 
         return Response({"message": "Added to cart"})
 
@@ -676,39 +707,111 @@ class CheckoutView(APIView):
 
     def post(self, request):
         user = request.user
-        cart = Cart.objects.get(user=user)
-        items = cart.items.all()
+        
+        try:
+            cart = Cart.objects.get(user=user)
+            items = cart.items.all()
+        except Cart.DoesNotExist:
+            return Response({"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
 
         if not items:
-            return Response({"error": "Cart is empty"}, status=400)
+            return Response({"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
 
-        with transaction.atomic():
+        # Calculate total amount
+        base_amount = sum(float(item.product.price) * item.quantity for item in items)
+        platform_fee = base_amount * 0.05
+        gst = platform_fee * 0.18
+        total_amount = base_amount + platform_fee + gst
+        amount_in_paise = int(total_amount * 100)
 
-            # Step 1: Create Order
-            order = Order.objects.create(
-                user=user,
-                address=request.data.get('address'),
-                phone=request.data.get('phone'),
-                total_price=sum(
-                    item.product.price *
-                    item.quantity for item in items),
-                payment_status='pending'
-            )
-
-            # Step 2: Create OrderItems
-            for item in items:
-                OrderItem.objects.create(
-                    order=order,
-                    product=item.product,
-                    vendor=item.product.vendor,
-                    quantity=item.quantity,
-                    price=item.product.price
-                )
-
-            # Step 3: Clear Cart
-            cart.items.all().delete()
+        # Create Razorpay order (DO NOT delete cart items yet!)
+        razorpay_order = razorpay_client.order.create({
+            "amount": amount_in_paise,
+            "currency": "INR",
+            "payment_capture": 1,
+        })
 
         return Response({
-            "message": "Order created",
-            "order_id": order.id
+            "razorpay_order_id": razorpay_order["id"],
+            "razorpay_key_id": settings.RAZORPAY_KEY_ID,
+            "amount": amount_in_paise,
+            "currency": "INR",
         })
+
+class VerifyCartPaymentView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        razorpay_order_id = request.data.get('razorpay_order_id')
+        razorpay_payment_id = request.data.get('razorpay_payment_id')
+        razorpay_signature = request.data.get('razorpay_signature')
+        address = request.data.get('address')
+        phone = request.data.get('phone')
+
+        # 1. Verify Signature
+        try:
+            razorpay_client.utility.verify_payment_signature({
+                'razorpay_order_id': razorpay_order_id,
+                'razorpay_payment_id': razorpay_payment_id,
+                'razorpay_signature': razorpay_signature,
+            })
+        except Exception:
+            return Response({"error": "Payment verification failed."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2. Process Cart Atomically
+        try:
+            cart = Cart.objects.get(user=user)
+            items = cart.items.all()
+            
+            with transaction.atomic():
+                # Lock all products in the cart
+                product_ids = [item.product.id for item in items]
+                products = Product.objects.select_for_update().filter(id__in=product_ids)
+                product_map = {p.id: p for p in products}
+                
+                total_amount = 0
+                
+                # Check stock for all items
+                for item in items:
+                    product = product_map.get(item.product.id)
+                    if product.stock_quantity < item.quantity:
+                        return Response(
+                            {"error": f"Insufficient stock for {product.name}. Only {product.stock_quantity} left."},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    total_amount += float(product.price) * item.quantity
+                    
+                # Add fees
+                platform_fee = total_amount * 0.05
+                gst = platform_fee * 0.18
+                final_total = total_amount + platform_fee + gst
+
+                # Create Order
+                order = Order.objects.create(
+                    user=user, address=address, phone=phone,
+                    status='pending', payment_status='paid',
+                    razorpay_order_id=razorpay_order_id,
+                    razorpay_payment_id=razorpay_payment_id,
+                    razorpay_signature=razorpay_signature,
+                    total_price=final_total
+                )
+
+                # Create OrderItems & Decrement Stock
+                for item in items:
+                    product = product_map[item.product.id]
+                    product.stock_quantity -= item.quantity
+                    product.save()
+                    
+                    OrderItem.objects.create(
+                        order=order, product=product, vendor=product.vendor,
+                        quantity=item.quantity, price=product.price
+                    )
+
+                # Clear Cart NOW (after successful payment and order creation)
+                items.delete()
+
+            return Response({"message": "Order placed successfully"}, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": "An error occurred while processing your order."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

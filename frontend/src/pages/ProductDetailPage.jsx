@@ -16,18 +16,25 @@ export const ProductDetailPage = () => {
     api.get(`/products/${id}/`).then(res => setProduct(res.data)).catch(() => setProduct(null))
   }, [id])
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (e) => { // (e) is only needed in HomePage.jsx
+    if (e) e.stopPropagation(); // Only needed in HomePage.jsx
+
     if (user?.role === 'vendor' || user?.role === 'admin') {
       toast.error(`${user.role.charAt(0).toUpperCase() + user.role.slice(1)}s are not permitted to buy products.`)
       return
     }
 
     try {
-      await api.post('/cart/add/', { product_id: product.id, quantity })
+      await api.post('/cart/add/', { product_id: product.id, quantity }) 
       toast.success("Added to cart!")
-    } catch {
-      toast.error("Please login to purchase.")
-      navigate('/login')
+    } catch (err) {
+      // CRITICAL FIX: Show the backend stock error if it exists!
+      if (err.response?.data?.error) {
+        toast.error(err.response.data.error);
+      } else {
+        toast.error("Please login to purchase.");
+        // navigate('/login'); // Optional: only navigate if it's a 401 status
+      }
     }
   }
 
@@ -69,7 +76,11 @@ export const ProductDetailPage = () => {
 
           <div className="flex gap-4">
             {/* Conditional UI: Disable or hide buttons for vendors */}
-            {user?.role === 'vendor' || user?.role === 'admin' ? (
+            {product.stock_quantity <= 0 ? (
+              <div className="flex-1 bg-gray-100 text-gray-500 py-3 text-center font-bold border-2 border-gray-200 cursor-not-allowed">
+                OUT OF STOCK
+              </div>
+            ) :user?.role === 'vendor' || user?.role === 'admin' ? (
               <div className="flex-1 bg-gray-100 text-gray-400 py-3 text-center font-bold border-2 border-gray-200 cursor-not-allowed">
                 PURCHASING DISABLED FOR {user.role.charAt(0).toUpperCase() + user.role.slice(1)}s
               </div>

@@ -16,7 +16,7 @@ export const VendorDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   // Forms State
-  const [newProduct, setNewProduct] = useState({ name: '', price: '', description: '', category: '' });
+  const [newProduct, setNewProduct] = useState({ name: '', price: '', description: '', category: '',stock_quantity: '' });
   const [productImageFile, setProductImageFile] = useState(null);
 
   const [newCategory, setNewCategory] = useState({ name: '' });
@@ -51,6 +51,7 @@ export const VendorDashboard = () => {
     const formData = new FormData();
     formData.append('name', newProduct.name);
     formData.append('price', newProduct.price);
+    formData.append('stock_quantity', newProduct.stock_quantity);
     formData.append('description', newProduct.description);
     formData.append('category', newProduct.category);
     formData.append('image', productImageFile);
@@ -200,6 +201,18 @@ export const VendorDashboard = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
                   <input required type="number" className="w-full p-3 border border-gray-200 outline-none focus:border-[#fe4c50] rounded-sm transition-colors" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} />
                 </div>
+                {/* NEW STOCK QUANTITY FIELD */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
+    <input 
+      required 
+      type="number" 
+      min="0" 
+      className="w-full p-3 border border-gray-200 outline-none focus:border-[#fe4c50] rounded-sm transition-colors" 
+      value={newProduct.stock_quantity} 
+      onChange={e => setNewProduct({...newProduct, stock_quantity: e.target.value})} 
+    />
+  </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                   <select required className="w-full p-3 border border-gray-200 outline-none focus:border-[#fe4c50] rounded-sm transition-colors bg-white mt-1" value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}>

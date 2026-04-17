@@ -81,6 +81,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'vendor_shop',
             'name',
             'price',
+            'stock_quantity',
             'image',
             'description',
             'status',

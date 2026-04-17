@@ -112,33 +112,52 @@ export const HomePage = () => {
     }
   }
 
-  const handleAddToCart = async (e, productId) => {
-    e.stopPropagation();
-    if (isAuthenticated && (user?.role === 'vendor' || user?.role === 'admin')) {
-      toast.error(`${user.role.charAt(0).toUpperCase() + user.role.slice(1)}s cannot add items to the cart.`);
-      return;
+  const handleAddToCart = async (e) => { // (e) is only needed in HomePage.jsx
+    if (e) e.stopPropagation(); // Only needed in HomePage.jsx
+
+    if (user?.role === 'vendor' || user?.role === 'admin') {
+      toast.error(`${user.role.charAt(0).toUpperCase() + user.role.slice(1)}s are not permitted to buy products.`)
+      return
     }
+
     try {
-      await api.post('/cart/add/', { product_id: productId, quantity: 1 });
-      toast.success("Added to cart!");
-    } catch (error) {
-      console.error(error);
-      toast.error("Please login to add items.");
-      navigate('/login');
+      
+      await api.post('/cart/add/', { product_id: productId, quantity: 1 }) 
+      toast.success("Added to cart!")
+    } catch (err) {
+      // CRITICAL FIX: Show the backend stock error if it exists!
+      if (err.response?.data?.error) {
+        toast.error(err.response.data.error);
+      } else {
+        toast.error("Please login to purchase.");
+        // navigate('/login'); // Optional: only navigate if it's a 401 status
+      }
     }
-  };
+  }
 
   if (loading) return <div className="min-h-screen flex items-center justify-center font-sans">Loading...</div>
 
   const ProductGrid = ({ products }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
       {products.map(p => (
-        <div key={p.id} onClick={() => navigate(`/product/${p.id}`)} className="product-card group cursor-pointer bg-white overflow-hidden transition-all duration-300 hover:shadow-xl rounded-sm border border-gray-100">
-          <div className="product-image-container relative aspect-[4/5] bg-gray-50 overflow-hidden">
-            <img src={p.image} alt={p.name} className="w-full h-full object-cover mix-blend-multiply p-4" />
-            <div className="absolute bottom-0 left-0 w-full bg-[#fe4c50]/90 text-white text-center py-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 font-medium" onClick={(e) => handleAddToCart(e, p.id)}>
-              ADD TO CART
+        <div key={p.id} onClick={() => navigate(`/product/${p.id}`)} className="product-card group cursor-pointer bg-white overflow-hidden transition-all duration-300 hover:shadow-xl rounded-sm border border-gray-100 relative">
+          
+          {/* Out of Stock Badge (Top Right) */}
+          {p.stock_quantity <= 0 && (
+            <div className="absolute z-10 top-4 right-4 bg-gray-800 text-white text-[10px] font-bold px-3 py-1 rounded-sm uppercase tracking-wider shadow-sm">
+              Out of Stock
             </div>
+          )}
+
+          <div className={`product-image-container relative aspect-[4/5] bg-gray-50 overflow-hidden ${p.stock_quantity <= 0 ? 'opacity-70 grayscale' : ''}`}>
+            <img src={p.image} alt={p.name} className="w-full h-full object-cover mix-blend-multiply p-4" />
+            
+            {/* Only show Add to Cart hover if in stock */}
+            {p.stock_quantity > 0 && (
+              <div className="absolute bottom-0 left-0 w-full bg-[#fe4c50]/90 text-white text-center py-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 font-medium" onClick={(e) => handleAddToCart(e, p.id)}>
+                ADD TO CART
+              </div>
+            )}
           </div>
           <div className="p-4 text-center">
             <h3 className="text-[#1e1e27] font-medium text-lg truncate">{p.name}</h3>

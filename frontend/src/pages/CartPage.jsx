@@ -55,15 +55,19 @@ export const CartPage = () => {
         order_id: orderData.razorpay_order_id,
         handler: async function (response) {
           try {
-            await api.post('/payment/verify/', {
+            await api.post('/payment/verify-cart/', {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
+              address: address, 
+              phone: phone
             })
+            
             toast.success("Payment Successful! Order Placed.")
             navigate('/buyer') 
-          } catch {
-            toast.error("Payment verification failed.")
+            
+          } catch (err) {
+            toast.error(err.response?.data?.error || "Payment verification failed.")
           }
         },
         theme: { color: '#fe4c50' },

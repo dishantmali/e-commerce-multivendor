@@ -25,7 +25,7 @@ from .views import (
     # Category
     CategoryListView,
     # Cart
-    CartView, AddToCartView, CheckoutView, RemoveFromCartView,
+    CartView, AddToCartView, CheckoutView, RemoveFromCartView,VerifyCartPaymentView,
     # Homepage
     HomePageView,
 )
@@ -114,6 +114,10 @@ urlpatterns = [
         'cart/remove/<int:item_id>/',
         RemoveFromCartView.as_view(),
         name='remove_from_cart'),
+    path(
+        'payment/verify-cart/',
+        VerifyCartPaymentView.as_view(),
+        name='verify_cart_payment'),
 
     # ---------------- PAYMENT ---------------- #
     path(
@@ -124,6 +128,10 @@ urlpatterns = [
         'payment/verify/',
         VerifyPaymentView.as_view(),
         name='verify_payment'),
+    path(
+        'payment/verify-cart/', 
+        VerifyCartPaymentView.as_view(), 
+        name='verify_cart_payment'),
 
     # ---------------- ORDERS ---------------- #
     path('orders/', OrderListView.as_view(), name='order_list'),
