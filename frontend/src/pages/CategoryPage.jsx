@@ -16,29 +16,29 @@ export const CategoryPage = () => {
   const [maxPrice, setMaxPrice] = useState('');
 
   useEffect(() => {
+    const fetchFilteredProducts = async () => {
+      try {
+        const catRes = await api.get('/categories/');
+        const currentCat = catRes.data.find(c => c.id === parseInt(id));
+        setCategory(currentCat);
+
+        // Build query string
+        let url = `/products/?category=${id}`;
+        if (search) url += `&search=${search}`;
+        if (minPrice) url += `&min_price=${minPrice}`;
+        if (maxPrice) url += `&max_price=${maxPrice}`;
+
+        const prodRes = await api.get(url);
+        setProducts(prodRes.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchFilteredProducts();
   }, [id, search, minPrice, maxPrice]);
-
-  const fetchFilteredProducts = async () => {
-    try {
-      const catRes = await api.get('/categories/');
-      const currentCat = catRes.data.find(c => c.id === parseInt(id));
-      setCategory(currentCat);
-
-      // Build query string
-      let url = `/products/?category=${id}`;
-      if (search) url += `&search=${search}`;
-      if (minPrice) url += `&min_price=${minPrice}`;
-      if (maxPrice) url += `&max_price=${maxPrice}`;
-
-      const prodRes = await api.get(url);
-      setProducts(prodRes.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 

@@ -9,7 +9,8 @@ const Icons = {
   Products: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>,
   Users: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
   Categories: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
-  Orders: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+  Orders: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>,
+  Offers: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
 };
 
 export const AdminDashboard = () => {
@@ -20,9 +21,17 @@ export const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [categories, setCategories] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [categoryRequests, setCategoryRequests] = useState([]);
+  const [offers, setOffers] = useState([]);
   
   const [loading, setLoading] = useState(true);
+  
+  // Forms
   const [newCatName, setNewCatName] = useState('');
+  const [newCatImage, setNewCatImage] = useState(null);
+
+  const [newOffer, setNewOffer] = useState({ title: '', start_date: '', end_date: '' });
+  const [offerImageFile, setOfferImageFile] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -30,19 +39,24 @@ export const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [prodRes, vendRes, userRes, catRes, orderRes] = await Promise.all([
+      const [prodRes, vendRes, userRes, catRes, orderRes, catReqRes, offerRes] = await Promise.all([
         api.get('/admin/products/pending/'),
         api.get('/admin/vendors/pending/'),
         api.get('/admin/users/'),
         api.get('/admin/categories/'),
-        api.get('/admin/orders/')
+        api.get('/admin/orders/'),
+        api.get('/admin/category-requests/'),
+        api.get('/admin/offers/')
       ]);
       setPendingProducts(prodRes.data);
       setPendingVendors(vendRes.data);
       setUsers(userRes.data);
       setCategories(catRes.data);
       setOrders(orderRes.data);
-    } catch (err) {
+      setCategoryRequests(catReqRes.data);
+      setOffers(offerRes.data);
+    } catch (error) {
+      console.error(error);
       toast.error("Error loading admin data");
     } finally {
       setLoading(false);
@@ -59,19 +73,73 @@ export const AdminDashboard = () => {
         setPendingVendors(pendingVendors.filter(v => v.id !== id));
       }
       toast.success(`${type} ${action}d successfully`);
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       toast.error(`Failed to ${action} ${type}`);
+    }
+  };
+
+  const handleCatRequestAction = async (id, action) => {
+    try {
+      await api.post(`/admin/category-requests/${id}/action/`, { action });
+      setCategoryRequests(categoryRequests.filter(req => req.id !== id));
+      if (action === 'approve') {
+        const res = await api.get('/admin/categories/');
+        setCategories(res.data);
+      }
+      toast.success(`Category request ${action}d`);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed category request action");
+    }
+  };
+
+  const handleOfferAction = async (id, action) => {
+    try {
+      await api.post(`/admin/offers/${id}/action/`, { action });
+      const res = await api.get('/admin/offers/');
+      setOffers(res.data);
+      toast.success(`Offer ${action}d`);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed offer action");
+    }
+  };
+
+  const handleDeleteOffer = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this offer?")) return;
+    try {
+      await api.delete(`/admin/offers/${id}/`);
+      setOffers(offers.filter(o => o.id !== id));
+      toast.success("Offer deleted");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete offer");
     }
   };
 
   const handleCreateCategory = async (e) => {
     e.preventDefault();
+    if (!newCatImage) return toast.error("Please provide an image for the category");
+    const formData = new FormData();
+    formData.append('name', newCatName);
+    formData.append('image', newCatImage);
+
     try {
-      const res = await api.post('/admin/categories/', { name: newCatName });
+      const res = await api.post('/admin/categories/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       setCategories([...categories, res.data]);
       setNewCatName('');
+      setNewCatImage(null);
+      
+      // reset file input
+      const fileInput = document.getElementById('catImageInput');
+      if(fileInput) fileInput.value = '';
+
       toast.success("Category created!");
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       toast.error("Failed to create category");
     }
   };
@@ -82,8 +150,36 @@ export const AdminDashboard = () => {
       await api.delete(`/admin/categories/${id}/`);
       setCategories(categories.filter(c => c.id !== id));
       toast.success("Category deleted");
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       toast.error("Failed to delete category");
+    }
+  };
+
+  const handleCreateOffer = async (e) => {
+    e.preventDefault();
+    if (!offerImageFile) return toast.error("Please provide an image for the offer");
+    const formData = new FormData();
+    formData.append('title', newOffer.title);
+    formData.append('start_date', newOffer.start_date);
+    formData.append('end_date', newOffer.end_date);
+    formData.append('image', offerImageFile);
+
+    try {
+      const res = await api.post('/admin/offers/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setOffers([res.data, ...offers]);
+      setNewOffer({title:'', start_date:'', end_date:''});
+      setOfferImageFile(null);
+      
+      const fileInput = document.getElementById('offerImageInput');
+      if(fileInput) fileInput.value = '';
+
+      toast.success("Offer created!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to create offer");
     }
   };
 
@@ -92,6 +188,9 @@ export const AdminDashboard = () => {
       <div className="animate-spin h-10 w-10 border-4 border-[#fe4c50] border-t-transparent rounded-full"></div>
     </div>
   );
+
+  const pendingCatReqs = categoryRequests.filter(r => r.status === 'pending');
+  const pendingOfferReqs = offers.filter(o => o.status === 'pending');
 
   return (
     <div className="w-full px-4 sm:px-8 lg:px-12 py-10 font-sans bg-[#f5f5f5] min-h-[calc(100vh-80px)]">
@@ -127,8 +226,14 @@ export const AdminDashboard = () => {
                 <Icons.Users /> Users Directory
               </button>
 
-              <button onClick={() => setActiveTab('categories')} className={`flex items-center gap-3 px-6 py-4 text-sm font-medium transition-colors border-t border-gray-100 ${activeTab === 'categories' ? 'bg-[#fe4c50] text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-[#fe4c50]'}`}>
-                <Icons.Categories /> Manage Categories
+              <button onClick={() => setActiveTab('categories')} className={`flex items-center justify-between px-6 py-4 text-sm font-medium transition-colors border-t border-gray-100 ${activeTab === 'categories' ? 'bg-[#fe4c50] text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-[#fe4c50]'}`}>
+                <div className="flex items-center gap-3"><Icons.Categories /> Categories</div>
+                {pendingCatReqs.length > 0 && <span className={`px-2 py-0.5 text-xs rounded-full ${activeTab === 'categories' ? 'bg-white text-[#fe4c50]' : 'bg-[#fe4c50] text-white'}`}>{pendingCatReqs.length}</span>}
+              </button>
+
+              <button onClick={() => setActiveTab('offers')} className={`flex items-center justify-between px-6 py-4 text-sm font-medium transition-colors border-t border-gray-100 ${activeTab === 'offers' ? 'bg-[#fe4c50] text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-[#fe4c50]'}`}>
+                <div className="flex items-center gap-3"><Icons.Offers /> Offers</div>
+                {pendingOfferReqs.length > 0 && <span className={`px-2 py-0.5 text-xs rounded-full ${activeTab === 'offers' ? 'bg-white text-[#fe4c50]' : 'bg-[#fe4c50] text-white'}`}>{pendingOfferReqs.length}</span>}
               </button>
 
               <button onClick={() => setActiveTab('orders')} className={`flex items-center gap-3 px-6 py-4 text-sm font-medium transition-colors border-t border-gray-100 ${activeTab === 'orders' ? 'bg-[#fe4c50] text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-[#fe4c50]'}`}>
@@ -217,10 +322,10 @@ export const AdminDashboard = () => {
               {pendingProducts.length === 0 ? (
                 <div className="p-10 text-center text-gray-500">No products awaiting review.</div>
               ) : (
-                <div className="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {pendingProducts.map(product => (
-                    <div key={product.id} className="border border-gray-100 rounded-sm overflow-hidden hover:shadow-md transition-shadow flex flex-col">
-                      <div className="relative aspect-square bg-[#f5f5f5] p-4">
+                    <div key={product.id} className="border border-gray-100 rounded-sm overflow-hidden hover:shadow-md transition-shadow flex flex-col pt-4">
+                      <div className="relative aspect-square bg-[#f5f5f5] p-2 mx-4 rounded-sm flex items-center justify-center">
                         <img src={product.image} className="w-full h-full object-contain mix-blend-multiply" alt={product.name} />
                       </div>
                       <div className="p-4 flex-1 flex flex-col">
@@ -272,45 +377,183 @@ export const AdminDashboard = () => {
 
           {/* TAB: CATEGORIES */}
           {activeTab === 'categories' && (
-            <div className="animate-fade-in grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Add Category Form */}
-              <div className="lg:col-span-1">
-                <div className="bg-white p-6 rounded-sm shadow-sm border border-gray-100">
-                  <h2 className="text-lg font-bold text-[#1e1e27] mb-4">Create Category</h2>
-                  <form onSubmit={handleCreateCategory} className="space-y-4">
-                    <input 
-                      type="text" 
-                      placeholder="Category Name" 
-                      required 
-                      value={newCatName} 
-                      onChange={e => setNewCatName(e.target.value)} 
-                      className="w-full p-3 bg-gray-50 border border-gray-200 outline-none focus:border-[#fe4c50] transition-colors" 
-                    />
-                    <button type="submit" className="w-full bg-[#1e1e27] text-white py-3 font-bold uppercase tracking-wider hover:bg-[#fe4c50] transition-colors">
-                      Add Category
-                    </button>
-                  </form>
-                </div>
-              </div>
+            <div className="animate-fade-in flex flex-col gap-8">
               
-              {/* Category List */}
-              <div className="lg:col-span-2">
+              {/* Category Requests Section */}
+              {pendingCatReqs.length > 0 && (
                 <div className="bg-white rounded-sm shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="px-6 py-5 border-b border-gray-100 bg-gray-50">
-                    <h2 className="text-lg font-bold text-[#1e1e27]">Existing Categories</h2>
+                  <div className="px-6 py-5 border-b border-gray-100 bg-yellow-50">
+                    <h2 className="text-lg font-bold text-[#1e1e27]">Pending Category Requests</h2>
                   </div>
-                  <div className="divide-y divide-gray-100">
-                    {categories.length === 0 ? <p className="p-6 text-gray-500">No categories found.</p> : categories.map(cat => (
-                      <div key={cat.id} className="p-4 flex justify-between items-center hover:bg-gray-50">
-                        <span className="font-bold text-[#1e1e27]">{cat.name}</span>
-                        <button 
-                          onClick={() => handleDeleteCategory(cat.id)}
-                          className="text-red-500 hover:bg-red-50 px-3 py-1 rounded-sm text-sm font-medium transition-colors"
-                        >
-                          Delete
-                        </button>
+                  <div className="divide-y divide-gray-100 p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {pendingCatReqs.map(req => (
+                      <div key={req.id} className="border border-gray-100 rounded-sm p-4 relative">
+                        {req.image && <img src={req.image} className="w-full h-32 object-cover rounded-sm mb-4" alt={req.name} />}
+                        <p className="text-xs text-gray-400 uppercase tracking-widest mb-1 truncate">Req by: {req.vendor_shop}</p>
+                        <h3 className="font-bold text-[#1e1e27] truncate mb-4">{req.name}</h3>
+                        <div className="grid grid-cols-2 gap-2 mt-auto">
+                          <button onClick={() => handleCatRequestAction(req.id, 'reject')} className="w-full py-2 text-xs font-bold uppercase text-[#fe4c50] border border-[#fe4c50] hover:bg-[#fe4c50] hover:text-white transition-colors rounded-sm">Reject</button>
+                          <button onClick={() => handleCatRequestAction(req.id, 'approve')} className="w-full py-2 text-xs font-bold uppercase text-white bg-[#1e1e27] hover:bg-green-600 transition-colors rounded-sm">Approve</button>
+                        </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Add Category Form */}
+                <div className="lg:col-span-1">
+                  <div className="bg-white p-6 rounded-sm shadow-sm border border-gray-100">
+                    <h2 className="text-lg font-bold text-[#1e1e27] mb-4">Create Category</h2>
+                    <form onSubmit={handleCreateCategory} className="space-y-4">
+                      <input 
+                        type="text" 
+                        placeholder="Category Name" 
+                        required 
+                        value={newCatName} 
+                        onChange={e => setNewCatName(e.target.value)} 
+                        className="w-full p-3 bg-gray-50 border border-gray-200 outline-none focus:border-[#fe4c50] transition-colors" 
+                      />
+                      <input 
+                        id="catImageInput"
+                        type="file" 
+                        accept="image/*" 
+                        required 
+                        onChange={e => setNewCatImage(e.target.files[0])} 
+                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-[#1e1e27] hover:file:bg-gray-100" 
+                      />
+                      <button type="submit" className="w-full bg-[#1e1e27] text-white py-3 font-bold uppercase tracking-wider hover:bg-[#fe4c50] transition-colors">
+                        Add Category
+                      </button>
+                    </form>
+                  </div>
+                </div>
+                
+                {/* Category List */}
+                <div className="lg:col-span-2">
+                  <div className="bg-white rounded-sm shadow-sm border border-gray-100 overflow-hidden h-full">
+                    <div className="px-6 py-5 border-b border-gray-100 bg-gray-50">
+                      <h2 className="text-lg font-bold text-[#1e1e27]">Existing Categories</h2>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                      {categories.length === 0 ? <p className="p-6 text-gray-500">No categories found.</p> : categories.map(cat => (
+                        <div key={cat.id} className="p-4 flex justify-between items-center hover:bg-gray-50">
+                          <div className="flex items-center gap-4">
+                            {cat.image && <img src={cat.image} className="w-12 h-12 object-cover rounded-sm border border-gray-200" alt={cat.name} />}
+                            <span className="font-bold text-[#1e1e27]">{cat.name}</span>
+                          </div>
+                          <button 
+                            onClick={() => handleDeleteCategory(cat.id)}
+                            className="text-red-500 hover:bg-red-50 px-3 py-1 rounded-sm text-sm font-medium transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: OFFERS */}
+          {activeTab === 'offers' && (
+            <div className="animate-fade-in flex flex-col gap-8">
+              
+              {/* Pending Offer Requests Section */}
+              {pendingOfferReqs.length > 0 && (
+                <div className="bg-white rounded-sm shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="px-6 py-5 border-b border-gray-100 bg-yellow-50">
+                    <h2 className="text-lg font-bold text-[#1e1e27]">Pending Offer Requests</h2>
+                  </div>
+                  <div className="divide-y divide-gray-100 p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {pendingOfferReqs.map(offer => (
+                      <div key={offer.id} className="border border-gray-100 rounded-sm p-4 relative">
+                        {offer.image && <img src={offer.image} className="w-full h-32 object-cover rounded-sm mb-4" alt={offer.title} />}
+                        <p className="text-xs text-gray-400 uppercase tracking-widest mb-1 truncate">Req by: {offer.vendor_shop}</p>
+                        <h3 className="font-bold text-[#1e1e27] truncate">{offer.title}</h3>
+                        <p className="text-xs text-gray-500 mb-4">{offer.start_date} to {offer.end_date}</p>
+                        <div className="grid grid-cols-2 gap-2 mt-auto">
+                          <button onClick={() => handleOfferAction(offer.id, 'reject')} className="w-full py-2 text-xs font-bold uppercase text-[#fe4c50] border border-[#fe4c50] hover:bg-[#fe4c50] hover:text-white transition-colors rounded-sm">Reject</button>
+                          <button onClick={() => handleOfferAction(offer.id, 'approve')} className="w-full py-2 text-xs font-bold uppercase text-white bg-[#1e1e27] hover:bg-green-600 transition-colors rounded-sm">Approve</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Add Offer Form */}
+                <div className="lg:col-span-1">
+                  <div className="bg-white p-6 rounded-sm shadow-sm border border-gray-100">
+                    <h2 className="text-lg font-bold text-[#1e1e27] mb-4">Create Offer</h2>
+                    <form onSubmit={handleCreateOffer} className="space-y-4">
+                      <input 
+                        type="text" 
+                        placeholder="Offer Title" 
+                        required 
+                        value={newOffer.title} 
+                        onChange={e => setNewOffer({...newOffer, title: e.target.value})} 
+                        className="w-full p-3 bg-gray-50 border border-gray-200 outline-none focus:border-[#fe4c50] transition-colors" 
+                      />
+                      <input 
+                        type="date" 
+                        required 
+                        value={newOffer.start_date} 
+                        onChange={e => setNewOffer({...newOffer, start_date: e.target.value})} 
+                        className="w-full p-3 bg-gray-50 border border-gray-200 outline-none focus:border-[#fe4c50] transition-colors text-gray-500" 
+                      />
+                      <input 
+                        type="date" 
+                        required 
+                        value={newOffer.end_date} 
+                        onChange={e => setNewOffer({...newOffer, end_date: e.target.value})} 
+                        className="w-full p-3 bg-gray-50 border border-gray-200 outline-none focus:border-[#fe4c50] transition-colors text-gray-500" 
+                      />
+                      <input 
+                        id="offerImageInput"
+                        type="file" 
+                        accept="image/*" 
+                        required 
+                        onChange={e => setOfferImageFile(e.target.files[0])} 
+                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-[#1e1e27] hover:file:bg-gray-100" 
+                      />
+                      <button type="submit" className="w-full bg-[#1e1e27] text-white py-3 font-bold uppercase tracking-wider hover:bg-[#fe4c50] transition-colors">
+                        Add Offer
+                      </button>
+                    </form>
+                  </div>
+                </div>
+                
+                {/* Active Offers List */}
+                <div className="lg:col-span-2">
+                  <div className="bg-white rounded-sm shadow-sm border border-gray-100 overflow-hidden h-full">
+                    <div className="px-6 py-5 border-b border-gray-100 bg-gray-50 flex justify-between">
+                      <h2 className="text-lg font-bold text-[#1e1e27]">Active/Approved Offers</h2>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                      {offers.filter(o => o.status === 'approved').length === 0 ? <p className="p-6 text-gray-500">No active offers found.</p> : offers.filter(o => o.status === 'approved').map(offer => (
+                        <div key={offer.id} className="p-4 flex justify-between items-center hover:bg-gray-50">
+                          <div className="flex items-center gap-4">
+                            {offer.image && <img src={offer.image} className="w-20 h-12 object-cover rounded-sm border border-gray-200" alt={offer.title} />}
+                            <div>
+                                <span className="font-bold text-[#1e1e27] block">{offer.title}</span>
+                                <span className="text-xs text-gray-500 block">{offer.start_date} to {offer.end_date}</span>
+                                {offer.vendor_shop !== 'Admin' && <span className="text-[10px] bg-blue-50 text-blue-600 px-2 rounded-sm uppercase font-bold">By {offer.vendor_shop}</span>}
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => handleDeleteOffer(offer.id)}
+                            className="text-red-500 hover:bg-red-50 px-3 py-1 rounded-sm text-sm font-medium transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>

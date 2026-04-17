@@ -7,7 +7,9 @@ from .models import (
     Order,
     OrderItem,
     Cart,
-    CartItem
+    CartItem,
+    CategoryRequest,
+    Offer
 )
 
 
@@ -58,7 +60,13 @@ class OrderItemInline(admin.TabularInline):
 # ---------------- ORDER ---------------- #
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'total_price', 'status', 'payment_status', 'created_at')
+    list_display = (
+        'id',
+        'user',
+        'total_price',
+        'status',
+        'payment_status',
+        'created_at')
     list_filter = ('status', 'payment_status')
     search_fields = ('user__email',)
     inlines = [OrderItemInline]
@@ -74,3 +82,22 @@ class CartItemInline(admin.TabularInline):
 class CartAdmin(admin.ModelAdmin):
     list_display = ('id', 'user')
     inlines = [CartItemInline]
+
+
+# ---------------- CATEGORY REQUEST ---------------- #
+@admin.register(CategoryRequest)
+class CategoryRequestAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'requested_by', 'status', 'created_at')
+    list_filter = ('status',)
+    search_fields = ('name',)
+
+
+# ---------------- OFFER ---------------- #
+@admin.register(Offer)
+class OfferAdmin(admin.ModelAdmin):
+    list_display = (
+        'id', 'title', 'start_date', 'end_date',
+        'requested_by', 'status', 'created_at'
+    )
+    list_filter = ('status',)
+    search_fields = ('title',)

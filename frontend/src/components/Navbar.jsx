@@ -22,8 +22,6 @@ export const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
         
         <div className="w-1/3 hidden md:flex items-center gap-6">
-          <Link to="/" className="nav-link font-medium text-[#1e1e27] hover:text-[#fe4c50] transition-colors">Shop</Link>
-          <a href="#categories" className="nav-link font-medium text-[#1e1e27] hover:text-[#fe4c50] transition-colors">Categories</a>
         </div>
 
         <div className="w-1/3 flex justify-center">

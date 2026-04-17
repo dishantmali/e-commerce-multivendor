@@ -1,14 +1,19 @@
 from rest_framework import serializers
-from .models import CustomUser, VendorProfile, Product, Order, OrderItem , Category , Cart , CartItem
+from .models import (
+    CustomUser, VendorProfile, Product, Order, OrderItem,
+    Category, Cart, CartItem, CategoryRequest, Offer
+)
 
-# ---------------- USER ---------------- 
+
+
+# ---------------- USER ----------------
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['id', 'name', 'email', 'role']
 
 
-# ---------------- REGISTER ---------------- 
+# ---------------- REGISTER ----------------
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     shop_name = serializers.CharField(write_only=True, required=False)
@@ -64,7 +69,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-# ---------------- PRODUCT ---------------- 
+# ---------------- PRODUCT ----------------
 class ProductSerializer(serializers.ModelSerializer):
     vendor_shop = serializers.SerializerMethodField()
 
@@ -78,9 +83,9 @@ class ProductSerializer(serializers.ModelSerializer):
             'price',
             'image',
             'description',
-            'status',       
-            'category',     
-            'created_at' 
+            'status',
+            'category',
+            'created_at'
         ]
         read_only_fields = ['vendor', 'status']
 
@@ -88,10 +93,11 @@ class ProductSerializer(serializers.ModelSerializer):
         return obj.vendor.shop_name
 
 
-# ---------------- ORDER ITEM ---------------- 
+# ---------------- ORDER ITEM ----------------
 class OrderItemSerializer(serializers.ModelSerializer):
     product_details = ProductSerializer(source='product', read_only=True)
-    vendor_shop = serializers.CharField(source='vendor.shop_name', read_only=True)
+    vendor_shop = serializers.CharField(
+        source='vendor.shop_name', read_only=True)
 
     class Meta:
         model = OrderItem
@@ -106,7 +112,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
         ]
 
 
-# ---------------- ORDER ---------------- 
+# ---------------- ORDER ----------------
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     buyer_name = serializers.CharField(source='user.name', read_only=True)
@@ -139,15 +145,13 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
 
 
-# ---------------- VENDOR ORDER UPDATE ---------------- 
+# ---------------- VENDOR ORDER UPDATE ----------------
 class VendorOrderUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['status']
 
     def validate_status(self, value):
-        order = self.instance
-
         # Optional: simple validation (since multi-vendor now)
         valid_statuses = ['pending', 'confirmed', 'shipped', 'delivered']
 
@@ -156,10 +160,12 @@ class VendorOrderUpdateSerializer(serializers.ModelSerializer):
 
         return value
 
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = '__all__'
+
 
 class CartItemSerializer(serializers.ModelSerializer):
     product_details = ProductSerializer(source='product', read_only=True)
@@ -175,3 +181,34 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ['id', 'items']
+
+
+class CategoryRequestSerializer(serializers.ModelSerializer):
+    vendor_shop = serializers.CharField(
+        source='requested_by.shop_name', read_only=True
+    )
+
+    class Meta:
+        model = CategoryRequest
+        fields = [
+            'id', 'name', 'image', 'requested_by',
+            'vendor_shop', 'status', 'created_at'
+        ]
+        read_only_fields = ['requested_by', 'status', 'created_at']
+
+
+class OfferSerializer(serializers.ModelSerializer):
+    vendor_shop = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Offer
+        fields = [
+            'id', 'title', 'image', 'start_date', 'end_date',
+            'requested_by', 'vendor_shop', 'status', 'created_at'
+        ]
+        read_only_fields = ['requested_by', 'status', 'created_at']
+
+    def get_vendor_shop(self, obj):
+        if obj.requested_by:
+            return obj.requested_by.shop_name
+        return 'Admin'

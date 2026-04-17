@@ -38,7 +38,8 @@ export const SignupPage = () => {
       await login(loginRes.data.access, loginRes.data.refresh)
       toast.success('Registration Successful!')
       navigate('/')
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       toast.error('Registration failed. Please check your details.')
     } finally {
       setLoading(false)

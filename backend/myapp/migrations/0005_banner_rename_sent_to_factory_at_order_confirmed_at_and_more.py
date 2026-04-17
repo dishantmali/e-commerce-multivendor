@@ -15,7 +15,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Banner',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
                 ('title', models.CharField(max_length=255)),
                 ('image', models.ImageField(upload_to='banners/')),
                 ('is_active', models.BooleanField(default=True)),
@@ -46,7 +47,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='order',
             name='total_price',
-            field=models.DecimalField(decimal_places=2, default=0, max_digits=10),
+            field=models.DecimalField(
+                decimal_places=2, default=0, max_digits=10),
         ),
         migrations.AddField(
             model_name='product',
@@ -56,7 +58,16 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='product',
             name='status',
-            field=models.CharField(choices=[('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')], default='pending', max_length=10),
+            field=models.CharField(
+                choices=[
+                    ('pending',
+                     'Pending'),
+                    ('approved',
+                     'Approved'),
+                    ('rejected',
+                     'Rejected')],
+                default='pending',
+                max_length=10),
         ),
         migrations.AddField(
             model_name='vendorprofile',
@@ -71,7 +82,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='vendorprofile',
             name='logo',
-            field=models.ImageField(blank=True, null=True, upload_to='vendor_logos/'),
+            field=models.ImageField(
+                blank=True, null=True, upload_to='vendor_logos/'),
         ),
         migrations.AddField(
             model_name='vendorprofile',
@@ -81,51 +93,95 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='customuser',
             name='role',
-            field=models.CharField(choices=[('admin', 'Admin'), ('buyer', 'Buyer'), ('vendor', 'Vendor')], default='buyer', max_length=20),
+            field=models.CharField(
+                choices=[
+                    ('admin',
+                     'Admin'),
+                    ('buyer',
+                     'Buyer'),
+                    ('vendor',
+                     'Vendor')],
+                default='buyer',
+                max_length=20),
         ),
         migrations.AlterField(
             model_name='order',
             name='status',
-            field=models.CharField(choices=[('pending', 'Pending'), ('confirmed', 'Confirmed'), ('shipped', 'Shipped'), ('delivered', 'Delivered'), ('cancelled', 'Cancelled')], default='pending', max_length=20),
+            field=models.CharField(
+                choices=[
+                    ('pending',
+                     'Pending'),
+                    ('confirmed',
+                     'Confirmed'),
+                    ('shipped',
+                     'Shipped'),
+                    ('delivered',
+                     'Delivered'),
+                    ('cancelled',
+                     'Cancelled')],
+                default='pending',
+                max_length=20),
         ),
         migrations.CreateModel(
             name='Cart',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('id', models.BigAutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
+                ('user', models.OneToOneField(
+                    on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.CreateModel(
             name='CartItem',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
                 ('quantity', models.PositiveIntegerField(default=1)),
-                ('cart', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='myapp.cart')),
-                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='myapp.product')),
+                ('cart',
+                 models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                                   related_name='items',
+                                   to='myapp.cart')),
+                ('product', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='myapp.product')),
             ],
         ),
         migrations.CreateModel(
             name='Category',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=255)),
-                ('parent', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='myapp.category')),
+                ('parent',
+                 models.ForeignKey(blank=True,
+                                   null=True,
+                                   on_delete=django.db.models.deletion.CASCADE,
+                                   to='myapp.category')),
             ],
         ),
         migrations.AddField(
             model_name='product',
             name='category',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='myapp.category'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to='myapp.category'),
         ),
         migrations.CreateModel(
             name='OrderItem',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
                 ('quantity', models.PositiveIntegerField(default=1)),
                 ('price', models.DecimalField(decimal_places=2, max_digits=10)),
-                ('order', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='myapp.order')),
-                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='myapp.product')),
-                ('vendor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='myapp.vendorprofile')),
+                ('order',
+                 models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                                   related_name='items',
+                                   to='myapp.order')),
+                ('product', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='myapp.product')),
+                ('vendor', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='myapp.vendorprofile')),
             ],
         ),
     ]

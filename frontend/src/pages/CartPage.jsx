@@ -31,7 +31,8 @@ export const CartPage = () => {
         items: prevCart.items.filter(item => item.id !== itemId)
       }))
       toast.success("Item removed from cart")
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       toast.error("Failed to remove item")
     }
   }

@@ -5,8 +5,78 @@ import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import toast from 'react-hot-toast'
 
+const CountdownTimer = ({ startDate, endDate }) => {
+  const [timeLeft, setTimeLeft] = useState({ text: '', days: 0, hours: 0, minutes: 0, seconds: 0, isEnded: false });
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      const start = new Date(startDate + 'T00:00:00').getTime();
+      const end = new Date(endDate + 'T23:59:59').getTime();
+
+      let targetTime, prefix, isEnded = false;
+
+      if (now < start) {
+        targetTime = start;
+        prefix = 'Starts in';
+      } else if (now >= start && now <= end) {
+        targetTime = end;
+        prefix = 'Ends in';
+      } else {
+        prefix = 'Offer Ended';
+        isEnded = true;
+        targetTime = now;
+      }
+
+      const difference = targetTime - now;
+
+      let days = 0, hours = 0, minutes = 0, seconds = 0;
+      if (difference > 0) {
+        days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        seconds = Math.floor((difference % (1000 * 60)) / 1000);
+      }
+
+      setTimeLeft({ text: prefix, days, hours, minutes, seconds, isEnded });
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(timer);
+  }, [startDate, endDate]);
+
+  if (timeLeft.isEnded) {
+    return <p className="text-xl mb-10 text-gray-200 drop-shadow-sm font-medium">{timeLeft.text}</p>;
+  }
+
+  return (
+    <div className="mb-10 flex flex-col items-center">
+      <p className="text-lg text-gray-200 drop-shadow-sm font-medium mb-3">{timeLeft.text}</p>
+      <div className="flex gap-4 text-center">
+        <div className="bg-white/10 backdrop-blur-md rounded-lg px-4 py-3 min-w-[80px] shadow-sm">
+          <span className="text-3xl font-bold block text-white">{timeLeft.days}</span>
+          <span className="text-xs uppercase tracking-wider text-gray-300">Days</span>
+        </div>
+        <div className="bg-white/10 backdrop-blur-md rounded-lg px-4 py-3 min-w-[80px] shadow-sm">
+          <span className="text-3xl font-bold block text-white">{timeLeft.hours}</span>
+          <span className="text-xs uppercase tracking-wider text-gray-300">Hours</span>
+        </div>
+        <div className="bg-white/10 backdrop-blur-md rounded-lg px-4 py-3 min-w-[80px] shadow-sm">
+          <span className="text-3xl font-bold block text-white">{timeLeft.minutes}</span>
+          <span className="text-xs uppercase tracking-wider text-gray-300">Mins</span>
+        </div>
+        <div className="bg-white/10 backdrop-blur-md rounded-lg px-4 py-3 min-w-[80px] shadow-sm">
+          <span className="text-3xl font-bold block text-white">{timeLeft.seconds}</span>
+          <span className="text-xs uppercase tracking-wider text-gray-300">Secs</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const HomePage = () => {
-  const [data, setData] = useState({ categories: [], featured_products: [], new_products: [] })
+  const [data, setData] = useState({ categories: [], featured_products: [], new_products: [], offers: [] })
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
@@ -51,7 +121,8 @@ export const HomePage = () => {
     try {
       await api.post('/cart/add/', { product_id: productId, quantity: 1 });
       toast.success("Added to cart!");
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       toast.error("Please login to add items.");
       navigate('/login');
     }
@@ -136,14 +207,17 @@ export const HomePage = () => {
       </div>
 
       {/* 4. OFFERS SECTION (Banner) */}
-      <div className="w-full bg-[#1e1e27] py-20 text-center text-white my-10">
-        <div className="max-w-4xl mx-auto px-4">
-          <p className="text-[#fe4c50] font-bold tracking-widest uppercase mb-4">Limited Time Offer</p>
-          <h2 className="text-4xl md:text-6xl font-bold mb-6 italic">FLAT 50% OFF</h2>
-          <p className="text-xl mb-10 text-gray-400">On your first purchase over ₹2,999. Use Code: FIRST50</p>
-          <button className="bg-[#fe4c50] text-white px-12 py-4 rounded-sm font-bold hover:bg-[#e04347] transition-colors shadow-lg">Grab Offer Now</button>
+      {data.offers && data.offers.length > 0 && data.offers.map((offer) => (
+        <div key={offer.id} className="w-full bg-[#1e1e27] py-20 text-center text-white my-10 relative overflow-hidden flex items-center justify-center animate-fade-in group">
+          {offer.image && <img src={offer.image} className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:scale-105 transition-transform duration-700" alt={offer.title} />}
+          <div className="max-w-4xl mx-auto px-4 relative z-10">
+            <p className="text-[#fe4c50] font-bold tracking-widest uppercase mb-4">Limited Time Offer</p>
+            <h2 className="text-4xl md:text-6xl font-bold mb-6 italic drop-shadow-md">{offer.title}</h2>
+            <CountdownTimer startDate={offer.start_date} endDate={offer.end_date} />
+            <button className="bg-[#fe4c50] text-white px-12 py-4 rounded-sm font-bold hover:bg-[#e04347] transition-colors shadow-lg">Shop Now</button>
+          </div>
         </div>
-      </div>
+      ))}
 
       {/* 5. NEW ARRIVAL */}
       <div className="max-w-7xl mx-auto px-4 py-16">

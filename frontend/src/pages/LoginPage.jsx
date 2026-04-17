@@ -27,7 +27,8 @@ export const LoginPage = () => {
         navigate('/'); // Buyers go to home page
       }
 
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       toast.error('Invalid credentials. Please try again.');
     } finally {
       setLoading(false);
