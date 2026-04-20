@@ -1,3 +1,5 @@
+from re import search
+
 import razorpay
 from datetime import date
 from django.conf import settings
@@ -7,10 +9,10 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied, ValidationError
-from django.db import transaction
+from django.db import transaction , models
 from .models import (
     CustomUser, Product, Order, VendorProfile, OrderItem,
-    Category, Cart, CartItem, CategoryRequest, Offer
+    Category, Cart, CartItem, CategoryRequest, Offer , Wishlist
 )
 from .serializers import (
     RegisterSerializer, CustomUserSerializer, ProductSerializer,
@@ -41,6 +43,7 @@ class MeView(generics.RetrieveAPIView):
 
 class HomePageView(APIView):
     permission_classes = [permissions.AllowAny]
+    pagination_class = None
 
     def get(self, request):
         categories = Category.objects.all()
@@ -91,9 +94,11 @@ class ProductListView(generics.ListAPIView):
         search = self.request.query_params.get('search')
         if search:
             queryset = queryset.filter(
-                name__icontains=search) | queryset.filter(
-                description__icontains=search)
-
+                models.Q(name__icontains=search) | 
+                models.Q(description__icontains=search) |
+                models.Q(vendor__shop_name__icontains=search) |
+                models.Q(category__name__icontains=search)
+            )
         # Price Filters
         min_price = self.request.query_params.get('min_price')
         max_price = self.request.query_params.get('max_price')
@@ -815,3 +820,29 @@ class VerifyCartPaymentView(APIView):
 
         except Exception as e:
             return Response({"error": "An error occurred while processing your order."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class WishlistToggleView(APIView):
+    permission_classes = [permissions.IsAuthenticated] #
+
+    def post(self, request):
+        product_id = request.data.get('product_id')
+        if not product_id:
+            return Response({"error": "Product ID required"}, status=400)
+        
+        try:
+            product = Product.objects.get(id=product_id) #
+            # get_or_create returns a tuple (object, created_boolean)
+            wishlist_item, created = Wishlist.objects.get_or_create(
+                user=request.user, 
+                product=product
+            )
+
+            if not created:
+                # If it already existed, we "toggle" it off by deleting it
+                wishlist_item.delete()
+                return Response({"message": "Removed from wishlist", "added": False})
+            
+            return Response({"message": "Added to wishlist", "added": True}, status=201)
+            
+        except Product.DoesNotExist:
+            return Response({"error": "Product not found"}, status=404)

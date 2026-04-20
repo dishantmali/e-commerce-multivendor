@@ -25,7 +25,7 @@ export const ProductDetailPage = () => {
     }
 
     try {
-      await api.post('/cart/add/', { product_id: product.id, quantity }) 
+      await api.post('/cart/add/', { product_id: product.id, quantity })
       toast.success("Added to cart!")
     } catch (err) {
       // CRITICAL FIX: Show the backend stock error if it exists!
@@ -37,9 +37,22 @@ export const ProductDetailPage = () => {
       }
     }
   }
+  const handleAddToWishlist = async () => {
+    try {
+      // This now matches the URL we just created in Django
+      const res = await api.post('/wishlist/toggle/', { product_id: product.id });
 
+      if (res.data.added) {
+        toast.success("Added to wishlist!");
+      } else {
+        toast.success("Removed from wishlist!");
+      }
+    } catch (err) {
+      toast.error("Please login to save items.");
+    }
+  };
   const handleBuyNow = async () => {
-    
+
     if (user?.role === 'vendor' || user?.role === 'admin') {
       toast.error(`${user.role.charAt(0).toUpperCase() + user.role.slice(1)}s are not permitted to buy products.`)
       return
@@ -57,14 +70,14 @@ export const ProductDetailPage = () => {
         <div className="bg-[#f5f5f5] rounded-sm p-8 flex justify-center border border-gray-100">
           <img src={product.image} alt={product.name} className="max-h-[500px] object-contain mix-blend-multiply" />
         </div>
-        
+
         {/* Details */}
         <div className="animate-fade-in">
           <p className="text-sm text-gray-500 uppercase tracking-widest mb-2">{product.vendor_shop}</p>
           <h1 className="text-4xl font-bold text-[#1e1e27] mb-4">{product.name}</h1>
           <p className="text-3xl font-bold text-[#fe4c50] mb-6">₹{parseFloat(product.price).toLocaleString()}</p>
           <p className="text-gray-600 mb-8 leading-relaxed">{product.description}</p>
-          
+
           <div className="flex items-center gap-4 mb-8">
             <span className="font-medium text-[#1e1e27]">Quantity:</span>
             <div className="flex items-center border border-gray-300 rounded-sm">
@@ -80,7 +93,7 @@ export const ProductDetailPage = () => {
               <div className="flex-1 bg-gray-100 text-gray-500 py-3 text-center font-bold border-2 border-gray-200 cursor-not-allowed">
                 OUT OF STOCK
               </div>
-            ) :user?.role === 'vendor' || user?.role === 'admin' ? (
+            ) : user?.role === 'vendor' || user?.role === 'admin' ? (
               <div className="flex-1 bg-gray-100 text-gray-400 py-3 text-center font-bold border-2 border-gray-200 cursor-not-allowed">
                 PURCHASING DISABLED FOR {user.role.charAt(0).toUpperCase() + user.role.slice(1)}s
               </div>
@@ -88,6 +101,14 @@ export const ProductDetailPage = () => {
               <>
                 <button onClick={handleAddToCart} className="flex-1 bg-white text-[#1e1e27] border-2 border-[#1e1e27] py-3 font-bold uppercase tracking-wider hover:bg-[#1e1e27] hover:text-white transition-colors">
                   Add to Cart
+                </button>
+                <button
+                  onClick={handleAddToWishlist}
+                  className="p-3 border-2 border-dark text-dark hover:bg-dark hover:text-white transition-all rounded-sm"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
                 </button>
                 <button onClick={handleBuyNow} className="flex-1 bg-[#fe4c50] text-white py-3 font-bold uppercase tracking-wider hover:bg-[#e04347] transition-colors shadow-md">
                   Buy Now

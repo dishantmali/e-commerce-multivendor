@@ -35,6 +35,13 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'parent')
     search_fields = ('name',)
 
+    def delete_queryset(self, request, queryset):
+        """
+        Forces the custom delete() logic for every category 
+        selected in the admin bulk delete action.
+        """
+        for category in queryset:
+            category.delete()
 
 # ---------------- PRODUCT ---------------- #
 @admin.register(Product)

@@ -39,10 +39,22 @@ export const CartPage = () => {
 
   const handleCheckout = async (e) => {
     e.preventDefault()
-    if (!address || !phone) return toast.error("Please provide address and phone.")
+
+    // 1. Validation for the 10-digit mobile number
+    const mobileRegex = /^\d{10}$/;
+    if (!mobileRegex.test(phone)) {
+      return toast.error("Mobile number must be exactly 10 digits (0-9).")
+    }
+
+    // 2. Validation for address
+    if (!address.trim()) {
+      return toast.error("Please provide a shipping address.")
+    }
+
     setCheckingOut(true)
 
     try {
+      // FIX: Change 'formData.address' to 'address' and 'formData.phone' to 'phone'
       const res = await api.post('/checkout/', { address, phone })
       const orderData = res.data
 
@@ -59,13 +71,13 @@ export const CartPage = () => {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              address: address, 
-              phone: phone
+              address: address, // Used 'address' directly
+              phone: phone     // Used 'phone' directly
             })
-            
+
             toast.success("Payment Successful! Order Placed.")
-            navigate('/buyer') 
-            
+            navigate('/buyer')
+
           } catch (err) {
             toast.error(err.response?.data?.error || "Payment verification failed.")
           }
@@ -98,7 +110,7 @@ export const CartPage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-16 font-sans">
       <h1 className="text-3xl font-bold text-[#1e1e27] mb-10 border-b pb-4">Shopping Cart</h1>
-      
+
       <div className="flex flex-col lg:flex-row gap-12">
         <div className="lg:w-2/3">
           <div className="border border-gray-200 rounded-sm overflow-hidden shadow-sm">
@@ -122,11 +134,11 @@ export const CartPage = () => {
                     <td className="p-4 text-gray-600">₹{item.product_details.price}</td>
                     <td className="p-4 font-medium">{item.quantity}</td>
                     <td className="p-4 text-[#fe4c50] font-bold">₹{parseFloat(item.product_details.price) * item.quantity}</td>
-                    
+
                     {/* NEW: Remove Button */}
                     <td className="p-4 text-center">
-                      <button 
-                        onClick={() => handleRemoveItem(item.id)} 
+                      <button
+                        onClick={() => handleRemoveItem(item.id)}
                         className="text-gray-400 hover:text-[#fe4c50] transition-colors p-2 rounded-full hover:bg-red-50"
                         title="Remove Item"
                       >

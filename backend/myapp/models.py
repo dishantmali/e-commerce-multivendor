@@ -1,6 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
+from django.core.validators import RegexValidator
+from django_resized import ResizedImageField
+
+mobile_num_validator = RegexValidator(
+    regex=r'^\d{10}$',
+    message="Mobile number must be exactly 10 digits."
+)
 
 class CustomUser(AbstractUser):
     ROLE_CHOICES = (
@@ -31,7 +38,12 @@ class VendorProfile(models.Model):
     contact_details = models.TextField()
     logo = models.ImageField(upload_to='vendor_logos/', null=True, blank=True)
     address = models.TextField(null=True, blank=True)
-    phone = models.CharField(max_length=20, null=True, blank=True)
+    phone = models.CharField(
+        max_length=10, 
+        validators=[mobile_num_validator], 
+        null=True, 
+        blank=True
+    )
     is_approved = models.BooleanField(default=False)
 
     def __str__(self):
@@ -54,6 +66,14 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+    def delete(self, *args, **kwargs):
+        # Prevent deletion of the fallback category itself
+        if self.name.lower() == "uncategorized":
+            return 
+        uncategorized, _ = Category.objects.get_or_create(name="Uncategorized")
+        self.product_set.all().update(category=uncategorized)
+        super().delete(*args, **kwargs)
+
 class Product(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending'),
@@ -74,7 +94,13 @@ class Product(models.Model):
     )
     name = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.ImageField(upload_to='product_images/')
+    image = ResizedImageField(
+        size=[800, 1000],        # Max width/height
+        crop=['middle', 'center'], # Optional: auto-crop to fit ratio
+        quality=75,               # Compression level (1-100)
+        upload_to='product_images/',
+        force_format='JPEG'       # Converts PNGs/WebP to JPEG for better compression
+    )
     description = models.TextField()
     
     # FIX #2: Stock management field
@@ -124,7 +150,10 @@ class Order(models.Model):
         db_index=True # Added for performance
     )
     address = models.TextField()
-    phone = models.CharField(max_length=20)
+    phone = models.CharField(
+        max_length=10, 
+        validators=[mobile_num_validator]
+    )
     razorpay_order_id = models.CharField(max_length=255, blank=True, null=True)
     razorpay_payment_id = models.CharField(max_length=255, blank=True, null=True)
     razorpay_signature = models.CharField(max_length=255, blank=True, null=True)
@@ -186,3 +215,11 @@ class Banner(models.Model):
     title = models.CharField(max_length=255)
     image = models.ImageField(upload_to='banners/')
     is_active = models.BooleanField(default=True)
+
+class Wishlist(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='wishlist')
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'product') # Prevent duplicate likes

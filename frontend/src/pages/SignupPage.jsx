@@ -14,6 +14,20 @@ export const SignupPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    // Email Regex Validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      return toast.error("Please enter a valid email address.");
+    }
+
+    // Mobile Validation (if vendor or during checkout)
+    if (formData.role === 'vendor' || isCheckout) {
+      const mobileRegex = /^\d{10}$/;
+      if (!mobileRegex.test(formData.phone)) {
+        return toast.error("Mobile number must be exactly 10 digits.");
+      }
+    }
+
     setLoading(true)
 
     try {
@@ -32,7 +46,7 @@ export const SignupPage = () => {
       }
 
       await api.post('/auth/register/', payload, { headers: { 'Content-Type': 'multipart/form-data' } })
-      
+
       // Auto login
       const loginRes = await api.post('/auth/login/', { email: formData.email, password: formData.password })
       await login(loginRes.data.access, loginRes.data.refresh)
@@ -58,16 +72,16 @@ export const SignupPage = () => {
             <button type="button" onClick={() => setFormData({ ...formData, role: 'vendor' })} className={`flex-1 py-2 font-medium border-b-2 transition-colors ${formData.role === 'vendor' ? 'border-[#fe4c50] text-[#fe4c50]' : 'border-transparent text-gray-400'}`}>Vendor</button>
           </div>
 
-          <input type="text" placeholder="Full Name" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 outline-none focus:border-[#fe4c50]" />
-          <input type="email" placeholder="Email Address" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 outline-none focus:border-[#fe4c50]" />
-          <input type="password" placeholder="Password" required value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 outline-none focus:border-[#fe4c50]" />
+          <input type="text" placeholder="Full Name" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full p-3 bg-gray-50 border border-gray-200 outline-none focus:border-[#fe4c50]" />
+          <input type="email" placeholder="Email Address" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full p-3 bg-gray-50 border border-gray-200 outline-none focus:border-[#fe4c50]" />
+          <input type="password" placeholder="Password" required value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="w-full p-3 bg-gray-50 border border-gray-200 outline-none focus:border-[#fe4c50]" />
 
           {formData.role === 'vendor' && (
             <div className="space-y-5 bg-gray-50 p-4 border border-gray-200 animate-fade-in">
               <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Store Details</p>
-              <input type="text" placeholder="Shop Name" required value={formData.shop_name} onChange={e => setFormData({...formData, shop_name: e.target.value})} className="w-full p-3 bg-white border border-gray-200 outline-none focus:border-[#fe4c50]" />
-              <input type="tel" placeholder="Business Phone" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full p-3 bg-white border border-gray-200 outline-none focus:border-[#fe4c50]" />
-              <textarea placeholder="Shop Address" required value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full p-3 bg-white border border-gray-200 outline-none focus:border-[#fe4c50]" rows="2" />
+              <input type="text" placeholder="Shop Name" required value={formData.shop_name} onChange={e => setFormData({ ...formData, shop_name: e.target.value })} className="w-full p-3 bg-white border border-gray-200 outline-none focus:border-[#fe4c50]" />
+              <input type="tel" placeholder="Business Phone" required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full p-3 bg-white border border-gray-200 outline-none focus:border-[#fe4c50]" />
+              <textarea placeholder="Shop Address" required value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} className="w-full p-3 bg-white border border-gray-200 outline-none focus:border-[#fe4c50]" rows="2" />
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Shop Logo</label>
                 <input type="file" accept="image/*" onChange={e => setLogoFile(e.target.files[0])} className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#fe4c50]/10 file:text-[#fe4c50] hover:file:bg-[#fe4c50]/20" />
@@ -79,7 +93,7 @@ export const SignupPage = () => {
             {loading ? 'Registering...' : 'Sign Up'}
           </button>
         </form>
-        
+
         <p className="text-center text-gray-500 mt-6">
           Already have an account? <Link to="/login" className="text-[#1e1e27] font-semibold hover:text-[#fe4c50]">Sign In</Link>
         </p>

@@ -6,7 +6,16 @@ export const BuyerDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/orders/').then(res => setOrders(res.data)).finally(() => setLoading(false));
+    api.get('/orders/')
+      .then(res => {
+        // FIX: Check for .results in the paginated response
+        const orderData = res.data.results !== undefined ? res.data.results : res.data;
+        setOrders(orderData);
+      })
+      .catch(err => {
+        console.error("Failed to fetch orders:", err);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="p-10">Loading...</div>;

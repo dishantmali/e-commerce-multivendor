@@ -43,6 +43,16 @@ class RegisterSerializer(serializers.ModelSerializer):
                     "Vendor must provide shop_name and contact_details."
                 )
         return data
+    
+    def validate_phone(self, value):
+        if value and (not value.isdigit() or len(value) != 10):
+            raise serializers.ValidationError("Mobile number must be 10 digits.")
+        return value
+
+    def validate_email(self, value):
+        # Django's EmailField handles format, but you can add custom checks (e.g., domain)
+        value = value.lower().strip()
+        return value
 
     def create(self, validated_data):
         role = validated_data.get('role', 'buyer')

@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import toast from 'react-hot-toast'
+import { SkeletonCard } from '../components/SkeletonCard';
 
 const CountdownTimer = ({ startDate, endDate }) => {
   const [timeLeft, setTimeLeft] = useState({ text: '', days: 0, hours: 0, minutes: 0, seconds: 0, isEnded: false });
@@ -81,7 +82,7 @@ export const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const navigate = useNavigate()
-  const { user, isAuthenticated } = useAuth() 
+  const { user, isAuthenticated } = useAuth()
 
   useEffect(() => {
     const fetchHomepageData = async () => {
@@ -121,8 +122,7 @@ export const HomePage = () => {
     }
 
     try {
-      
-      await api.post('/cart/add/', { product_id: productId, quantity: 1 }) 
+      await api.post('/cart/add/', { product_id: productId, quantity: 1 })
       toast.success("Added to cart!")
     } catch (err) {
       // CRITICAL FIX: Show the backend stock error if it exists!
@@ -135,13 +135,24 @@ export const HomePage = () => {
     }
   }
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-sans">Loading...</div>
+  if (loading) return (
+    <div className="max-w-7xl mx-auto px-4 py-16">
+      {/* Mimic the section heading placeholder */}
+      <div className="h-10 bg-gray-100 w-48 mx-auto mb-12 animate-pulse rounded-sm"></div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+        {[...Array(8)].map((_, i) => (
+          <SkeletonCard key={i} />
+        ))}
+      </div>
+    </div>
+  );
 
   const ProductGrid = ({ products }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
       {products.map(p => (
         <div key={p.id} onClick={() => navigate(`/product/${p.id}`)} className="product-card group cursor-pointer bg-white overflow-hidden transition-all duration-300 hover:shadow-xl rounded-sm border border-gray-100 relative">
-          
+
           {/* Out of Stock Badge (Top Right) */}
           {p.stock_quantity <= 0 && (
             <div className="absolute z-10 top-4 right-4 bg-gray-800 text-white text-[10px] font-bold px-3 py-1 rounded-sm uppercase tracking-wider shadow-sm">
@@ -151,7 +162,7 @@ export const HomePage = () => {
 
           <div className={`product-image-container relative aspect-[4/5] bg-gray-50 overflow-hidden ${p.stock_quantity <= 0 ? 'opacity-70 grayscale' : ''}`}>
             <img src={p.image} alt={p.name} className="w-full h-full object-cover mix-blend-multiply p-4" />
-            
+
             {/* Only show Add to Cart hover if in stock */}
             {p.stock_quantity > 0 && (
               <div className="absolute bottom-0 left-0 w-full bg-[#fe4c50]/90 text-white text-center py-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 font-medium" onClick={(e) => handleAddToCart(e, p.id)}>
@@ -174,18 +185,18 @@ export const HomePage = () => {
       <div className="relative h-[400px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           {/* Using your provided background image */}
-          <img 
-            src="/src/assets/hero-big.jpeg" 
-            className="w-full h-full object-cover brightness-50" 
-            alt="Search Background" 
+          <img
+            src="/src/assets/hero-big.jpeg"
+            className="w-full h-full object-cover brightness-50"
+            alt="Search Background"
           />
         </div>
         <div className="relative z-10 w-full max-w-3xl px-4 text-center">
           <h1 className="text-4xl font-bold text-white mb-6 drop-shadow-lg">Find Your Style</h1>
           <div className="relative">
-            <input 
-              type="text" 
-              placeholder="Search for products, brands and more..." 
+            <input
+              type="text"
+              placeholder="Search for products, brands and more..."
               className="w-full p-5 pl-14 rounded-full bg-white/95 border-none shadow-2xl focus:ring-2 focus:ring-[#fe4c50] outline-none text-lg"
               value={searchQuery}
               onChange={handleSearch}
@@ -196,11 +207,28 @@ export const HomePage = () => {
       </div>
 
       {/* SEARCH RESULTS (Conditional) */}
-      {searchQuery.length > 2 && (
-        <div className="max-w-7xl mx-auto px-4 py-10 bg-white shadow-inner">
-          <h2 className="text-2xl font-bold mb-6 text-[#1e1e27]">Search Results</h2>
-          {searchResults.length > 0 ? <ProductGrid products={searchResults} /> : <p className="text-gray-500">No matching products found.</p>}
-          <hr className="mt-12 border-gray-100" />
+      {/* Inside Search Section, below the <input /> */}
+      {searchQuery.length > 2 && searchResults.length > 0 && (
+        <div className="absolute z-50 w-full mt-2 bg-white rounded-sm shadow-2xl border border-gray-100 overflow-hidden text-left animate-fade-in">
+          {searchResults.slice(0, 5).map(result => (
+            <div
+              key={result.id}
+              onClick={() => navigate(`/product/${result.id}`)}
+              className="flex items-center gap-4 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-none"
+            >
+              <img src={result.image} className="w-12 h-12 object-cover rounded-sm" alt="" />
+              <div>
+                <p className="font-bold text-dark text-sm truncate">{result.name}</p>
+                <p className="text-primary text-xs font-bold">₹{parseFloat(result.price).toLocaleString()}</p>
+              </div>
+            </div>
+          ))}
+          <button
+            onClick={() => window.scrollTo({ top: 500, behavior: 'smooth' })}
+            className="w-full py-2 bg-gray-50 text-xs font-bold text-gray-500 uppercase hover:text-primary transition-colors"
+          >
+            View All Results
+          </button>
         </div>
       )}
 
@@ -210,10 +238,10 @@ export const HomePage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {data.categories.map(cat => (
             <Link key={cat.id} to={`/category/${cat.id}`} className="relative h-64 bg-gray-100 flex items-center justify-center group overflow-hidden rounded-sm shadow-sm hover:shadow-md transition-shadow">
-               {cat.image && <img src={cat.image} className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500" alt={cat.name}/>}
-               <div className="relative bg-white/90 px-8 py-3 group-hover:bg-[#fe4c50] group-hover:text-white transition-all duration-300">
-                 <h2 className="text-xl font-bold uppercase tracking-wider">{cat.name}</h2>
-               </div>
+              {cat.image && <img src={cat.image} className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500" alt={cat.name} />}
+              <div className="relative bg-white/90 px-8 py-3 group-hover:bg-[#fe4c50] group-hover:text-white transition-all duration-300">
+                <h2 className="text-xl font-bold uppercase tracking-wider">{cat.name}</h2>
+              </div>
             </Link>
           ))}
         </div>
