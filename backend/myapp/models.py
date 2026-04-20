@@ -3,6 +3,9 @@ from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.core.validators import RegexValidator
 from django_resized import ResizedImageField
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.core.cache import cache
 
 mobile_num_validator = RegexValidator(
     regex=r'^\d{10}$',
@@ -223,3 +226,8 @@ class Wishlist(models.Model):
 
     class Meta:
         unique_together = ('user', 'product') # Prevent duplicate likes
+
+@receiver([post_save, post_delete], sender=Category)
+def invalidate_category_cache(sender, **kwargs):
+    cache.delete('global_categories')
+    print("Category updated: Cache Cleared.")

@@ -23,7 +23,7 @@ from .views import (
     AdminCategoryRequestListView, AdminCategoryRequestActionView,
     AdminOfferListCreateView, AdminOfferActionView,
     # Category
-    CategoryListView,WishlistToggleView,
+    CategoryListView,WishlistToggleView,WishlistListView,
     # Cart
     CartView, AddToCartView, CheckoutView, RemoveFromCartView,VerifyCartPaymentView,
     # Homepage
@@ -47,7 +47,8 @@ urlpatterns = [
         'products/<int:pk>/',
         ProductDetailView.as_view(),
         name='product_detail'),
-    path('wishlist/toggle/', WishlistToggleView.as_view(), name='wishlist_toggle'), 
+    path('wishlist/toggle/', WishlistToggleView.as_view(), name='wishlist_toggle'),
+    path('wishlist/', WishlistListView.as_view(), name='wishlist_list'), 
 
     # ---------------- VENDOR ---------------- #
     path(

@@ -1,20 +1,33 @@
+import html
 from rest_framework import serializers
 from .models import (
     CustomUser, VendorProfile, Product, Order, OrderItem,
-    Category, Cart, CartItem, CategoryRequest, Offer
+    Category, Cart, CartItem, CategoryRequest, Offer , Wishlist
 )
 
-
+# ---------------- BASE SANITIZER (The Armor) ----------------
+class SanitizedSerializer(serializers.ModelSerializer):
+    """
+    Base class to automatically trim whitespace and escape HTML 
+    from all string fields to prevent XSS attacks.
+    """
+    def to_internal_value(self, data):
+        internal_value = super().to_internal_value(data)
+        for key, value in internal_value.items():
+            if isinstance(value, str):
+                # Strip leading/trailing spaces and escape HTML tags
+                internal_value[key] = html.escape(value.strip())
+        return internal_value
 
 # ---------------- USER ----------------
-class CustomUserSerializer(serializers.ModelSerializer):
+class CustomUserSerializer(SanitizedSerializer):
     class Meta:
         model = CustomUser
         fields = ['id', 'name', 'email', 'role']
 
 
 # ---------------- REGISTER ----------------
-class RegisterSerializer(serializers.ModelSerializer):
+class RegisterSerializer(SanitizedSerializer):
     password = serializers.CharField(write_only=True)
     shop_name = serializers.CharField(write_only=True, required=False)
     contact_details = serializers.CharField(write_only=True, required=False)
@@ -50,9 +63,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def validate_email(self, value):
-        # Django's EmailField handles format, but you can add custom checks (e.g., domain)
-        value = value.lower().strip()
-        return value
+        # Email is already stripped by the base class, but we'll lowercase it here
+        return value.lower()
 
     def create(self, validated_data):
         role = validated_data.get('role', 'buyer')
@@ -80,7 +92,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 # ---------------- PRODUCT ----------------
-class ProductSerializer(serializers.ModelSerializer):
+class ProductSerializer(SanitizedSerializer):
     vendor_shop = serializers.SerializerMethodField()
 
     class Meta:
@@ -105,7 +117,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 # ---------------- ORDER ITEM ----------------
-class OrderItemSerializer(serializers.ModelSerializer):
+class OrderItemSerializer(SanitizedSerializer):
     product_details = ProductSerializer(source='product', read_only=True)
     vendor_shop = serializers.CharField(
         source='vendor.shop_name', read_only=True)
@@ -124,7 +136,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 # ---------------- ORDER ----------------
-class OrderSerializer(serializers.ModelSerializer):
+class OrderSerializer(SanitizedSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     buyer_name = serializers.CharField(source='user.name', read_only=True)
     buyer_email = serializers.CharField(source='user.email', read_only=True)
@@ -157,28 +169,25 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 # ---------------- VENDOR ORDER UPDATE ----------------
-class VendorOrderUpdateSerializer(serializers.ModelSerializer):
+class VendorOrderUpdateSerializer(SanitizedSerializer):
     class Meta:
         model = Order
         fields = ['status']
 
     def validate_status(self, value):
-        # Optional: simple validation (since multi-vendor now)
         valid_statuses = ['pending', 'confirmed', 'shipped', 'delivered']
-
         if value not in valid_statuses:
             raise serializers.ValidationError("Invalid status")
-
         return value
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class CategorySerializer(SanitizedSerializer):
     class Meta:
         model = Category
         fields = '__all__'
 
 
-class CartItemSerializer(serializers.ModelSerializer):
+class CartItemSerializer(SanitizedSerializer):
     product_details = ProductSerializer(source='product', read_only=True)
 
     class Meta:
@@ -186,7 +195,7 @@ class CartItemSerializer(serializers.ModelSerializer):
         fields = ['id', 'product', 'product_details', 'quantity']
 
 
-class CartSerializer(serializers.ModelSerializer):
+class CartSerializer(SanitizedSerializer):
     items = CartItemSerializer(many=True, read_only=True)
 
     class Meta:
@@ -194,7 +203,7 @@ class CartSerializer(serializers.ModelSerializer):
         fields = ['id', 'items']
 
 
-class CategoryRequestSerializer(serializers.ModelSerializer):
+class CategoryRequestSerializer(SanitizedSerializer):
     vendor_shop = serializers.CharField(
         source='requested_by.shop_name', read_only=True
     )
@@ -208,7 +217,7 @@ class CategoryRequestSerializer(serializers.ModelSerializer):
         read_only_fields = ['requested_by', 'status', 'created_at']
 
 
-class OfferSerializer(serializers.ModelSerializer):
+class OfferSerializer(SanitizedSerializer):
     vendor_shop = serializers.SerializerMethodField()
 
     class Meta:
@@ -223,3 +232,10 @@ class OfferSerializer(serializers.ModelSerializer):
         if obj.requested_by:
             return obj.requested_by.shop_name
         return 'Admin'
+
+class WishlistSerializer(SanitizedSerializer):
+    product = ProductSerializer(read_only=True)
+
+    class Meta:
+        model = Wishlist
+        fields = ['id', 'product', 'created_at']

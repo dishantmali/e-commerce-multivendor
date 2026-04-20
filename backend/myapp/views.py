@@ -1,5 +1,5 @@
 from re import search
-
+from django.core.cache import cache
 import razorpay
 from datetime import date
 from django.conf import settings
@@ -17,7 +17,7 @@ from .models import (
 from .serializers import (
     RegisterSerializer, CustomUserSerializer, ProductSerializer,
     OrderSerializer, VendorOrderUpdateSerializer, CategorySerializer,
-    CartSerializer, CategoryRequestSerializer, OfferSerializer
+    CartSerializer, CategoryRequestSerializer, OfferSerializer, WishlistSerializer
 )
 
 # Initialize Razorpay client
@@ -116,11 +116,27 @@ class ProductDetailView(generics.RetrieveAPIView):
     permission_classes = [permissions.AllowAny]
 
 
-class CategoryListView(generics.ListAPIView):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
+class CategoryListView(APIView):
     permission_classes = [permissions.AllowAny]
 
+    def get(self, request):
+        # 1. Try to fetch from 'memory'
+        cached_categories = cache.get('global_categories')
+
+        if cached_categories:
+            print("Cache Hit: Serving from RAM")
+            return Response(cached_categories)
+
+        # 2. If not in memory, fetch from DB
+        print("Cache Miss: Fetching from Database")
+        categories = Category.objects.all()
+        serializer = CategorySerializer(categories, many=True)
+        data = serializer.data
+
+        # 3. Save to memory for 24 hours (86400 seconds)
+        cache.set('global_categories', data, 86400)
+
+        return Response(data)
 
 # ---------------- Vendor APIs ---------------- #
 class VendorProductListCreateView(generics.ListCreateAPIView):
@@ -825,6 +841,11 @@ class WishlistToggleView(APIView):
     permission_classes = [permissions.IsAuthenticated] #
 
     def post(self, request):
+        if request.user.role != 'buyer':
+            return Response(
+                {"error": "Only buyers can maintain a wishlist."}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
         product_id = request.data.get('product_id')
         if not product_id:
             return Response({"error": "Product ID required"}, status=400)
@@ -846,3 +867,11 @@ class WishlistToggleView(APIView):
             
         except Product.DoesNotExist:
             return Response({"error": "Product not found"}, status=404)
+
+class WishlistListView(generics.ListAPIView):
+    serializer_class = WishlistSerializer # You'll need to create this in serializers.py
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Only return the wishlist items for the logged-in user
+        return Wishlist.objects.filter(user=self.request.user).select_related('product')

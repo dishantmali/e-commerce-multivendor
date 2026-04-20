@@ -8,10 +8,10 @@ import toast from 'react-hot-toast'
 export const ProductDetailPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { user } = useAuth() // Access the logged-in user
   const [product, setProduct] = useState(null)
   const [quantity, setQuantity] = useState(1)
-
+  const { user, isAuthenticated } = useAuth();
+  const isBuyer = isAuthenticated && user?.role === 'buyer';
   useEffect(() => {
     api.get(`/products/${id}/`).then(res => setProduct(res.data)).catch(() => setProduct(null))
   }, [id])
@@ -102,14 +102,17 @@ export const ProductDetailPage = () => {
                 <button onClick={handleAddToCart} className="flex-1 bg-white text-[#1e1e27] border-2 border-[#1e1e27] py-3 font-bold uppercase tracking-wider hover:bg-[#1e1e27] hover:text-white transition-colors">
                   Add to Cart
                 </button>
-                <button
-                  onClick={handleAddToWishlist}
-                  className="p-3 border-2 border-dark text-dark hover:bg-dark hover:text-white transition-all rounded-sm"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </button>
+                {isBuyer && (
+                  <button
+                    onClick={handleAddToWishlist}
+                    className="p-3 border-2 border-dark text-dark hover:bg-dark hover:text-white transition-all rounded-sm"
+                    title="Add to Wishlist"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </button>
+                )}
                 <button onClick={handleBuyNow} className="flex-1 bg-[#fe4c50] text-white py-3 font-bold uppercase tracking-wider hover:bg-[#e04347] transition-colors shadow-md">
                   Buy Now
                 </button>
