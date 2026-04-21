@@ -15,11 +15,8 @@ export const VendorDashboard = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Editing Stock State
   const [editingStockId, setEditingStockId] = useState(null);
   const [newStockValue, setNewStockValue] = useState('');
-
-  // Forms State
   const [newProduct, setNewProduct] = useState({ name: '', price: '', description: '', category: '', stock_quantity: '' });
   const [productImageFile, setProductImageFile] = useState(null);
   const [newCategory, setNewCategory] = useState({ name: '' });
@@ -28,41 +25,24 @@ export const VendorDashboard = () => {
   const [offerImageFile, setOfferImageFile] = useState(null);
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [prodRes, catRes] = await Promise.all([api.get('/vendor/products/'), api.get('/categories/')]);
+        setProducts(prodRes.data.results || prodRes.data || []);
+        setCategories(catRes.data.results || catRes.data || []);
+      } catch (error) { toast.error("Failed to load dashboard"); } finally { setLoading(false); }
+    };
     fetchData();
   }, []);
 
-  const fetchData = async () => {
-    try {
-      const [prodRes, catRes] = await Promise.all([
-        api.get('/vendor/products/'),
-        api.get('/categories/')
-      ]);
-      // Handle paginated response structure
-      setProducts(prodRes.data.results || prodRes.data);
-      setCategories(catRes.data.results || catRes.data);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to load dashboard data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleRestock = async (productId) => {
-    if (!newStockValue || parseInt(newStockValue) < 1) {
-      return toast.error("Please enter a valid stock quantity");
-    }
+    if (!newStockValue || parseInt(newStockValue) < 1) return toast.error("Valid quantity required");
     try {
-      const res = await api.patch(`/vendor/products/${productId}/`, {
-        stock_quantity: newStockValue
-      });
+      const res = await api.patch(`/vendor/products/${productId}/`, { stock_quantity: newStockValue });
       setProducts(products.map(p => p.id === productId ? res.data : p));
-      setEditingStockId(null);
-      setNewStockValue('');
-      toast.success("Stock updated successfully!");
-    } catch (err) {
-      toast.error("Failed to update stock.");
-    }
+      setEditingStockId(null); setNewStockValue('');
+      toast.success("Stock updated!");
+    } catch (err) { toast.error("Update failed"); }
   };
 
   const handleAddProduct = async (e) => {
@@ -73,20 +53,15 @@ export const VendorDashboard = () => {
     formData.append('image', productImageFile);
 
     try {
-      const res = await api.post('/vendor/products/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      setProducts([...products, res.data]);
+      const res = await api.post('/vendor/products/', formData, { headers: { 'Content-Type': 'multipart/form-data' }});
+      setProducts([res.data, ...products]);
       toast.success("Product added! Waiting for admin approval.");
       setNewProduct({ name: '', price: '', description: '', category: '', stock_quantity: '' });
       setProductImageFile(null);
       setActiveTab('products');
-    } catch (err) {
-      toast.error(err.response?.data?.detail || "Failed to add product");
-    }
+    } catch (err) { toast.error("Failed to add product"); }
   };
 
-  // Other handlers (Request Category/Offer) remain the same logic...
   const handleRequestCategory = async (e) => {
     e.preventDefault();
     const formData = new FormData();
@@ -114,73 +89,241 @@ export const VendorDashboard = () => {
   };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin h-10 w-10 border-4 border-[#fe4c50] border-t-transparent rounded-full"></div>
+    <div className="p-10 text-center text-[#5A3825] flex items-center justify-center gap-2">
+      <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+      </svg>
+      Loading...
     </div>
   );
 
   return (
-    <div className="w-full px-4 sm:px-8 lg:px-12 py-10 font-sans bg-[#f5f5f5] min-h-[calc(100vh-80px)]">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[#1e1e27]">Vendor Dashboard</h1>
+    <div className="w-full px-4 sm:px-8 lg:px-12 py-10 font-sans bg-[#FAF8F5] min-h-[calc(100vh-80px)]">
+
+      {/* Header */}
+      <div className="mb-8 animate-fade-in-up">
+        <h1 className="text-3xl font-bold text-[#2C1E16]">Vendor Dashboard</h1>
         <p className="text-gray-500 mt-1">Manage your catalog and request marketplace features.</p>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-8">
-        <aside className="w-full md:w-72 shrink-0">
-          <div className="bg-white rounded-sm shadow-sm border border-gray-100 sticky top-28 overflow-hidden">
+      <div className="flex flex-col lg:flex-row gap-8">
+
+        {/* Sidebar */}
+        <aside className="w-full lg:w-64 shrink-0 animate-fade-in-left">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 bg-[#5A3825]">
+              <p className="text-white text-xs font-bold uppercase tracking-widest opacity-80">Navigation</p>
+            </div>
             <nav className="flex flex-col">
-              <button onClick={() => setActiveTab('products')} className={`flex items-center gap-3 px-6 py-4 text-sm font-medium transition-colors ${activeTab === 'products' ? 'bg-[#fe4c50] text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
-                <Icons.Products /> My Catalog
-              </button>
-              <button onClick={() => setActiveTab('add_product')} className={`flex items-center gap-3 px-6 py-4 text-sm font-medium border-t border-gray-100 ${activeTab === 'add_product' ? 'bg-[#fe4c50] text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
-                <Icons.AddProduct /> Add Product
-              </button>
-              <button onClick={() => setActiveTab('request_category')} className={`flex items-center gap-3 px-6 py-4 text-sm font-medium border-t border-gray-100 ${activeTab === 'request_category' ? 'bg-[#fe4c50] text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
-                <Icons.Category /> Request Category
-              </button>
-              <button onClick={() => setActiveTab('request_offer')} className={`flex items-center gap-3 px-6 py-4 text-sm font-medium border-t border-gray-100 ${activeTab === 'request_offer' ? 'bg-[#fe4c50] text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
-                <Icons.Offer /> Request Offer
-              </button>
+              {[
+                { key: 'products', label: 'My Catalog', Icon: Icons.Products },
+                { key: 'add_product', label: 'Add Product', Icon: Icons.AddProduct },
+                { key: 'request_category', label: 'Request Category', Icon: Icons.Category },
+                { key: 'request_offer', label: 'Request Offer', Icon: Icons.Offer },
+              ].map(({ key, label, Icon }, i) => (
+                <button
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={`admin-nav-item flex items-center gap-3 px-6 py-4 text-sm font-medium border-t border-gray-100 transition-all duration-200 ${
+                    activeTab === key
+                      ? 'bg-[#5A3825] text-white shadow-inner'
+                      : 'text-gray-600 hover:bg-[#FAF8F5] hover:text-[#5A3825] hover:pl-8'
+                  }`}
+                  style={{ transitionProperty: 'background, color, padding' }}
+                >
+                  <span className={`transition-transform duration-200 ${activeTab === key ? 'scale-110' : ''}`}>
+                    <Icon />
+                  </span>
+                  {label}
+                </button>
+              ))}
             </nav>
           </div>
         </aside>
 
+        {/* Main Content */}
         <main className="flex-1">
+
+          {/* My Products Tab */}
           {activeTab === 'products' && (
-            <div className="animate-fade-in bg-white rounded-sm shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-100 bg-gray-50"><h2 className="text-lg font-bold text-[#1e1e27]">My Products</h2></div>
-              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map(p => (
-                  <div key={p.id} className="border border-gray-100 rounded-sm p-4 flex flex-col hover:shadow-md transition-shadow">
-                    <div className="h-48 bg-[#f5f5f5] rounded-sm flex items-center justify-center mb-4">
-                      <img src={p.image} className="max-h-full object-contain mix-blend-multiply" alt={p.name} />
+            <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
+                <h2 className="text-lg font-bold text-[#2C1E16]">My Products</h2>
+              </div>
+              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
+                {products.length === 0 ? (
+                  <p className="text-gray-500 animate-fade-in col-span-full">No products added yet.</p>
+                ) : products.map(p => (
+                  <div
+                    key={p.id}
+                    className="product-card-anim border border-gray-100 rounded-xl p-4 flex flex-col bg-white animate-fade-in-up"
+                  >
+                    <div className="h-48 bg-[#FAF8F5] rounded-lg flex items-center justify-center mb-4 overflow-hidden">
+                      <img
+                        src={p.image}
+                        className="product-thumb max-h-full object-contain mix-blend-multiply"
+                        alt={p.name}
+                      />
                     </div>
-                    <h3 className="font-bold text-[#1e1e27] truncate">{p.name}</h3>
-                    <p className="text-[#fe4c50] font-bold mb-2">₹{parseFloat(p.price).toLocaleString()}</p>
-                    
+                    <h3 className="font-bold text-[#2C1E16] truncate">{p.name}</h3>
+                    <p className="text-[#A87C51] font-bold mb-2 text-lg">₹{parseFloat(p.price).toLocaleString()}</p>
                     <div className="mb-4">
-                      <p className="text-sm text-gray-500">Stock: <span className={`font-bold ${p.stock_quantity === 0 ? 'text-red-500' : 'text-gray-800'}`}>{p.stock_quantity}</span></p>
+                      <p className="text-sm text-gray-500">
+                        Stock: <span className={`font-bold transition-colors duration-300 ${p.stock_quantity === 0 ? 'text-red-500' : 'text-gray-800'}`}>{p.stock_quantity}</span>
+                      </p>
                       {editingStockId === p.id ? (
-                        <div className="mt-2 flex gap-2">
-                          <input type="number" className="w-full p-2 border border-gray-200 text-sm outline-none focus:border-[#fe4c50]" placeholder="Qty" value={newStockValue} onChange={(e) => setNewStockValue(e.target.value)} />
-                          <button onClick={() => handleRestock(p.id)} className="bg-[#1e1e27] text-white px-3 py-1 text-xs font-bold hover:bg-[#fe4c50]">SAVE</button>
-                          <button onClick={() => setEditingStockId(null)} className="text-gray-400 p-1"><Icons.Offer /></button> {/* Placeholder Icon for X */}
+                        <div className="mt-2 flex gap-2 animate-fade-in">
+                          <input
+                            type="number"
+                            className="input-animated w-full p-2 border border-gray-200 text-sm outline-none focus:border-[#A87C51] rounded-md"
+                            value={newStockValue}
+                            onChange={(e) => setNewStockValue(e.target.value)}
+                          />
+                          <button
+                            onClick={() => handleRestock(p.id)}
+                            className="action-btn bg-[#5A3825] text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-[#3E2723]"
+                          >SAVE</button>
+                          <button
+                            onClick={() => setEditingStockId(null)}
+                            className="remove-btn text-gray-400 p-1 font-bold"
+                          >✕</button>
                         </div>
                       ) : (
                         p.status === 'approved' && p.stock_quantity === 0 && (
-                          <button onClick={() => { setEditingStockId(p.id); setNewStockValue(''); }} className="mt-2 w-full bg-[#1e1e27] text-white py-2 text-xs font-bold uppercase hover:bg-[#fe4c50] transition-colors">Restock Item</button>
+                          <button
+                            onClick={() => { setEditingStockId(p.id); setNewStockValue(''); }}
+                            className="mt-2 w-full border border-[#5A3825] text-[#5A3825] rounded-full py-2 text-xs font-bold hover:bg-[#5A3825] hover:text-white transition-all duration-200 active:scale-95"
+                          >Restock</button>
                         )
                       )}
                     </div>
                     <div className="mt-auto pt-2 border-t border-gray-50">
-                      <span className={`text-[10px] px-2 py-1 uppercase font-bold text-white rounded-sm ${p.status === 'approved' ? 'bg-green-500' : p.status === 'rejected' ? 'bg-red-500' : 'bg-yellow-500'}`}>{p.status}</span>
+                      <span className={`text-[10px] px-2 py-1 uppercase font-bold text-white rounded-md transition-all duration-300 ${p.status === 'approved' ? 'bg-[#A87C51]' : p.status === 'rejected' ? 'bg-red-500' : 'bg-gray-400'}`}>
+                        {p.status}
+                      </span>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
           )}
+
+          {/* Add Product Tab */}
+          {activeTab === 'add_product' && (
+            <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
+                <h2 className="text-lg font-bold text-[#2C1E16]">Add New Product</h2>
+              </div>
+              <form onSubmit={handleAddProduct} className="p-6 space-y-5 max-w-2xl">
+                <div className="animate-fade-in-up delay-1">
+                  <label className="block text-sm font-bold text-gray-600 mb-1">Product Name</label>
+                  <input type="text" required value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})}
+                    className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 hover:border-[#A87C51]/50" />
+                </div>
+                <div className="grid grid-cols-2 gap-4 animate-fade-in-up delay-2">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-600 mb-1">Price (₹)</label>
+                    <input type="number" required value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})}
+                      className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 hover:border-[#A87C51]/50" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-600 mb-1">Initial Stock</label>
+                    <input type="number" required value={newProduct.stock_quantity} onChange={e => setNewProduct({...newProduct, stock_quantity: e.target.value})}
+                      className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 hover:border-[#A87C51]/50" />
+                  </div>
+                </div>
+                <div className="animate-fade-in-up delay-3">
+                  <label className="block text-sm font-bold text-gray-600 mb-1">Category</label>
+                  <select required value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}
+                    className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 cursor-pointer hover:border-[#A87C51]/50">
+                    <option value="" disabled>Select a category</option>
+                    {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                  </select>
+                </div>
+                <div className="animate-fade-in-up delay-3">
+                  <label className="block text-sm font-bold text-gray-600 mb-1">Description</label>
+                  <textarea required value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} rows="4"
+                    className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 resize-none hover:border-[#A87C51]/50"></textarea>
+                </div>
+                <div className="animate-fade-in-up delay-4">
+                  <label className="block text-sm font-bold text-gray-600 mb-1">Product Image</label>
+                  <input type="file" accept="image/*" required onChange={e => setProductImageFile(e.target.files[0])}
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#FAF8F5] file:text-[#2C1E16] file:cursor-pointer file:transition-colors file:hover:bg-[#5A3825] file:hover:text-white" />
+                </div>
+                <div className="animate-fade-in-up delay-5">
+                  <button type="submit" className="btn-primary w-full bg-[#5A3825] text-white py-3 rounded-full font-bold uppercase tracking-wider hover:bg-[#3E2723] transition-all duration-200">
+                    Submit for Approval
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Request Category Tab */}
+          {activeTab === 'request_category' && (
+            <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
+                <h2 className="text-lg font-bold text-[#2C1E16]">Request a New Category</h2>
+              </div>
+              <form onSubmit={handleRequestCategory} className="p-6 space-y-5 max-w-md">
+                <div className="animate-fade-in-up delay-1">
+                  <label className="block text-sm font-bold text-gray-600 mb-1">Category Name</label>
+                  <input type="text" required value={newCategory.name} onChange={e => setNewCategory({name: e.target.value})}
+                    className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 hover:border-[#A87C51]/50" />
+                </div>
+                <div className="animate-fade-in-up delay-2">
+                  <label className="block text-sm font-bold text-gray-600 mb-1">Reference Image</label>
+                  <input type="file" accept="image/*" required onChange={e => setCategoryImageFile(e.target.files[0])}
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#FAF8F5] file:text-[#2C1E16] file:cursor-pointer file:transition-colors file:hover:bg-[#5A3825] file:hover:text-white" />
+                </div>
+                <div className="animate-fade-in-up delay-3">
+                  <button type="submit" className="btn-primary w-full bg-[#5A3825] text-white py-3 rounded-full font-bold uppercase tracking-wider hover:bg-[#3E2723] transition-all duration-200">
+                    Submit Request
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Request Offer Tab */}
+          {activeTab === 'request_offer' && (
+            <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
+                <h2 className="text-lg font-bold text-[#2C1E16]">Request a Promo Offer</h2>
+              </div>
+              <form onSubmit={handleRequestOffer} className="p-6 space-y-5 max-w-md">
+                <div className="animate-fade-in-up delay-1">
+                  <label className="block text-sm font-bold text-gray-600 mb-1">Offer Title</label>
+                  <input type="text" required value={newOffer.title} onChange={e => setNewOffer({...newOffer, title: e.target.value})}
+                    className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 hover:border-[#A87C51]/50" />
+                </div>
+                <div className="grid grid-cols-2 gap-4 animate-fade-in-up delay-2">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-600 mb-1">Start Date</label>
+                    <input type="date" required value={newOffer.start_date} onChange={e => setNewOffer({...newOffer, start_date: e.target.value})}
+                      className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 cursor-pointer hover:border-[#A87C51]/50" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-600 mb-1">End Date</label>
+                    <input type="date" required value={newOffer.end_date} onChange={e => setNewOffer({...newOffer, end_date: e.target.value})}
+                      className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 cursor-pointer hover:border-[#A87C51]/50" />
+                  </div>
+                </div>
+                <div className="animate-fade-in-up delay-3">
+                  <label className="block text-sm font-bold text-gray-600 mb-1">Banner Image</label>
+                  <input type="file" accept="image/*" required onChange={e => setOfferImageFile(e.target.files[0])}
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#FAF8F5] file:text-[#2C1E16] file:cursor-pointer file:transition-colors file:hover:bg-[#5A3825] file:hover:text-white" />
+                </div>
+                <div className="animate-fade-in-up delay-4">
+                  <button type="submit" className="btn-primary w-full bg-[#5A3825] text-white py-3 rounded-full font-bold uppercase tracking-wider hover:bg-[#3E2723] transition-all duration-200">
+                    Submit Request
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
         </main>
       </div>
     </div>

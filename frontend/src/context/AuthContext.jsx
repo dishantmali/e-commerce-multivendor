@@ -15,7 +15,6 @@ export const AuthProvider = ({ children }) => {
           const res = await api.get('/auth/me/');
           setUser(res.data);
         } catch (error) {
-          console.error(error);
           localStorage.removeItem('access');
           localStorage.removeItem('refresh');
         }
@@ -25,18 +24,37 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, []);
 
+  const logout = () => {
+    localStorage.removeItem('access');
+    localStorage.removeItem('refresh');
+    setUser(null);
+  };
+
   const login = async (access, refresh) => {
     localStorage.setItem('access', access);
     localStorage.setItem('refresh', refresh);
     const res = await api.get('/auth/me/');
     setUser(res.data);
-    return res.data; // <-- Added this line so we can route smartly after login
-  };
 
-  const logout = () => {
-    localStorage.removeItem('access');
-    localStorage.removeItem('refresh');
-    setUser(null);
+    // Merge Guest Cart
+    const guestCart = JSON.parse(localStorage.getItem('guestCart'));
+    if (guestCart && guestCart.length > 0) {
+      try {
+        await api.post('/cart/merge/', { items: guestCart });
+        localStorage.removeItem('guestCart'); 
+      } catch (err) { console.error("Failed to merge cart", err); }
+    }
+    
+    // Merge Guest Wishlist
+    const guestWishlist = JSON.parse(localStorage.getItem('guestWishlist'));
+    if (guestWishlist && guestWishlist.length > 0) {
+      try {
+        await api.post('/wishlist/merge/', { items: guestWishlist });
+        localStorage.removeItem('guestWishlist'); 
+      } catch (err) { console.error("Failed to merge wishlist", err); }
+    }
+    
+    return res.data;
   };
 
   return (
@@ -46,5 +64,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);

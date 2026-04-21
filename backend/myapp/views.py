@@ -57,6 +57,9 @@ class HomePageView(APIView):
             status='approved',
             end_date__gte=today
         )
+        
+        # --- NEW LOGIC: Fetch Top Approved Vendors ---
+        top_vendors = VendorProfile.objects.filter(is_approved=True)[:10]
 
         return Response({
             "categories": CategorySerializer(
@@ -75,6 +78,8 @@ class HomePageView(APIView):
                 active_offers, many=True,
                 context={'request': request}
             ).data,
+            # --- NEW DATA IN RESPONSE ---
+            "vendors": [{"shop_name": v.shop_name} for v in top_vendors]
         })
 
 
@@ -875,3 +880,47 @@ class WishlistListView(generics.ListAPIView):
     def get_queryset(self):
         # Only return the wishlist items for the logged-in user
         return Wishlist.objects.filter(user=self.request.user).select_related('product')
+
+class MergeCartView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        local_items = request.data.get('items', [])
+        cart, _ = Cart.objects.get_or_create(user=request.user)
+
+        for item in local_items:
+            product_id = item.get('product_id')
+            quantity = item.get('quantity', 1)
+            
+            try:
+                product = Product.objects.get(id=product_id, status='approved')
+                if product.stock_quantity > 0:
+                    cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+                    if not created:
+                        cart_item.quantity += quantity
+                    else:
+                        cart_item.quantity = quantity
+                    cart_item.save()
+            except Product.DoesNotExist:
+                continue
+
+        return Response({"message": "Cart merged successfully"})
+    
+class MergeWishlistView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        local_items = request.data.get('items', [])
+        
+        for item in local_items:
+            product_id = item.get('product')
+            if isinstance(product_id, dict):
+                product_id = product_id.get('id')
+                
+            try:
+                product = Product.objects.get(id=product_id, status='approved')
+                Wishlist.objects.get_or_create(user=request.user, product=product)
+            except Product.DoesNotExist:
+                continue
+
+        return Response({"message": "Wishlist merged successfully"})
