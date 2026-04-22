@@ -185,32 +185,6 @@ export const HomePage = () => {
   return (
     <div className="font-sans bg-white pb-16">
 
-      {/* Hero Banner */}
-      <div className="w-full bg-[#5A3825] h-[300px] md:h-[400px] flex items-center justify-center relative overflow-hidden">
-        {data.offers[0] ? (
-          <>
-            <img
-              src={data.offers[0].image}
-              className="animate-fade-in absolute inset-0 w-full h-full object-cover opacity-40"
-              alt="Offer"
-            />
-            <div className="animate-hero relative z-10 text-center px-4">
-              <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 italic">
-                {data.offers[0].title}
-              </h1>
-              <p className="text-[#A87C51] font-semibold text-lg bg-white/10 px-4 py-1 inline-block rounded-full backdrop-blur-sm">
-                Limited Time Deal
-              </p>
-            </div>
-          </>
-        ) : (
-          <div className="animate-hero text-white text-center z-10">
-            <h1 className="text-4xl font-bold mb-4">Welcome to Gujju Ni Dukan</h1>
-            <p className="text-[#A87C51]">Authentic Flavors, Delivered Fresh.</p>
-          </div>
-        )}
-      </div>
-
       {/* Offer Ticker */}
       {data.offers && data.offers.length > 0 && (
         <div className="w-full py-3 bg-[#A87C51] text-white overflow-hidden border-y border-[#5A3825]">
@@ -333,10 +307,7 @@ export const HomePage = () => {
                 {data.vendors.map((vendor, i) => <div key={`c-${i}`} className="text-2xl font-bold text-gray-300 mx-8">{vendor.shop_name}</div>)}
               </>
             ) : (
-              <>
-                {['Khakhra King', 'Surati Sweets', 'Kathiyawadi Spices', 'Ahmedabad Roasters'].map((brand, i) => <div key={`a-${i}`} className="text-2xl font-bold text-gray-300 mx-8">{brand}</div>)}
-                {['Khakhra King', 'Surati Sweets', 'Kathiyawadi Spices', 'Ahmedabad Roasters'].map((brand, i) => <div key={`b-${i}`} className="text-2xl font-bold text-gray-300 mx-8">{brand}</div>)}
-              </>
+              <div className="text-2xl font-bold text-gray-300 mx-8">No vendors to display.</div>
             )}
           </div>
         </div>
