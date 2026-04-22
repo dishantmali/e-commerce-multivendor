@@ -15,58 +15,50 @@ export const HomePage = () => {
 
   // --- Vendor Carousel Logic ---
   const vendorScrollRef = useRef(null);
+  const vendorIntervalRef = useRef(null);
+
+  const startVendorScroll = () => {
+    clearInterval(vendorIntervalRef.current);
+    vendorIntervalRef.current = setInterval(() => {
+      if (vendorScrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = vendorScrollRef.current;
+        // If reached the end, scroll back to start, else scroll right
+        if (scrollLeft + clientWidth >= scrollWidth - 10) {
+          vendorScrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          vendorScrollRef.current.scrollBy({ left: 280, behavior: 'smooth' });
+        }
+      }
+    }, 3000);
+  };
+
+  const stopVendorScroll = () => {
+    clearInterval(vendorIntervalRef.current);
+  };
 
   useEffect(() => {
-    const scrollContainer = vendorScrollRef.current;
-    if (!scrollContainer) return;
-
-    let interval;
-    const startAutoScroll = () => {
-      interval = setInterval(() => {
-        // If reached the end, scroll back to start, else scroll right
-        if (scrollContainer.scrollLeft + scrollContainer.clientWidth >= scrollContainer.scrollWidth - 10) {
-          scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          scrollContainer.scrollBy({ left: 280, behavior: 'smooth' });
-        }
-      }, 3000); // Scrolls every 3 seconds
-    };
-
-    startAutoScroll();
-
-    // Pause auto-scroll when user hovers over the carousel
-    scrollContainer.addEventListener('mouseenter', () => clearInterval(interval));
-    scrollContainer.addEventListener('mouseleave', startAutoScroll);
-
-    return () => {
-      clearInterval(interval);
-      if (scrollContainer) {
-        scrollContainer.removeEventListener('mouseenter', () => clearInterval(interval));
-        scrollContainer.removeEventListener('mouseleave', startAutoScroll);
-      }
-    };
+    if (data.vendors && data.vendors.length > 0) {
+      startVendorScroll();
+    }
+    return stopVendorScroll; // Cleanup on unmount
   }, [data.vendors]);
 
-  const scrollLeft = () => {
-    vendorScrollRef.current?.scrollBy({ left: -280, behavior: 'smooth' });
-  };
+  const scrollLeft = () => vendorScrollRef.current?.scrollBy({ left: -280, behavior: 'smooth' });
+  const scrollRight = () => vendorScrollRef.current?.scrollBy({ left: 280, behavior: 'smooth' });
 
-  const scrollRight = () => {
-    vendorScrollRef.current?.scrollBy({ left: 280, behavior: 'smooth' });
-  };
 
   // --- Reviews Carousel Logic & Static Data ---
   const reviewScrollRef = useRef(null);
+  const reviewIntervalRef = useRef(null);
 
   const staticReviews = [
     { name: "Dishant Mali", rating: 5, text: "Absolutely love the authentic taste! The sweets were fresh, perfectly packed, and delivered right on time." },
     { name: "Rahul Sharma", rating: 4, text: "Great coffee selection. The UI is very smooth. Delivery was a bit slow, but the quality makes up for it." },
-    { name: "Priya Patel", rating: 5, text: "Best place to get local Gujarati delicacies. The vendor responsiveness is top-notch. Will definitely order again!" },
+    { name: "Priyal Patel", rating: 5, text: "Best place to get local Gujarati delicacies. The vendor responsiveness is top-notch. Will definitely order again!" },
     { name: "Amit Kumar", rating: 5, text: "The user interface is so smooth and the wishlist feature makes it so easy to save my favorite items." },
     { name: "Sneha Desai", rating: 4, text: "Really good experience overall. The roasted blends are incredibly aromatic." }
   ];
 
-  // Helper to get initials (e.g., "Dishant Mali" -> "DM")
   const getInitials = (name) => {
     if (!name) return '';
     const parts = name.split(' ');
@@ -76,37 +68,32 @@ export const HomePage = () => {
     return parts[0][0].toUpperCase();
   };
 
-  useEffect(() => {
-    const scrollContainer = reviewScrollRef.current;
-    if (!scrollContainer) return;
-
-    let interval;
-    const startAutoScroll = () => {
-      interval = setInterval(() => {
-        if (scrollContainer.scrollLeft + scrollContainer.clientWidth >= scrollContainer.scrollWidth - 10) {
-          scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
+  const startReviewScroll = () => {
+    clearInterval(reviewIntervalRef.current);
+    reviewIntervalRef.current = setInterval(() => {
+      if (reviewScrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = reviewScrollRef.current;
+        if (scrollLeft + clientWidth >= scrollWidth - 10) {
+          reviewScrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
         } else {
-          scrollContainer.scrollBy({ left: 320, behavior: 'smooth' });
+          reviewScrollRef.current.scrollBy({ left: 340, behavior: 'smooth' });
         }
-      }, 3500); // Scrolls every 3.5 seconds
-    };
-
-    startAutoScroll();
-
-    scrollContainer.addEventListener('mouseenter', () => clearInterval(interval));
-    scrollContainer.addEventListener('mouseleave', startAutoScroll);
-
-    return () => {
-      clearInterval(interval);
-      if (scrollContainer) {
-        scrollContainer.removeEventListener('mouseenter', () => clearInterval(interval));
-        scrollContainer.removeEventListener('mouseleave', startAutoScroll);
       }
-    };
+    }, 3000);
+  };
+
+  const stopReviewScroll = () => {
+    clearInterval(reviewIntervalRef.current);
+  };
+
+  useEffect(() => {
+    startReviewScroll();
+    return stopReviewScroll; // Cleanup on unmount
   }, []);
 
-  const scrollReviewsLeft = () => reviewScrollRef.current?.scrollBy({ left: -320, behavior: 'smooth' });
-  const scrollReviewsRight = () => reviewScrollRef.current?.scrollBy({ left: 320, behavior: 'smooth' });
+  const scrollReviewsLeft = () => reviewScrollRef.current?.scrollBy({ left: -340, behavior: 'smooth' });
+  const scrollReviewsRight = () => reviewScrollRef.current?.scrollBy({ left: 340, behavior: 'smooth' });
+
 
   // --- API Fetch Logic ---
   useEffect(() => {
@@ -329,11 +316,9 @@ export const HomePage = () => {
           
           {/* Poster 1 (Left 50%) */}
           <div className="w-full md:w-1/2 bg-[#F5EFE6] p-8 md:p-12 lg:p-16 flex flex-col justify-center relative overflow-hidden group">
-            {/* Background Texture/Gradient */}
             <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-transparent to-[#A87C51]/10 pointer-events-none"></div>
             <div className="absolute -right-32 -top-32 w-96 h-96 bg-white/60 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000 pointer-events-none"></div>
             
-            {/* Content perfectly aligned within the wide space */}
             <div className="relative z-10 w-full max-w-xl mx-auto md:ml-auto md:mr-10 xl:mr-16">
               <span className="text-[#A87C51] font-bold tracking-[0.3em] uppercase text-[10px] md:text-xs mb-3 block">Premium Quality</span>
               <h3 className="text-4xl lg:text-6xl font-black text-[#2C1E16] mb-4 leading-[1.05] tracking-tight">
@@ -351,11 +336,9 @@ export const HomePage = () => {
 
           {/* Poster 2 (Right 50%) */}
           <div className="w-full md:w-1/2 bg-[#1A110A] p-8 md:p-12 lg:p-16 flex flex-col justify-center relative overflow-hidden group">
-            {/* Background Texture/Gradient */}
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-bl from-transparent to-[#A87C51]/10 pointer-events-none"></div>
             <div className="absolute -left-32 -bottom-32 w-96 h-96 bg-[#A87C51]/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000 pointer-events-none"></div>
             
-            {/* Content perfectly aligned within the wide space */}
             <div className="relative z-10 w-full max-w-xl mx-auto md:mr-auto md:ml-10 xl:ml-16">
               <span className="text-[#A87C51] font-bold tracking-[0.3em] uppercase text-[10px] md:text-xs mb-3 block">Freshly Ground</span>
               <h3 className="text-4xl lg:text-6xl font-black text-white mb-4 leading-[1.05] tracking-tight">
@@ -420,30 +403,23 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* Top Vendors Carousel (UNCHANGED as requested) */}
+      {/* Top Vendors Carousel */}
       <div className="py-20 bg-[#FAF8F5] border-y border-[#A87C51]/20 mt-16 relative">
         <div className="max-w-7xl mx-auto px-4">
           
-          {/* Header & Desktop Controls */}
-          <div className="flex justify-between items-end mb-10">
-            <div className="animate-fade-in-up">
-              <span className="text-[#A87C51] font-bold tracking-widest uppercase text-xs">Our Partners</span>
-              <h2 className="text-3xl font-bold text-[#2C1E16] mt-2">Trusted Top Vendors</h2>
-            </div>
-            <div className="hidden md:flex gap-3 animate-fade-in-up">
-              <button onClick={scrollLeft} className="w-12 h-12 rounded-full border-2 border-[#5A3825] flex items-center justify-center text-[#5A3825] hover:bg-[#5A3825] hover:text-white transition-all duration-300 active:scale-95">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
-              </button>
-              <button onClick={scrollRight} className="w-12 h-12 rounded-full border-2 border-[#5A3825] flex items-center justify-center text-[#5A3825] hover:bg-[#5A3825] hover:text-white transition-all duration-300 active:scale-95">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
-              </button>
-            </div>
+          {/* Header Centered */}
+          <div className="text-center mb-10 animate-fade-in-up">
+            <span className="text-[#A87C51] font-bold tracking-widest uppercase text-xs">Our Partners</span>
+            <h2 className="text-3xl font-bold text-[#2C1E16] mt-2">Trusted Top Vendors</h2>
           </div>
 
-          {/* Scrolling Container */}
           <div 
-            ref={vendorScrollRef} 
-            className="flex overflow-x-auto gap-6 pb-12 pt-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            ref={vendorScrollRef}
+            onMouseEnter={stopVendorScroll}
+            onMouseLeave={startVendorScroll}
+            onTouchStart={stopVendorScroll}
+            onTouchEnd={startVendorScroll}
+            className="flex overflow-x-auto gap-6 pb-6 pt-4 px-2 w-full snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           >
             {data.vendors && data.vendors.length > 0 ? (
               [...data.vendors, ...data.vendors, ...data.vendors].map((vendor, idx) => (
@@ -451,7 +427,6 @@ export const HomePage = () => {
                   key={idx} 
                   className="min-w-[240px] md:min-w-[280px] bg-white border border-[#A87C51]/20 rounded-2xl p-8 flex flex-col items-center justify-center snap-center group cursor-pointer transition-all duration-400 hover:-translate-y-4 hover:shadow-[0_20px_40px_rgba(90,56,37,0.12)] hover:border-[#5A3825]"
                 >
-                  {/* Vendor Logo (Span system completely removed) */}
                   <div className="w-28 h-28 rounded-full bg-[#FAF8F5] mb-6 flex items-center justify-center overflow-hidden border-4 border-white shadow-[0_4px_15px_rgba(0,0,0,0.05)] group-hover:border-[#A87C51]/30 transition-all duration-400 group-hover:shadow-[0_8px_25px_rgba(168,124,81,0.25)] relative">
                     <img 
                       src={vendor.logo || '/logo.jpeg'} 
@@ -459,29 +434,24 @@ export const HomePage = () => {
                       className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-500" 
                     />
                   </div>
-                  
-                  {/* Vendor Info */}
                   <h3 className="font-bold text-[#2C1E16] text-xl text-center group-hover:text-[#A87C51] transition-colors">{vendor.shop_name}</h3>
-                  {/* <p className="text-xs text-gray-400 mt-3 uppercase tracking-widest font-bold flex items-center gap-1">
-                    <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                    Verified
-                  </p> */}
                 </div>
               ))
             ) : (
-              <p className="text-gray-500">No top vendors available at the moment.</p>
+              <p className="text-gray-500 text-center w-full">No top vendors available at the moment.</p>
             )}
           </div>
           
-          {/* Mobile Controls */}
-          <div className="flex md:hidden justify-center gap-6 mt-2">
-             <button onClick={scrollLeft} className="w-12 h-12 rounded-full border-2 border-[#5A3825] flex items-center justify-center text-[#5A3825] hover:bg-[#5A3825] hover:text-white transition-colors active:scale-95">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
-              </button>
-              <button onClick={scrollRight} className="w-12 h-12 rounded-full border-2 border-[#5A3825] flex items-center justify-center text-[#5A3825] hover:bg-[#5A3825] hover:text-white transition-colors active:scale-95">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
-              </button>
+          {/* Centered Controls Below Carousel (Desktop & Mobile) */}
+          <div className="flex justify-center gap-4 mt-6">
+            <button onClick={scrollLeft} className="w-12 h-12 rounded-full bg-white shadow-[0_2px_10px_rgba(0,0,0,0.08)] border border-gray-100 flex items-center justify-center text-[#2C1E16] hover:bg-[#FAF8F5] transition-all duration-300 active:scale-95">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <button onClick={scrollRight} className="w-12 h-12 rounded-full bg-white shadow-[0_2px_10px_rgba(0,0,0,0.08)] border border-gray-100 flex items-center justify-center text-[#2C1E16] hover:bg-[#FAF8F5] transition-all duration-300 active:scale-95">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+            </button>
           </div>
+
         </div>
       </div>
 
@@ -489,41 +459,31 @@ export const HomePage = () => {
       <div className="py-20 bg-white relative">
         <div className="max-w-7xl mx-auto px-4">
           
-          {/* Header & Desktop Controls */}
-          <div className="flex justify-between items-end mb-10">
-            <div className="animate-fade-in-up">
-              <span className="text-[#A87C51] font-bold tracking-widest uppercase text-xs">Testimonials</span>
-              <h2 className="text-3xl font-bold text-[#2C1E16] mt-2">What Our Customers Say</h2>
-            </div>
-            <div className="hidden md:flex gap-3 animate-fade-in-up">
-              <button onClick={scrollReviewsLeft} className="w-12 h-12 rounded-full border-2 border-[#5A3825] flex items-center justify-center text-[#5A3825] hover:bg-[#5A3825] hover:text-white transition-all duration-300 active:scale-95">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
-              </button>
-              <button onClick={scrollReviewsRight} className="w-12 h-12 rounded-full border-2 border-[#5A3825] flex items-center justify-center text-[#5A3825] hover:bg-[#5A3825] hover:text-white transition-all duration-300 active:scale-95">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
-              </button>
-            </div>
+          {/* Header Centered */}
+          <div className="text-center mb-10 animate-fade-in-up">
+            <span className="text-[#A87C51] font-bold tracking-widest uppercase text-xs">Testimonials</span>
+            <h2 className="text-3xl font-bold text-[#2C1E16] mt-2">What Our Customers Say</h2>
           </div>
 
-          {/* Scrolling Container */}
           <div 
-            ref={reviewScrollRef} 
-            className="flex overflow-x-auto gap-6 pb-12 pt-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            ref={reviewScrollRef}
+            onMouseEnter={stopReviewScroll}
+            onMouseLeave={startReviewScroll}
+            onTouchStart={stopReviewScroll}
+            onTouchEnd={startReviewScroll}
+            className="flex overflow-x-auto gap-6 pb-6 pt-4 px-2 w-full snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           >
-            {/* Duplicating the static array to create the infinite scroll illusion */}
             {[...staticReviews, ...staticReviews, ...staticReviews].map((review, idx) => (
               <div 
                 key={idx} 
                 className="min-w-[300px] md:min-w-[340px] bg-white border border-[#A87C51]/20 rounded-2xl p-8 flex flex-col snap-center group cursor-pointer transition-all duration-400 hover:-translate-y-4 hover:shadow-[0_20px_40px_rgba(90,56,37,0.12)] hover:border-[#5A3825]"
               >
-                {/* Header: Logo and Name */}
                 <div className="flex items-center gap-4 mb-5">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#A87C51] to-[#5A3825] flex items-center justify-center text-white font-bold text-xl shadow-[0_4px_15px_rgba(0,0,0,0.05)] transition-all duration-400 group-hover:scale-110 group-hover:shadow-[0_8px_25px_rgba(168,124,81,0.25)]">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#A87C51] to-[#5A3825] flex items-center justify-center text-white font-bold text-xl border-2 border-white shadow-[0_4px_15px_rgba(0,0,0,0.05)] transition-all duration-500 group-hover:scale-110 group-hover:border-[#A87C51]/30 group-hover:shadow-[0_8px_25px_rgba(168,124,81,0.25)]">
                     {getInitials(review.name)}
                   </div>
                   <div>
                     <h3 className="font-bold text-[#2C1E16] text-lg group-hover:text-[#A87C51] transition-colors">{review.name}</h3>
-                    {/* Star Ratings */}
                     <div className="flex text-yellow-400 mt-1">
                       {[...Array(5)].map((_, i) => (
                         <svg key={i} className={`w-4 h-4 ${i < review.rating ? 'fill-current' : 'text-gray-300 fill-current'}`} viewBox="0 0 20 20">
@@ -533,8 +493,6 @@ export const HomePage = () => {
                     </div>
                   </div>
                 </div>
-                
-                {/* Review Text */}
                 <p className="text-gray-600 italic text-sm leading-relaxed relative">
                   <span className="text-4xl text-[#A87C51]/20 absolute -top-4 -left-2 font-serif">"</span>
                   <span className="relative z-10 pl-2">{review.text}</span>
@@ -543,15 +501,16 @@ export const HomePage = () => {
             ))}
           </div>
           
-          {/* Mobile Controls */}
-          <div className="flex md:hidden justify-center gap-6 mt-2">
-             <button onClick={scrollReviewsLeft} className="w-12 h-12 rounded-full border-2 border-[#5A3825] flex items-center justify-center text-[#5A3825] hover:bg-[#5A3825] hover:text-white transition-colors active:scale-95">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
-              </button>
-              <button onClick={scrollReviewsRight} className="w-12 h-12 rounded-full border-2 border-[#5A3825] flex items-center justify-center text-[#5A3825] hover:bg-[#5A3825] hover:text-white transition-colors active:scale-95">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
-              </button>
+          {/* Centered Controls Below Carousel (Desktop & Mobile) */}
+          <div className="flex justify-center gap-4 mt-6">
+            <button onClick={scrollReviewsLeft} className="w-12 h-12 rounded-full bg-white shadow-[0_2px_10px_rgba(0,0,0,0.08)] border border-gray-100 flex items-center justify-center text-[#2C1E16] hover:bg-[#FAF8F5] transition-all duration-300 active:scale-95">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <button onClick={scrollReviewsRight} className="w-12 h-12 rounded-full bg-white shadow-[0_2px_10px_rgba(0,0,0,0.08)] border border-gray-100 flex items-center justify-center text-[#2C1E16] hover:bg-[#FAF8F5] transition-all duration-300 active:scale-95">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+            </button>
           </div>
+
         </div>
       </div>
 

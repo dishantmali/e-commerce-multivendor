@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
+import dukanLogo from '../assets/dukan.jpeg'
 
 const Icons = {
   Overview:   () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" /></svg>,
@@ -13,7 +16,12 @@ const Icons = {
 };
 
 export const AdminDashboard = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  
   const [activeTab, setActiveTab] = useState('overview');
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef(null);
 
   const [pendingProducts, setPendingProducts] = useState([]);
   const [pendingVendors, setPendingVendors] = useState([]);
@@ -60,6 +68,22 @@ export const AdminDashboard = () => {
     fetchData();
   }, []);
 
+  // Close profile dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   const handleAction = async (type, id, action) => {
     try {
       if (type === 'product') {
@@ -103,7 +127,6 @@ export const AdminDashboard = () => {
   const handleDeleteOffer = async (id) => {
     if (!window.confirm("Are you sure you want to delete this offer?")) return;
     try {
-      // FIX: Added /action/ to the end of the URL to match Django urls.py
       await api.delete(`/admin/offers/${id}/action/`);
       setOffers(offers.filter(o => o.id !== id));
       toast.success("Offer deleted");
@@ -166,111 +189,179 @@ export const AdminDashboard = () => {
   };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center text-[#5A3825]">Loading...</div>
+    <div className="fixed inset-0 z-[60] bg-[#FAF8F5] flex items-center justify-center text-[#5A3825] font-sans">
+      <div className="flex flex-col items-center gap-4">
+        <svg className="animate-spin w-8 h-8" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+        </svg>
+        <span className="font-bold tracking-widest uppercase">Loading Portal...</span>
+      </div>
+    </div>
   );
 
   const pendingCatReqs  = categoryRequests.filter(r => r.status === 'pending');
   const pendingOfferReqs = offers.filter(o => o.status === 'pending');
 
+  const navItems = [
+    { key: 'overview',    label: 'Overview',          Icon: Icons.Overview,    badge: null },
+    { key: 'vendors',     label: 'Pending Vendors',   Icon: Icons.Vendors,     badge: pendingVendors.length },
+    { key: 'products',    label: 'Pending Products',  Icon: Icons.Products,    badge: pendingProducts.length },
+    { key: 'users',       label: 'Users Directory',   Icon: Icons.Users,       badge: null },
+    { key: 'categories',  label: 'Categories',        Icon: Icons.Categories,  badge: pendingCatReqs.length },
+    { key: 'offers',      label: 'Offers',            Icon: Icons.Offers,      badge: pendingOfferReqs.length },
+    { key: 'orders',      label: 'Global Orders',     Icon: Icons.Orders,      badge: null },
+  ];
+
   return (
-    <div className="w-full px-4 sm:px-8 lg:px-12 py-10 font-sans bg-[#FAF8F5] min-h-[calc(100vh-80px)]">
+    // Wrapper overlaying everything (hides global navbar)
+    <div className="fixed inset-0 z-[60] flex bg-[#FAF8F5] font-sans overflow-hidden">
+      
+      {/* ── Sidebar ── */}
+      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-full shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10">
+        
+        {/* Logo Section */}
+        <div className="h-20 flex items-center px-6 border-b border-gray-100 shrink-0 cursor-pointer" onClick={() => navigate('/')}>
+          <img src={dukanLogo} alt="Logo" className="rounded-full object-cover mix-blend-multiply mr-3" />
+        </div>
 
-      <div className="animate-fade-in mb-8">
-        <h1 className="text-3xl font-bold text-[#2C1E16]">Admin Portal</h1>
-        <p className="text-gray-500 mt-1">Manage your marketplace, vendors, and catalog.</p>
-      </div>
+        {/* Navigation Links */}
+        <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-2">
+          <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Admin Controls</p>
+          {navItems.map(({ key, label, Icon, badge }) => {
+            const isActive = activeTab === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 group ${
+                  isActive 
+                    ? 'bg-[#5A3825] text-white shadow-md' 
+                    : 'text-gray-500 hover:bg-[#FAF8F5] hover:text-[#5A3825]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className={`${isActive ? 'text-[#A87C51]' : 'text-gray-400 group-hover:text-[#A87C51]'} transition-colors`}>
+                    <Icon />
+                  </span>
+                  {label}
+                </div>
+                {badge > 0 && (
+                  <span className={`px-2 py-0.5 text-xs rounded-full ${isActive ? 'bg-white text-[#5A3825]' : 'bg-[#A87C51] text-white'}`}>
+                    {badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
 
-      <div className="flex flex-col md:flex-row gap-8">
+        {/* Bottom Sidebar area (optional branding/info) */}
+        <div className="p-6 border-t border-gray-100 bg-[#FAF8F5] shrink-0 text-center">
+          <p className="text-xs text-gray-400 font-medium">© {new Date().getFullYear()} Gujju Ni Dukan</p>
+        </div>
+      </aside>
 
-        {/* ── Sidebar ── */}
-        <aside className="animate-fade-in-left w-full md:w-72 shrink-0">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden sticky top-28">
-            <nav className="flex flex-col">
-              {[
-                { key: 'overview',    label: 'Overview',          Icon: Icons.Overview,    badge: null },
-                { key: 'vendors',     label: 'Pending Vendors',   Icon: Icons.Vendors,     badge: pendingVendors.length },
-                { key: 'products',    label: 'Pending Products',  Icon: Icons.Products,    badge: pendingProducts.length },
-                { key: 'users',       label: 'Users Directory',   Icon: Icons.Users,       badge: null },
-                { key: 'categories',  label: 'Categories',        Icon: Icons.Categories,  badge: pendingCatReqs.length },
-                { key: 'offers',      label: 'Offers',            Icon: Icons.Offers,      badge: pendingOfferReqs.length },
-                { key: 'orders',      label: 'Global Orders',     Icon: Icons.Orders,      badge: null },
-              ].map(({ key, label, Icon, badge }, i) => (
-                <button
-                  key={key}
-                  onClick={() => setActiveTab(key)}
-                  className={`admin-nav-item flex items-center justify-between px-6 py-4 text-sm font-medium ${i > 0 ? 'border-t border-gray-100' : ''} ${activeTab === key ? 'bg-[#5A3825] text-white' : 'text-gray-600 hover:bg-[#FAF8F5]'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon /> {label}
-                  </div>
-                  {badge > 0 && (
-                    <span className={`px-2 py-0.5 text-xs rounded-full ${activeTab === key ? 'bg-white text-[#5A3825]' : 'bg-[#A87C51] text-white'}`}>
-                      {badge}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </nav>
+      {/* ── Main Content Area ── */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+        
+        {/* Top Header */}
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-8 shrink-0 z-10 shadow-sm">
+          <h2 className="text-2xl font-extrabold text-[#2C1E16] capitalize tracking-tight">
+            {activeTab.replace('_', ' ')}
+          </h2>
+
+          {/* Profile Dropdown */}
+          <div className="relative" ref={profileRef}>
+            <button 
+              onClick={() => setIsProfileOpen(!isProfileOpen)} 
+              className="flex items-center gap-3 focus:outline-none p-1.5 rounded-full hover:bg-[#FAF8F5] transition-colors duration-200 border border-transparent hover:border-gray-200"
+            >
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-bold text-[#2C1E16] leading-none">{user?.name || 'Admin'}</p>
+                <p className="text-xs text-gray-500 mt-1 uppercase tracking-widest">{user?.role}</p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#A87C51] to-[#5A3825] text-white flex items-center justify-center font-bold shadow-md">
+                {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
+              </div>
+              <svg className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+
+            {/* Dropdown Menu */}
+            <div className={`absolute right-0 mt-3 w-56 bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-50 transition-all duration-200 origin-top-right ${isProfileOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}`}>
+              <div className="px-4 py-3 border-b border-gray-50 mb-2">
+                <p className="text-sm font-bold text-[#2C1E16] truncate">{user?.name || 'Admin'}</p>
+                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              </div>
+              <button onClick={() => { navigate('/'); setIsProfileOpen(false); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-[#FAF8F5] hover:text-[#A87C51] transition-colors flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                Return to Store
+              </button>
+              <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2 mt-1">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                Sign Out
+              </button>
+            </div>
           </div>
-        </aside>
+        </header>
 
-        {/* ── Main content ── */}
-        <main className="flex-1 w-full overflow-hidden">
+        {/* Scrollable Tab Content Area */}
+        <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
 
           {/* Overview */}
           {activeTab === 'overview' && (
             <div className="animate-fade-in stagger-children grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="stat-card animate-fade-in-up bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-[#5A3825]">
                 <p className="text-sm font-bold text-gray-500 uppercase">Pending Vendors</p>
-                <h3 className="text-3xl font-bold text-[#2C1E16]">{pendingVendors.length}</h3>
+                <h3 className="text-4xl font-black text-[#2C1E16] mt-2">{pendingVendors.length}</h3>
               </div>
               <div className="stat-card animate-fade-in-up bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-[#A87C51]">
                 <p className="text-sm font-bold text-gray-500 uppercase">Pending Products</p>
-                <h3 className="text-3xl font-bold text-[#2C1E16]">{pendingProducts.length}</h3>
+                <h3 className="text-4xl font-black text-[#2C1E16] mt-2">{pendingProducts.length}</h3>
               </div>
               <div className="stat-card animate-fade-in-up bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-blue-500">
                 <p className="text-sm font-bold text-gray-500 uppercase">Total Buyers</p>
-                <h3 className="text-3xl font-bold text-[#2C1E16]">{users.length}</h3>
+                <h3 className="text-4xl font-black text-[#2C1E16] mt-2">{users.length}</h3>
               </div>
               <div className="stat-card animate-fade-in-up bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-green-500">
                 <p className="text-sm font-bold text-gray-500 uppercase">Total Orders</p>
-                <h3 className="text-3xl font-bold text-[#2C1E16]">{orders.length}</h3>
+                <h3 className="text-4xl font-black text-[#2C1E16] mt-2">{orders.length}</h3>
               </div>
             </div>
           )}
 
           {/* Vendors */}
           {activeTab === 'vendors' && (
-            <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
+            <div className="animate-fade-in bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-100 bg-white">
                 <h2 className="text-lg font-bold text-[#2C1E16]">Vendor Applications</h2>
               </div>
               {pendingVendors.length === 0
-                ? <div className="p-10 text-center text-gray-500">No pending vendor applications.</div>
+                ? <div className="p-16 text-center text-gray-500 font-medium">No pending vendor applications.</div>
                 : (
                   <div className="overflow-x-auto w-full">
                     <table className="w-full text-left whitespace-nowrap">
                       <thead className="bg-[#FAF8F5] text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
                         <tr>
-                          <th className="px-6 py-4 font-semibold">Shop Details</th>
-                          <th className="px-6 py-4 font-semibold">Contact Info</th>
-                          <th className="px-6 py-4 font-semibold text-right">Actions</th>
+                          <th className="px-6 py-4 font-bold">Shop Details</th>
+                          <th className="px-6 py-4 font-bold">Contact Info</th>
+                          <th className="px-6 py-4 font-bold text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
                         {pendingVendors.map(v => (
-                          <tr key={v.id} className="admin-table-row">
+                          <tr key={v.id} className="admin-table-row hover:bg-[#FAF8F5] transition-colors duration-150">
                             <td className="px-6 py-4">
-                              <p className="font-bold text-[#2C1E16]">{v.shop_name}</p>
-                              <p className="text-sm text-gray-500 line-clamp-1">{v.address}</p>
+                              <p className="font-bold text-[#2C1E16] text-base">{v.shop_name}</p>
+                              <p className="text-sm text-gray-500 line-clamp-1 mt-0.5">{v.address}</p>
                             </td>
                             <td className="px-6 py-4">
                               <p className="text-sm text-[#2C1E16] font-medium">{v.email}</p>
                               <p className="text-sm text-gray-500 mt-1">{v.phone}</p>
                             </td>
-                            <td className="px-6 py-4 flex justify-end gap-2">
-                              <button onClick={() => handleAction('vendor', v.id, 'reject')} className="action-btn px-4 py-2 text-xs font-bold uppercase text-red-500 bg-red-50 rounded-md">Reject</button>
-                              <button onClick={() => handleAction('vendor', v.id, 'approve')} className="action-btn px-4 py-2 text-xs font-bold uppercase text-white bg-[#5A3825] rounded-md">Approve</button>
+                            <td className="px-6 py-4 flex justify-end gap-3 items-center h-full">
+                              <button onClick={() => handleAction('vendor', v.id, 'reject')} className="action-btn px-5 py-2 text-xs font-bold uppercase text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Reject</button>
+                              <button onClick={() => handleAction('vendor', v.id, 'approve')} className="action-btn px-5 py-2 text-xs font-bold uppercase text-white bg-[#5A3825] hover:bg-[#3E2723] rounded-lg transition-colors shadow-md">Approve</button>
                             </td>
                           </tr>
                         ))}
@@ -283,26 +374,26 @@ export const AdminDashboard = () => {
 
           {/* Products */}
           {activeTab === 'products' && (
-            <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
+            <div className="animate-fade-in bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-100 bg-white">
                 <h2 className="text-lg font-bold text-[#2C1E16]">Product Review Queue</h2>
               </div>
               {pendingProducts.length === 0
-                ? <div className="p-10 text-center text-gray-500">No products awaiting review.</div>
+                ? <div className="p-16 text-center text-gray-500 font-medium">No products awaiting review.</div>
                 : (
-                  <div className="p-6 stagger-children grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="p-6 stagger-children grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 bg-[#FAF8F5]/30">
                     {pendingProducts.map(p => (
-                      <div key={p.id} className="review-card animate-fade-in-up border border-gray-100 rounded-xl overflow-hidden flex flex-col pt-4">
-                        <div className="relative aspect-square bg-[#FAF8F5] p-2 mx-4 rounded-lg flex items-center justify-center">
+                      <div key={p.id} className="review-card animate-fade-in-up bg-white border border-gray-100 rounded-2xl overflow-hidden flex flex-col pt-4 hover:border-[#A87C51]/40 transition-colors">
+                        <div className="relative aspect-square bg-[#FAF8F5] p-2 mx-4 rounded-xl flex items-center justify-center">
                           <img src={p.image} className="w-full h-full object-contain mix-blend-multiply" alt={p.name} />
                         </div>
-                        <div className="p-4 flex-1 flex flex-col">
-                          <p className="text-xs text-gray-400 uppercase mb-1 truncate">{p.vendor_shop}</p>
-                          <h3 className="font-bold text-[#2C1E16] truncate mb-2">{p.name}</h3>
-                          <p className="text-[#A87C51] font-bold mb-4">₹{parseFloat(p.price).toLocaleString()}</p>
-                          <div className="mt-auto grid grid-cols-2 gap-2">
-                            <button onClick={() => handleAction('product', p.id, 'reject')} className="action-btn w-full py-2 text-xs font-bold text-red-500 border border-red-500 rounded-md">Reject</button>
-                            <button onClick={() => handleAction('product', p.id, 'approve')} className="action-btn w-full py-2 text-xs font-bold text-white bg-[#5A3825] rounded-md">Approve</button>
+                        <div className="p-5 flex-1 flex flex-col">
+                          <p className="text-[10px] font-black text-[#A87C51] uppercase tracking-widest mb-1 truncate">{p.vendor_shop}</p>
+                          <h3 className="font-bold text-[#2C1E16] text-lg truncate mb-1">{p.name}</h3>
+                          <p className="text-[#2C1E16] font-bold mb-5">₹{parseFloat(p.price).toLocaleString()}</p>
+                          <div className="mt-auto grid grid-cols-2 gap-3">
+                            <button onClick={() => handleAction('product', p.id, 'reject')} className="action-btn w-full py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Reject</button>
+                            <button onClick={() => handleAction('product', p.id, 'approve')} className="action-btn w-full py-2.5 text-xs font-bold text-white bg-[#5A3825] hover:bg-[#3E2723] rounded-lg transition-colors shadow-md">Approve</button>
                           </div>
                         </div>
                       </div>
@@ -314,28 +405,33 @@ export const AdminDashboard = () => {
 
           {/* Users */}
           {activeTab === 'users' && (
-            <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
+            <div className="animate-fade-in bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-100 bg-white">
                 <h2 className="text-lg font-bold text-[#2C1E16]">Users Directory (Buyers)</h2>
               </div>
               <div className="overflow-x-auto w-full">
                 <table className="w-full text-left whitespace-nowrap">
                   <thead className="bg-[#FAF8F5] text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
                     <tr>
-                      <th className="px-6 py-4 font-semibold">User ID</th>
-                      <th className="px-6 py-4 font-semibold">Name</th>
-                      <th className="px-6 py-4 font-semibold">Email</th>
-                      <th className="px-6 py-4 font-semibold">Role</th>
+                      <th className="px-6 py-4 font-bold">User ID</th>
+                      <th className="px-6 py-4 font-bold">Name</th>
+                      <th className="px-6 py-4 font-bold">Email</th>
+                      <th className="px-6 py-4 font-bold">Role</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {users.map(u => (
-                      <tr key={u.id} className="admin-table-row">
-                        <td className="px-6 py-4 font-medium text-gray-500">#{u.id}</td>
-                        <td className="px-6 py-4 font-bold text-[#2C1E16]">{u.name}</td>
+                      <tr key={u.id} className="admin-table-row hover:bg-[#FAF8F5] transition-colors duration-150">
+                        <td className="px-6 py-4 font-medium text-gray-400">#{u.id}</td>
+                        <td className="px-6 py-4 font-bold text-[#2C1E16] flex items-center gap-3">
+                           <div className="w-8 h-8 rounded-full bg-[#FAF8F5] text-[#A87C51] flex items-center justify-center font-bold text-xs border border-gray-200">
+                             {u.name.charAt(0).toUpperCase()}
+                           </div>
+                           {u.name}
+                        </td>
                         <td className="px-6 py-4 text-gray-600">{u.email}</td>
                         <td className="px-6 py-4">
-                          <span className="bg-[#FAF8F5] text-[#5A3825] px-3 py-1 rounded-md text-xs font-bold uppercase">{u.role}</span>
+                          <span className="bg-[#A87C51]/10 text-[#5A3825] px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider">{u.role}</span>
                         </td>
                       </tr>
                     ))}
@@ -349,19 +445,19 @@ export const AdminDashboard = () => {
           {activeTab === 'categories' && (
             <div className="animate-fade-in flex flex-col gap-8">
               {pendingCatReqs.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="px-6 py-5 border-b border-gray-100 bg-white">
                     <h2 className="text-lg font-bold text-[#2C1E16]">Pending Category Requests</h2>
                   </div>
-                  <div className="p-6 stagger-children grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="p-6 stagger-children grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 bg-[#FAF8F5]/30">
                     {pendingCatReqs.map(req => (
-                      <div key={req.id} className="review-card animate-fade-in-up border border-gray-100 rounded-xl p-4">
-                        {req.image && <img src={req.image} className="w-full h-32 object-cover rounded-md mb-4" alt={req.name} />}
-                        <p className="text-xs text-gray-400 uppercase tracking-widest mb-1 truncate">Req by: {req.vendor_shop}</p>
-                        <h3 className="font-bold text-[#2C1E16] truncate mb-4">{req.name}</h3>
-                        <div className="grid grid-cols-2 gap-2">
-                          <button onClick={() => handleCatRequestAction(req.id, 'reject')} className="action-btn w-full py-2 text-xs font-bold text-red-500 border border-red-500 rounded-md">Reject</button>
-                          <button onClick={() => handleCatRequestAction(req.id, 'approve')} className="action-btn w-full py-2 text-xs font-bold text-white bg-[#5A3825] rounded-md">Approve</button>
+                      <div key={req.id} className="review-card animate-fade-in-up bg-white border border-gray-100 rounded-2xl p-5 hover:border-[#A87C51]/40 transition-colors">
+                        {req.image && <img src={req.image} className="w-full h-36 object-cover rounded-xl mb-5 shadow-sm" alt={req.name} />}
+                        <p className="text-[10px] font-black text-[#A87C51] uppercase tracking-widest mb-1 truncate">Req by: {req.vendor_shop}</p>
+                        <h3 className="font-bold text-[#2C1E16] text-xl truncate mb-5">{req.name}</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button onClick={() => handleCatRequestAction(req.id, 'reject')} className="action-btn w-full py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Reject</button>
+                          <button onClick={() => handleCatRequestAction(req.id, 'approve')} className="action-btn w-full py-2.5 text-xs font-bold text-white bg-[#5A3825] hover:bg-[#3E2723] rounded-lg transition-colors shadow-md">Approve</button>
                         </div>
                       </div>
                     ))}
@@ -369,32 +465,38 @@ export const AdminDashboard = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-1">
-                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h2 className="text-lg font-bold text-[#2C1E16] mb-4">Create Category</h2>
-                    <form onSubmit={handleCreateCategory} className="space-y-4">
-                      <input type="text" placeholder="Category Name" required value={newCatName} onChange={e => setNewCatName(e.target.value)} className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none" />
-                      <input id="catImageInput" type="file" accept="image/*" required onChange={e => setNewCatImage(e.target.files[0])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#FAF8F5] file:text-[#2C1E16]" />
-                      <button type="submit" className="btn-primary w-full bg-[#5A3825] text-white py-3 rounded-full font-bold uppercase tracking-wider hover:bg-[#3E2723]">Add Category</button>
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div className="xl:col-span-1">
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                    <h2 className="text-xl font-bold text-[#2C1E16] mb-6">Create Category</h2>
+                    <form onSubmit={handleCreateCategory} className="space-y-5">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Category Name</label>
+                        <input type="text" placeholder="e.g., Sweets" required value={newCatName} onChange={e => setNewCatName(e.target.value)} className="input-animated w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Cover Image</label>
+                        <input id="catImageInput" type="file" accept="image/*" required onChange={e => setNewCatImage(e.target.files[0])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[#FAF8F5] file:text-[#5A3825] hover:file:bg-[#A87C51] hover:file:text-white file:transition-colors cursor-pointer" />
+                      </div>
+                      <button type="submit" className="btn-primary w-full bg-[#5A3825] text-white py-3.5 rounded-xl font-bold uppercase tracking-widest hover:bg-[#3E2723] shadow-md mt-2">Publish Category</button>
                     </form>
                   </div>
                 </div>
-                <div className="lg:col-span-2">
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden h-full">
-                    <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
-                      <h2 className="text-lg font-bold text-[#2C1E16]">Existing Categories</h2>
+                <div className="xl:col-span-2">
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden h-full flex flex-col">
+                    <div className="px-6 py-5 border-b border-gray-100 bg-white shrink-0">
+                      <h2 className="text-lg font-bold text-[#2C1E16]">Live Categories</h2>
                     </div>
-                    <div className="divide-y divide-gray-100">
+                    <div className="divide-y divide-gray-50 flex-1 overflow-y-auto">
                       {categories.length === 0
-                        ? <p className="p-6 text-gray-500">No categories found.</p>
+                        ? <p className="p-10 text-center text-gray-500">No categories active.</p>
                         : categories.map(cat => (
-                          <div key={cat.id} className="admin-list-item p-4 flex justify-between items-center">
-                            <div className="flex items-center gap-4">
-                              {cat.image && <img src={cat.image} className="w-12 h-12 object-cover rounded-lg border border-gray-200" alt={cat.name} />}
-                              <span className="font-bold text-[#2C1E16]">{cat.name}</span>
+                          <div key={cat.id} className="admin-list-item p-4 px-6 flex justify-between items-center hover:bg-[#FAF8F5] transition-colors">
+                            <div className="flex items-center gap-5">
+                              {cat.image ? <img src={cat.image} className="w-14 h-14 object-cover rounded-xl border border-gray-100 shadow-sm" alt={cat.name} /> : <div className="w-14 h-14 rounded-xl bg-gray-100 border border-gray-200"></div>}
+                              <span className="font-bold text-[#2C1E16] text-lg">{cat.name}</span>
                             </div>
-                            <button onClick={() => handleDeleteCategory(cat.id)} className="action-btn text-red-500 hover:bg-red-50 px-3 py-1 rounded-md text-sm font-medium">Delete</button>
+                            <button onClick={() => handleDeleteCategory(cat.id)} className="action-btn text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">Delete</button>
                           </div>
                         ))
                       }
@@ -409,20 +511,20 @@ export const AdminDashboard = () => {
           {activeTab === 'offers' && (
             <div className="animate-fade-in flex flex-col gap-8">
               {pendingOfferReqs.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="px-6 py-5 border-b border-gray-100 bg-white">
                     <h2 className="text-lg font-bold text-[#2C1E16]">Pending Offer Requests</h2>
                   </div>
-                  <div className="p-6 stagger-children grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="p-6 stagger-children grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 bg-[#FAF8F5]/30">
                     {pendingOfferReqs.map(offer => (
-                      <div key={offer.id} className="review-card animate-fade-in-up border border-gray-100 rounded-xl p-4">
-                        {offer.image && <img src={offer.image} className="w-full h-32 object-cover rounded-md mb-4" alt={offer.title} />}
-                        <p className="text-xs text-gray-400 uppercase tracking-widest mb-1 truncate">Req by: {offer.vendor_shop}</p>
-                        <h3 className="font-bold text-[#2C1E16] truncate">{offer.title}</h3>
-                        <p className="text-xs text-gray-500 mb-4">{offer.start_date} to {offer.end_date}</p>
-                        <div className="grid grid-cols-2 gap-2">
-                          <button onClick={() => handleOfferAction(offer.id, 'reject')} className="action-btn w-full py-2 text-xs font-bold text-red-500 border border-red-500 rounded-md">Reject</button>
-                          <button onClick={() => handleOfferAction(offer.id, 'approve')} className="action-btn w-full py-2 text-xs font-bold text-white bg-[#5A3825] rounded-md">Approve</button>
+                      <div key={offer.id} className="review-card animate-fade-in-up bg-white border border-gray-100 rounded-2xl p-5 hover:border-[#A87C51]/40 transition-colors">
+                        {offer.image && <img src={offer.image} className="w-full h-36 object-cover rounded-xl mb-4 shadow-sm" alt={offer.title} />}
+                        <p className="text-[10px] font-black text-[#A87C51] uppercase tracking-widest mb-1 truncate">Req by: {offer.vendor_shop}</p>
+                        <h3 className="font-bold text-[#2C1E16] text-lg truncate">{offer.title}</h3>
+                        <p className="text-xs font-medium text-gray-500 mb-5 bg-gray-50 inline-block px-2 py-1 rounded mt-2">{offer.start_date} → {offer.end_date}</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button onClick={() => handleOfferAction(offer.id, 'reject')} className="action-btn w-full py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Reject</button>
+                          <button onClick={() => handleOfferAction(offer.id, 'approve')} className="action-btn w-full py-2.5 text-xs font-bold text-white bg-[#5A3825] hover:bg-[#3E2723] rounded-lg transition-colors shadow-md">Approve</button>
                         </div>
                       </div>
                     ))}
@@ -430,37 +532,51 @@ export const AdminDashboard = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-1">
-                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h2 className="text-lg font-bold text-[#2C1E16] mb-4">Create Offer</h2>
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div className="xl:col-span-1">
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                    <h2 className="text-xl font-bold text-[#2C1E16] mb-6">Create Promo Offer</h2>
                     <form onSubmit={handleCreateOffer} className="space-y-4">
-                      <input type="text" placeholder="Offer Title" required value={newOffer.title} onChange={e => setNewOffer({ ...newOffer, title: e.target.value })} className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none" />
-                      <input type="date" required value={newOffer.start_date} onChange={e => setNewOffer({ ...newOffer, start_date: e.target.value })} className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none text-gray-500" />
-                      <input type="date" required value={newOffer.end_date} onChange={e => setNewOffer({ ...newOffer, end_date: e.target.value })} className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none text-gray-500" />
-                      <input id="offerImageInput" type="file" accept="image/*" required onChange={e => setOfferImageFile(e.target.files[0])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#FAF8F5] file:text-[#2C1E16]" />
-                      <button type="submit" className="btn-primary w-full bg-[#5A3825] text-white py-3 rounded-full font-bold uppercase tracking-wider hover:bg-[#3E2723]">Add Offer</button>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Offer Title</label>
+                        <input type="text" required value={newOffer.title} onChange={e => setNewOffer({ ...newOffer, title: e.target.value })} className="input-animated w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                           <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Start Date</label>
+                           <input type="date" required value={newOffer.start_date} onChange={e => setNewOffer({ ...newOffer, start_date: e.target.value })} className="input-animated w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors text-sm" />
+                        </div>
+                        <div>
+                           <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">End Date</label>
+                           <input type="date" required value={newOffer.end_date} onChange={e => setNewOffer({ ...newOffer, end_date: e.target.value })} className="input-animated w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors text-sm" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1 mt-2">Banner Graphic</label>
+                        <input id="offerImageInput" type="file" accept="image/*" required onChange={e => setOfferImageFile(e.target.files[0])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[#FAF8F5] file:text-[#5A3825] hover:file:bg-[#A87C51] hover:file:text-white file:transition-colors cursor-pointer" />
+                      </div>
+                      <button type="submit" className="btn-primary w-full bg-[#5A3825] text-white py-3.5 rounded-xl font-bold uppercase tracking-widest hover:bg-[#3E2723] shadow-md mt-4">Broadcast Offer</button>
                     </form>
                   </div>
                 </div>
-                <div className="lg:col-span-2">
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden h-full">
-                    <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
-                      <h2 className="text-lg font-bold text-[#2C1E16]">Active Offers</h2>
+                <div className="xl:col-span-2">
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden h-full flex flex-col">
+                    <div className="px-6 py-5 border-b border-gray-100 bg-white shrink-0">
+                      <h2 className="text-lg font-bold text-[#2C1E16]">Live Offers</h2>
                     </div>
-                    <div className="divide-y divide-gray-100">
+                    <div className="divide-y divide-gray-50 flex-1 overflow-y-auto">
                       {offers.filter(o => o.status === 'approved').length === 0
-                        ? <p className="p-6 text-gray-500">No active offers found.</p>
+                        ? <p className="p-10 text-center text-gray-500">No live offers broadcasted.</p>
                         : offers.filter(o => o.status === 'approved').map(offer => (
-                          <div key={offer.id} className="admin-list-item p-4 flex justify-between items-center">
-                            <div className="flex items-center gap-4">
-                              {offer.image && <img src={offer.image} className="w-20 h-12 object-cover rounded-lg border border-gray-200" alt={offer.title} />}
+                          <div key={offer.id} className="admin-list-item p-4 px-6 flex justify-between items-center hover:bg-[#FAF8F5] transition-colors">
+                            <div className="flex items-center gap-5">
+                              {offer.image && <img src={offer.image} className="w-24 h-14 object-cover rounded-lg border border-gray-100 shadow-sm" alt={offer.title} />}
                               <div>
-                                <span className="font-bold text-[#2C1E16] block">{offer.title}</span>
-                                <span className="text-xs text-gray-500 block">{offer.start_date} to {offer.end_date}</span>
+                                <span className="font-bold text-[#2C1E16] text-base block">{offer.title}</span>
+                                <span className="text-xs font-medium text-[#A87C51] bg-[#A87C51]/10 px-2 py-0.5 rounded mt-1 inline-block">{offer.start_date} → {offer.end_date}</span>
                               </div>
                             </div>
-                            <button onClick={() => handleDeleteOffer(offer.id)} className="action-btn text-red-500 hover:bg-red-50 px-3 py-1 rounded-md text-sm font-medium">Delete</button>
+                            <button onClick={() => handleDeleteOffer(offer.id)} className="action-btn text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">Terminate</button>
                           </div>
                         ))
                       }
@@ -473,40 +589,40 @@ export const AdminDashboard = () => {
 
           {/* Orders */}
           {activeTab === 'orders' && (
-            <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
-                <h2 className="text-lg font-bold text-[#2C1E16]">Global Order Ledger</h2>
+            <div className="animate-fade-in bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-100 bg-white">
+                <h2 className="text-lg font-bold text-[#2C1E16]">Global Ledger</h2>
               </div>
               {orders.length === 0
-                ? <div className="p-10 text-center text-gray-500">No orders placed yet.</div>
+                ? <div className="p-16 text-center text-gray-500 font-medium">No orders recorded in ledger.</div>
                 : (
                   <div className="overflow-x-auto w-full">
                     <table className="w-full text-left whitespace-nowrap">
                       <thead className="bg-[#FAF8F5] text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
                         <tr>
-                          <th className="px-6 py-4 font-semibold">Order ID</th>
-                          <th className="px-6 py-4 font-semibold">Buyer Info</th>
-                          <th className="px-6 py-4 font-semibold">Total Amount</th>
-                          <th className="px-6 py-4 font-semibold">Pay Status</th>
-                          <th className="px-6 py-4 font-semibold">Delivery Status</th>
+                          <th className="px-6 py-4 font-bold">Order ID</th>
+                          <th className="px-6 py-4 font-bold">Customer</th>
+                          <th className="px-6 py-4 font-bold">Total Val</th>
+                          <th className="px-6 py-4 font-bold">Pay Status</th>
+                          <th className="px-6 py-4 font-bold">Delivery</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
                         {orders.map(order => (
-                          <tr key={order.id} className="admin-table-row">
-                            <td className="px-6 py-4 font-bold text-gray-500">#{order.id}</td>
+                          <tr key={order.id} className="admin-table-row hover:bg-[#FAF8F5] transition-colors duration-150">
+                            <td className="px-6 py-4 font-bold text-gray-400">#{order.id}</td>
                             <td className="px-6 py-4">
-                              <p className="font-bold text-[#2C1E16]">{order.buyer_name}</p>
+                              <p className="font-bold text-[#2C1E16] text-base">{order.buyer_name}</p>
                               <p className="text-sm text-gray-500">{order.buyer_email}</p>
                             </td>
-                            <td className="px-6 py-4 font-bold text-[#A87C51]">₹{parseFloat(order.total_price).toLocaleString()}</td>
+                            <td className="px-6 py-4 font-black text-[#A87C51] text-lg">₹{parseFloat(order.total_price).toLocaleString()}</td>
                             <td className="px-6 py-4">
-                              <span className={`px-3 py-1 rounded-md text-xs font-bold uppercase ${order.payment_status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-yellow-50 text-yellow-600'}`}>
+                              <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${order.payment_status === 'paid' ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-yellow-50 text-yellow-600 border border-yellow-100'}`}>
                                 {order.payment_status}
                               </span>
                             </td>
                             <td className="px-6 py-4">
-                              <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-md text-xs font-bold uppercase">
+                              <span className="px-3 py-1.5 bg-gray-50 border border-gray-100 text-gray-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
                                 {order.status}
                               </span>
                             </td>
