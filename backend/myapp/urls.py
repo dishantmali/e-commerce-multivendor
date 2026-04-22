@@ -28,6 +28,8 @@ from .views import (
     CartView, AddToCartView, CheckoutView, RemoveFromCartView,VerifyCartPaymentView,MergeCartView,
     # Homepage
     HomePageView,
+    # Reviews
+    ProductReviewListCreateView, PlatformReviewListCreateView, VendorReviewListView
 )
 
 urlpatterns = [
@@ -142,7 +144,12 @@ urlpatterns = [
     path('vendor/order-items/<int:pk>/status/',
          VendorOrderStatusUpdateView.as_view(),
          name='vendor_order_status_update'),
-         
+
     # ---------------- HOMEPAGE ---------------- #
     path('homepage/', HomePageView.as_view(), name='homepage'),
+
+    # ---------------- REVIEWS ---------------- #
+    path('products/<int:product_id>/reviews/', ProductReviewListCreateView.as_view(), name='product_reviews'),
+    path('platform-reviews/', PlatformReviewListCreateView.as_view(), name='platform_reviews'),
+    path('vendor/reviews/', VendorReviewListView.as_view(), name='vendor_reviews'),
 ]

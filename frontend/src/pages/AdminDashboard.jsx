@@ -21,6 +21,7 @@ export const AdminDashboard = () => {
   
   const [activeTab, setActiveTab] = useState('overview');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // <-- NEW: Mobile sidebar state
   const profileRef = useRef(null);
 
   const [pendingProducts, setPendingProducts] = useState([]);
@@ -68,7 +69,6 @@ export const AdminDashboard = () => {
     fetchData();
   }, []);
 
-  // Close profile dropdown if clicked outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
@@ -214,12 +214,22 @@ export const AdminDashboard = () => {
   ];
 
   return (
-    // Wrapper overlaying everything (hides global navbar)
     <div className="fixed inset-0 z-[60] flex bg-[#FAF8F5] font-sans overflow-hidden">
       
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden backdrop-blur-sm transition-opacity" 
+          onClick={() => setIsSidebarOpen(false)} 
+        />
+      )}
+
       {/* ── Sidebar ── */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-full shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10">
-        
+      <aside 
+        className={`absolute lg:relative w-64 bg-white border-r border-gray-200 flex flex-col h-full shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-50 transition-transform duration-300 ease-in-out ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}
+      >
         {/* Logo Section */}
         <div className="h-20 flex items-center px-6 border-b border-gray-100 shrink-0 cursor-pointer" onClick={() => navigate('/')}>
           <img src={dukanLogo} alt="Logo" className="rounded-full object-cover mix-blend-multiply mr-3" />
@@ -233,7 +243,10 @@ export const AdminDashboard = () => {
             return (
               <button
                 key={key}
-                onClick={() => setActiveTab(key)}
+                onClick={() => {
+                  setActiveTab(key);
+                  setIsSidebarOpen(false); // Close sidebar on mobile after clicking
+                }}
                 className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 group ${
                   isActive 
                     ? 'bg-[#5A3825] text-white shadow-md' 
@@ -256,7 +269,7 @@ export const AdminDashboard = () => {
           })}
         </nav>
 
-        {/* Bottom Sidebar area (optional branding/info) */}
+        {/* Bottom Sidebar area */}
         <div className="p-6 border-t border-gray-100 bg-[#FAF8F5] shrink-0 text-center">
           <p className="text-xs text-gray-400 font-medium">© {new Date().getFullYear()} Gujju Ni Dukan</p>
         </div>
@@ -266,10 +279,23 @@ export const AdminDashboard = () => {
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         
         {/* Top Header */}
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-8 shrink-0 z-10 shadow-sm">
-          <h2 className="text-2xl font-extrabold text-[#2C1E16] capitalize tracking-tight">
-            {activeTab.replace('_', ' ')}
-          </h2>
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-4 sm:px-8 shrink-0 z-10 shadow-sm">
+          
+          <div className="flex items-center gap-3 sm:gap-4">
+            {/* Mobile Hamburger Button */}
+            <button 
+              onClick={() => setIsSidebarOpen(true)} 
+              className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 hover:text-[#5A3825] rounded-lg transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            
+            <h2 className="text-xl sm:text-2xl font-extrabold text-[#2C1E16] capitalize tracking-tight truncate">
+              {activeTab.replace('_', ' ')}
+            </h2>
+          </div>
 
           {/* Profile Dropdown */}
           <div className="relative" ref={profileRef}>
@@ -306,7 +332,7 @@ export const AdminDashboard = () => {
         </header>
 
         {/* Scrollable Tab Content Area */}
-        <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
 
           {/* Overview */}
           {activeTab === 'overview' && (
@@ -467,7 +493,7 @@ export const AdminDashboard = () => {
 
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 <div className="xl:col-span-1">
-                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                  <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
                     <h2 className="text-xl font-bold text-[#2C1E16] mb-6">Create Category</h2>
                     <form onSubmit={handleCreateCategory} className="space-y-5">
                       <div>
@@ -534,7 +560,7 @@ export const AdminDashboard = () => {
 
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 <div className="xl:col-span-1">
-                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                  <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
                     <h2 className="text-xl font-bold text-[#2C1E16] mb-6">Create Promo Offer</h2>
                     <form onSubmit={handleCreateOffer} className="space-y-4">
                       <div>
@@ -604,7 +630,6 @@ export const AdminDashboard = () => {
                           <th className="px-6 py-4 font-bold">Customer</th>
                           <th className="px-6 py-4 font-bold">Total Val</th>
                           <th className="px-6 py-4 font-bold">Pay Status</th>
-                          <th className="px-6 py-4 font-bold">Delivery</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -619,11 +644,6 @@ export const AdminDashboard = () => {
                             <td className="px-6 py-4">
                               <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${order.payment_status === 'paid' ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-yellow-50 text-yellow-600 border border-yellow-100'}`}>
                                 {order.payment_status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className="px-3 py-1.5 bg-gray-50 border border-gray-100 text-gray-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
-                                {order.status}
                               </span>
                             </td>
                           </tr>

@@ -12,12 +12,14 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from django.db import transaction , models
 from .models import (
     CustomUser, Product, Order, VendorProfile, OrderItem,
-    Category, Cart, CartItem, CategoryRequest, Offer , Wishlist
+    Category, Cart, CartItem, CategoryRequest, Offer , Wishlist,
+    ProductReview, PlatformReview
 )
 from .serializers import (
     RegisterSerializer, CustomUserSerializer, ProductSerializer,
     OrderSerializer,OrderItemSerializer, VendorOrderUpdateSerializer, CategorySerializer,
-    CartSerializer, CategoryRequestSerializer, OfferSerializer, WishlistSerializer
+    CartSerializer, CategoryRequestSerializer, OfferSerializer, WishlistSerializer ,
+    ProductReviewSerializer, PlatformReviewSerializer
 )
 
 # Initialize Razorpay client
@@ -924,3 +926,83 @@ class MergeWishlistView(APIView):
                 continue
 
         return Response({"message": "Wishlist merged successfully"})
+    
+# ---------------- Review APIs ---------------- #
+
+class ProductReviewListCreateView(generics.ListCreateAPIView):
+    serializer_class = ProductReviewSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        product_id = self.kwargs['product_id']
+        return ProductReview.objects.filter(product_id=product_id).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.role != 'buyer':
+            raise PermissionDenied("Only buyers can leave reviews.")
+
+        order_item_id = self.request.data.get('order_item')
+        if not order_item_id:
+            raise ValidationError({"order_item": "This field is required."})
+
+        try:
+            # Ensure the order item belongs to the user
+            order_item = OrderItem.objects.get(id=order_item_id, order__user=user)
+        except OrderItem.DoesNotExist:
+            raise ValidationError("Order item not found or does not belong to you.")
+
+        # Business Logic: Must be delivered to review
+        if order_item.status != 'delivered':
+            raise ValidationError("You can only review products that have been delivered.")
+
+        # Business Logic: Prevent duplicate reviews for the same item
+        if ProductReview.objects.filter(order_item=order_item).exists():
+            raise ValidationError("You have already reviewed this specific order item.")
+
+        serializer.save(
+            user=user,
+            product=order_item.product,
+            vendor=order_item.vendor,
+            order_item=order_item
+        )
+
+class PlatformReviewListCreateView(generics.ListCreateAPIView):
+    serializer_class = PlatformReviewSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [permissions.AllowAny()] # Public can see featured reviews
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        if self.request.method == 'GET':
+            # Only return admin-approved featured reviews for the homepage
+            return PlatformReview.objects.filter(is_featured=True).order_by('-created_at')
+        
+        # Logged-in user seeing their own feedback history
+        return PlatformReview.objects.filter(user=self.request.user).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        if self.request.user.role != 'buyer':
+            raise PermissionDenied("Only buyers can leave platform feedback.")
+        
+        # New reviews default to not featured
+        serializer.save(user=self.request.user, is_featured=False)
+
+
+class VendorReviewListView(generics.ListAPIView):
+    serializer_class = ProductReviewSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role != 'vendor' or not hasattr(user, 'vendor_profile'):
+            return ProductReview.objects.none()
+        
+        # Let the vendor see all reviews left on their products
+        return ProductReview.objects.filter(vendor=user.vendor_profile).order_by('-created_at')

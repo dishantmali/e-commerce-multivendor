@@ -223,3 +223,32 @@ class Wishlist(models.Model):
 def invalidate_category_cache(sender, **kwargs):
     cache.delete('global_categories')
     print("Category updated: Cache Cleared.")
+
+class ProductReview(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    vendor = models.ForeignKey(VendorProfile, on_delete=models.CASCADE, related_name='vendor_reviews')
+    order_item = models.OneToOneField(OrderItem, on_delete=models.CASCADE)
+    rating = models.PositiveIntegerField(choices=[(i, i) for i in range(1, 6)])
+    review_text = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Review by {self.user.email} for {self.product.name}"
+
+
+class PlatformReview(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    rating = models.PositiveIntegerField(choices=[(i, i) for i in range(1, 6)])
+    feedback_text = models.TextField()
+    is_featured = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Platform Feedback by {self.user.email}"

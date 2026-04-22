@@ -9,7 +9,9 @@ from .models import (
     Cart,
     CartItem,
     CategoryRequest,
-    Offer
+    Offer,
+    ProductReview,
+    PlatformReview
 )
 
 
@@ -112,3 +114,25 @@ class OfferAdmin(admin.ModelAdmin):
     )
     list_filter = ('status',)
     search_fields = ('title',)
+
+# ---------------- REVIEWS ---------------- #
+@admin.register(ProductReview)
+class ProductReviewAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'product', 'vendor', 'rating', 'created_at')
+    list_filter = ('rating', 'created_at', 'vendor')
+    search_fields = ('user__email', 'product__name', 'review_text')
+
+@admin.register(PlatformReview)
+class PlatformReviewAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'rating', 'is_featured', 'created_at')
+    list_filter = ('rating', 'is_featured', 'created_at')
+    search_fields = ('user__email', 'feedback_text')
+    actions = ['feature_reviews', 'unfeature_reviews']
+
+    def feature_reviews(self, request, queryset):
+        queryset.update(is_featured=True)
+    feature_reviews.short_description = "Feature selected reviews on homepage"
+
+    def unfeature_reviews(self, request, queryset):
+        queryset.update(is_featured=False)
+    unfeature_reviews.short_description = "Remove selected reviews from homepage"

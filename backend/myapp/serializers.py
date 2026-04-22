@@ -1,8 +1,10 @@
 import html
 from rest_framework import serializers
+from django.db import models
 from .models import (
     CustomUser, VendorProfile, Product, Order, OrderItem,
-    Category, Cart, CartItem, CategoryRequest, Offer , Wishlist
+    Category, Cart, CartItem, CategoryRequest, Offer , Wishlist ,
+    ProductReview, PlatformReview
 )
 
 # ---------------- BASE SANITIZER (The Armor) ----------------
@@ -94,6 +96,8 @@ class RegisterSerializer(SanitizedSerializer):
 # ---------------- PRODUCT ----------------
 class ProductSerializer(SanitizedSerializer):
     vendor_shop = serializers.SerializerMethodField()
+    average_rating = serializers.SerializerMethodField()
+    review_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -108,12 +112,38 @@ class ProductSerializer(SanitizedSerializer):
             'description',
             'status',
             'category',
-            'created_at'
+            'created_at',
+            'average_rating',
+            'review_count'
         ]
         read_only_fields = ['vendor', 'status']
 
     def get_vendor_shop(self, obj):
         return obj.vendor.shop_name
+
+    def get_average_rating(self, obj):
+        avg = obj.reviews.aggregate(models.Avg('rating'))['rating__avg']
+        return round(avg, 1) if avg else 0.0
+
+    def get_review_count(self, obj):
+        return obj.reviews.count()
+    
+# ---------------- REVIEWS ----------------
+class ProductReviewSerializer(SanitizedSerializer):
+    reviewer_name = serializers.CharField(source='user.name', read_only=True)
+
+    class Meta:
+        model = ProductReview
+        fields = ['id', 'user', 'reviewer_name', 'product', 'vendor', 'order_item', 'rating', 'review_text', 'created_at']
+        read_only_fields = ['user', 'product', 'vendor', 'created_at']
+
+class PlatformReviewSerializer(SanitizedSerializer):
+    reviewer_name = serializers.CharField(source='user.name', read_only=True)
+
+    class Meta:
+        model = PlatformReview
+        fields = ['id', 'user', 'reviewer_name', 'rating', 'feedback_text', 'is_featured', 'created_at']
+        read_only_fields = ['user', 'is_featured', 'created_at']
 
 # ---------------- ORDER ----------------
 class OrderItemSerializer(SanitizedSerializer):
