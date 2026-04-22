@@ -62,6 +62,8 @@ class ProductAdmin(admin.ModelAdmin):
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
+    # Added the new fields so you can manage them inside the Order view
+    fields = ('product', 'vendor', 'quantity', 'price', 'status', 'confirmed_at', 'shipped_at', 'delivered_at')
 
 
 # ---------------- ORDER ---------------- #
@@ -71,10 +73,12 @@ class OrderAdmin(admin.ModelAdmin):
         'id',
         'user',
         'total_price',
-        'status',
+        # 'status',  <-- REMOVED THIS
         'payment_status',
-        'created_at')
-    list_filter = ('status', 'payment_status')
+        'created_at'
+    )
+    # REMOVED 'status' from list_filter
+    list_filter = ('payment_status',) 
     search_fields = ('user__email',)
     inlines = [OrderItemInline]
 

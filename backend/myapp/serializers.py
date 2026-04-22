@@ -115,27 +115,26 @@ class ProductSerializer(SanitizedSerializer):
     def get_vendor_shop(self, obj):
         return obj.vendor.shop_name
 
-
-# ---------------- ORDER ITEM ----------------
+# ---------------- ORDER ----------------
 class OrderItemSerializer(SanitizedSerializer):
     product_details = ProductSerializer(source='product', read_only=True)
-    vendor_shop = serializers.CharField(
-        source='vendor.shop_name', read_only=True)
+    vendor_shop = serializers.CharField(source='vendor.shop_name', read_only=True)
+    
+    # Extra fields for the Vendor view
+    order_id = serializers.IntegerField(source='order.id', read_only=True)
+    buyer_name = serializers.CharField(source='order.user.name', read_only=True)
+    address = serializers.CharField(source='order.address', read_only=True)
+    phone = serializers.CharField(source='order.phone', read_only=True)
+    order_date = serializers.DateTimeField(source='order.created_at', read_only=True)
 
     class Meta:
         model = OrderItem
         fields = [
-            'id',
-            'product',
-            'product_details',
-            'vendor',
-            'vendor_shop',
-            'quantity',
-            'price'
+            'id', 'order_id', 'buyer_name', 'address', 'phone', 'order_date',
+            'product', 'product_details', 'vendor', 'vendor_shop',
+            'quantity', 'price', 'status', 'confirmed_at', 'shipped_at', 'delivered_at'
         ]
 
-
-# ---------------- ORDER ----------------
 class OrderSerializer(SanitizedSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     buyer_name = serializers.CharField(source='user.name', read_only=True)
@@ -144,34 +143,16 @@ class OrderSerializer(SanitizedSerializer):
     class Meta:
         model = Order
         fields = [
-            'id',
-            'user',
-            'buyer_name',
-            'buyer_email',
-            'items',
-            'total_price',
-            'address',
-            'phone',
-            'status',
-            'payment_status',
-            'razorpay_order_id',
-            'razorpay_payment_id',
-            'created_at',
-        ]
-        read_only_fields = [
-            'user',
-            'status',
-            'payment_status',
-            'razorpay_order_id',
-            'razorpay_payment_id',
-            'created_at',
+            'id', 'user', 'buyer_name', 'buyer_email', 'items',
+            'total_price', 'address', 'phone', 'payment_status',
+            'razorpay_order_id', 'razorpay_payment_id', 'created_at',
         ]
 
 
 # ---------------- VENDOR ORDER UPDATE ----------------
 class VendorOrderUpdateSerializer(SanitizedSerializer):
     class Meta:
-        model = Order
+        model = OrderItem
         fields = ['status']
 
     def validate_status(self, value):

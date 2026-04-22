@@ -55,13 +55,13 @@ export const BuyerDashboard = () => {
             >
               <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-4 bg-[#FAF8F5] -mx-6 -mt-6 px-6 pt-6 rounded-t-xl">
                 <div>
-                  <p className="text-sm text-gray-500">Order ID: #{order.id}</p>
-                  <p className="font-bold text-[#2C1E16] mt-1">
-                    Status: <span className="uppercase text-[#A87C51]">{order.status}</span>
+                  <p className="text-sm text-gray-500 font-bold tracking-widest">ORDER #{order.id}</p>
+                  <p className="font-bold text-[#2C1E16] mt-1 text-sm">
+                    Payment: <span className="uppercase text-green-600 bg-green-100 px-2 py-0.5 rounded ml-1">{order.payment_status}</span>
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-gray-500">Total</p>
+                  <p className="text-sm text-gray-500 font-bold">Total</p>
                   <p className="font-bold text-xl text-[#5A3825]">
                     ₹{parseFloat(order.total_price).toLocaleString()}
                   </p>
@@ -70,17 +70,30 @@ export const BuyerDashboard = () => {
 
               <div className="space-y-3">
                 {order.items.map(item => (
-                  <div key={item.id} className="order-item-row flex items-center gap-4 px-2 py-1 -mx-2">
-                    <img
-                      src={item.product_details?.image}
-                      className="order-item-img w-16 h-16 object-cover bg-[#FAF8F5] rounded-md border border-gray-100 shrink-0"
-                      alt=""
-                    />
-                    <div>
-                      <p className="font-medium text-[#2C1E16]">{item.product_details?.name}</p>
-                      <p className="text-sm text-gray-500">
-                        Qty: {item.quantity} | Vendor: {item.vendor_shop}
-                      </p>
+                  <div key={item.id} className="order-item-row flex items-center justify-between gap-4 px-4 py-3 border border-gray-100 rounded-lg bg-white">
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={item.product_details?.image}
+                        className="w-16 h-16 object-cover bg-[#FAF8F5] rounded-md border border-gray-100 shrink-0"
+                        alt=""
+                      />
+                      <div>
+                        <p className="font-bold text-[#2C1E16]">{item.product_details?.name}</p>
+                        <p className="text-sm text-gray-500">
+                          Qty: {item.quantity} | Vendor: {item.vendor_shop}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="text-right">
+                      <span className={`px-3 py-1 text-xs font-black uppercase tracking-wider rounded-full ${
+                        item.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                        item.status === 'confirmed' ? 'bg-blue-100 text-blue-700' :
+                        item.status === 'shipped' ? 'bg-purple-100 text-purple-700' :
+                        'bg-green-100 text-green-700'
+                      }`}>
+                        {item.status}
+                      </span>
                     </div>
                   </div>
                 ))}

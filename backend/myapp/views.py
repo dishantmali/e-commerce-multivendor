@@ -16,7 +16,7 @@ from .models import (
 )
 from .serializers import (
     RegisterSerializer, CustomUserSerializer, ProductSerializer,
-    OrderSerializer, VendorOrderUpdateSerializer, CategorySerializer,
+    OrderSerializer,OrderItemSerializer, VendorOrderUpdateSerializer, CategorySerializer,
     CartSerializer, CategoryRequestSerializer, OfferSerializer, WishlistSerializer
 )
 
@@ -620,21 +620,21 @@ class VerifyPaymentView(APIView):
 # ---------------- Order APIs ---------------- #
 
 class OrderListView(generics.ListAPIView):
-    serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    # Buyers get full Orders, Vendors get a list of their specific OrderItems
+    def get_serializer_class(self):
+        if self.request.user.role == 'vendor':
+            return OrderItemSerializer
+        return OrderSerializer
 
     def get_queryset(self):
         user = self.request.user
-
         if user.role == 'buyer':
             return Order.objects.filter(user=user).order_by('-created_at')
-
         elif user.role == 'vendor':
             if hasattr(user, 'vendor_profile'):
-                return Order.objects.filter(
-                    items__vendor=user.vendor_profile
-                ).distinct().order_by('-created_at')
-
+                return OrderItem.objects.filter(vendor=user.vendor_profile).order_by('-order__created_at')
         return Order.objects.none()
 
 
@@ -644,28 +644,21 @@ class VendorOrderStatusUpdateView(generics.UpdateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-
         if user.role != 'vendor' or not hasattr(user, 'vendor_profile'):
-            return Order.objects.none()
-
-        return Order.objects.filter(
-            items__vendor=user.vendor_profile
-        ).distinct()
+            return OrderItem.objects.none()
+        # Ensure vendors can only update their own items
+        return OrderItem.objects.filter(vendor=user.vendor_profile)
 
     def perform_update(self, serializer):
         new_status = serializer.validated_data.get('status')
-
         timestamp_fields = {
             'confirmed': 'confirmed_at',
             'shipped': 'shipped_at',
             'delivered': 'delivered_at',
         }
-
         extra_kwargs = {}
-
         if new_status in timestamp_fields:
             extra_kwargs[timestamp_fields[new_status]] = timezone.now()
-
         serializer.save(**extra_kwargs)
 
 
@@ -821,7 +814,8 @@ class VerifyCartPaymentView(APIView):
                 # Create Order
                 order = Order.objects.create(
                     user=user, address=address, phone=phone,
-                    status='pending', payment_status='paid',
+                    # status='pending', 
+                    payment_status='paid',
                     razorpay_order_id=razorpay_order_id,
                     razorpay_payment_id=razorpay_payment_id,
                     razorpay_signature=razorpay_signature,
@@ -845,6 +839,7 @@ class VerifyCartPaymentView(APIView):
             return Response({"message": "Order placed successfully"}, status=status.HTTP_201_CREATED)
 
         except Exception as e:
+            print(f"Checkout Error: {e}")
             return Response({"error": "An error occurred while processing your order."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 class WishlistToggleView(APIView):

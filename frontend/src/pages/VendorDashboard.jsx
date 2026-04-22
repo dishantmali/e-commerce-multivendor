@@ -6,13 +6,15 @@ const Icons = {
   Products: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>,
   AddProduct: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>,
   Category: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
-  Offer: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+  Offer: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  Orders: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>,
 };
 
 export const VendorDashboard = () => {
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [editingStockId, setEditingStockId] = useState(null);
@@ -27,9 +29,14 @@ export const VendorDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [prodRes, catRes] = await Promise.all([api.get('/vendor/products/'), api.get('/categories/')]);
+        const [prodRes, catRes, ordRes] = await Promise.all([
+          api.get('/vendor/products/'), 
+          api.get('/categories/'),
+          api.get('/orders/')
+        ]);
         setProducts(prodRes.data.results || prodRes.data || []);
         setCategories(catRes.data.results || catRes.data || []);
+        setOrders(ordRes.data.results || ordRes.data || []);
       } catch (error) { toast.error("Failed to load dashboard"); } finally { setLoading(false); }
     };
     fetchData();
@@ -117,25 +124,33 @@ export const VendorDashboard = () => {
             </div>
             <nav className="flex flex-col">
               {[
-                { key: 'products', label: 'My Catalog', Icon: Icons.Products },
-                { key: 'add_product', label: 'Add Product', Icon: Icons.AddProduct },
-                { key: 'request_category', label: 'Request Category', Icon: Icons.Category },
-                { key: 'request_offer', label: 'Request Offer', Icon: Icons.Offer },
-              ].map(({ key, label, Icon }, i) => (
+                { key: 'products', label: 'My Catalog', Icon: Icons.Products, badge: null },
+                { key: 'orders', label: 'Order Fulfillment', Icon: Icons.Orders, badge: orders.filter(o => o.status === 'pending').length },
+                { key: 'add_product', label: 'Add Product', Icon: Icons.AddProduct, badge: null },
+                { key: 'request_category', label: 'Request Category', Icon: Icons.Category, badge: null },
+                { key: 'request_offer', label: 'Request Offer', Icon: Icons.Offer, badge: null },
+              ].map(({ key, label, Icon, badge }) => (
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={`admin-nav-item flex items-center gap-3 px-6 py-4 text-sm font-medium border-t border-gray-100 transition-all duration-200 ${
+                  className={`admin-nav-item flex items-center justify-between px-6 py-4 text-sm font-medium border-t border-gray-100 transition-all duration-200 ${
                     activeTab === key
                       ? 'bg-[#5A3825] text-white shadow-inner'
                       : 'text-gray-600 hover:bg-[#FAF8F5] hover:text-[#5A3825] hover:pl-8'
                   }`}
                   style={{ transitionProperty: 'background, color, padding' }}
                 >
-                  <span className={`transition-transform duration-200 ${activeTab === key ? 'scale-110' : ''}`}>
-                    <Icon />
-                  </span>
-                  {label}
+                  <div className="flex items-center gap-3">
+                    <span className={`transition-transform duration-200 ${activeTab === key ? 'scale-110' : ''}`}>
+                      <Icon />
+                    </span>
+                    {label}
+                  </div>
+                  {badge > 0 && (
+                    <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${activeTab === key ? 'bg-white text-[#5A3825]' : 'bg-[#A87C51] text-white'}`}>
+                      {badge}
+                    </span>
+                  )}
                 </button>
               ))}
             </nav>
@@ -202,6 +217,58 @@ export const VendorDashboard = () => {
                       <span className={`text-[10px] px-2 py-1 uppercase font-bold text-white rounded-md transition-all duration-300 ${p.status === 'approved' ? 'bg-[#A87C51]' : p.status === 'rejected' ? 'bg-red-500' : 'bg-gray-400'}`}>
                         {p.status}
                       </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Order Fulfillment Tab */}
+          {activeTab === 'orders' && (
+            <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
+                <h2 className="text-lg font-bold text-[#2C1E16]">Order Fulfillment</h2>
+              </div>
+              <div className="p-6 space-y-4">
+                {orders.length === 0 ? (
+                  <p className="text-gray-500">No orders to fulfill yet.</p>
+                ) : orders.map(item => (
+                  <div key={item.id} className="border border-gray-200 rounded-xl p-5 bg-white flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center gap-4">
+                      <img src={item.product_details?.image} alt="" className="w-16 h-16 object-cover rounded-lg border bg-[#FAF8F5]" />
+                      <div>
+                        <p className="text-xs text-gray-500 font-bold tracking-widest">ORDER #{item.order_id} • {new Date(item.order_date).toLocaleDateString()}</p>
+                        <p className="font-bold text-[#2C1E16] text-lg">{item.product_details?.name} (x{item.quantity})</p>
+                        <p className="text-sm text-gray-600 mt-1"><span className="font-bold">Buyer:</span> {item.buyer_name}</p>
+                        <p className="text-sm text-gray-600"><span className="font-bold">Address:</span> {item.address} | <span className="font-bold">Phone:</span> {item.phone}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col gap-2 min-w-[150px]">
+                      <label className="text-xs font-bold text-gray-500 uppercase">Update Status</label>
+                      <select 
+                        className={`p-2 border rounded-lg text-sm font-bold outline-none transition-colors duration-200 ${
+                          item.status === 'pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-200 focus:border-yellow-400' :
+                          item.status === 'confirmed' ? 'bg-blue-50 text-blue-700 border-blue-200 focus:border-blue-400' :
+                          item.status === 'shipped' ? 'bg-purple-50 text-purple-700 border-purple-200 focus:border-purple-400' :
+                          'bg-green-50 text-green-700 border-green-200 focus:border-green-400'
+                        }`}
+                        value={item.status}
+                        onChange={async (e) => {
+                          const newStatus = e.target.value;
+                          try {
+                            await api.patch(`/vendor/order-items/${item.id}/status/`, { status: newStatus });
+                            setOrders(orders.map(o => o.id === item.id ? { ...o, status: newStatus } : o));
+                            toast.success("Status Updated");
+                          } catch { toast.error("Failed to update"); }
+                        }}
+                      >
+                        <option value="pending" className="bg-white text-gray-700">Pending</option>
+                        <option value="confirmed" className="bg-white text-gray-700">Confirmed</option>
+                        <option value="shipped" className="bg-white text-gray-700">Shipped</option>
+                        <option value="delivered" className="bg-white text-gray-700">Delivered</option>
+                      </select>
                     </div>
                   </div>
                 ))}

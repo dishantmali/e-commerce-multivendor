@@ -139,10 +139,10 @@ urlpatterns = [
 
     # ---------------- ORDERS ---------------- #
     path('orders/', OrderListView.as_view(), name='order_list'),
-    path('vendor/orders/<int:pk>/status/',
+    path('vendor/order-items/<int:pk>/status/',
          VendorOrderStatusUpdateView.as_view(),
          name='vendor_order_status_update'),
-
+         
     # ---------------- HOMEPAGE ---------------- #
     path('homepage/', HomePageView.as_view(), name='homepage'),
 ]
