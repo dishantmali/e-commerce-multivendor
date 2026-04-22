@@ -25,6 +25,10 @@ export const SignupPage = () => {
         payload.append('shop_name', data.shop_name);
         payload.append('address', data.address);
         
+        // 🚀 FIX: The backend explicitly requires 'contact_details'. 
+        // We pass the address here to satisfy the backend validation.
+        payload.append('contact_details', data.address); 
+        
         if (data.logo && data.logo.length > 0) {
           payload.append('logo', data.logo[0]); // Append the actual file
         }
@@ -36,7 +40,16 @@ export const SignupPage = () => {
       toast.success("Account created! Please login.");
       navigate('/login');
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Registration failed. Try again.");
+      // Improved error logging to catch exact backend complaints
+      console.error("Backend Error:", err.response?.data);
+      
+      const errorData = err.response?.data;
+      const errorMessage = errorData?.non_field_errors?.[0] 
+        || errorData?.email?.[0]
+        || errorData?.detail 
+        || "Registration failed. Try again.";
+        
+      toast.error(errorMessage);
     }
   };
 

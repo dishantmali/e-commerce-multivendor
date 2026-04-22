@@ -58,7 +58,6 @@ class HomePageView(APIView):
             end_date__gte=today
         )
         
-        # --- NEW LOGIC: Fetch Top Approved Vendors ---
         top_vendors = VendorProfile.objects.filter(is_approved=True)[:10]
 
         return Response({
@@ -78,8 +77,14 @@ class HomePageView(APIView):
                 active_offers, many=True,
                 context={'request': request}
             ).data,
-            # --- NEW DATA IN RESPONSE ---
-            "vendors": [{"shop_name": v.shop_name} for v in top_vendors]
+            "vendors": [
+                {
+                    "shop_name": v.shop_name,
+                    # build_absolute_uri ensures the full URL is sent (e.g., http://127.0.0.1:8000/media/...)
+                    "logo": request.build_absolute_uri(v.logo.url) if v.logo else None
+                } 
+                for v in top_vendors
+            ]
         })
 
 
