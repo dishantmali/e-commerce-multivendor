@@ -22,6 +22,8 @@ from .views import (
     AdminCategoryDetailView, AdminOrderListView,
     AdminCategoryRequestListView, AdminCategoryRequestActionView,
     AdminOfferListCreateView, AdminOfferActionView,
+    AdminBannerView,
+
     # Category
     CategoryListView,WishlistToggleView,WishlistListView,MergeWishlistView,
     # Cart
@@ -152,4 +154,7 @@ urlpatterns = [
     path('products/<int:product_id>/reviews/', ProductReviewListCreateView.as_view(), name='product_reviews'),
     path('platform-reviews/', PlatformReviewListCreateView.as_view(), name='platform_reviews'),
     path('vendor/reviews/', VendorReviewListView.as_view(), name='vendor_reviews'),
+
+    path('admin/banners/', AdminBannerView.as_view()),
+    path('admin/banners/<int:pk>/', AdminBannerView.as_view()),
 ]

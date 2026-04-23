@@ -6,22 +6,23 @@ import { useAuth } from '../context/AuthContext';
 import dukanLogo from '../assets/dukan.jpeg'
 
 const Icons = {
-  Overview:   () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" /></svg>,
-  Vendors:    () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857" /></svg>,
-  Products:   () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>,
-  Users:      () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
+  Overview: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" /></svg>,
+  Vendors: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857" /></svg>,
+  Products: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>,
+  Users: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
   Categories: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
-  Orders:     () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>,
-  Offers:     () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+  Orders: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>,
+  Offers: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  Banners: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
 };
 
 export const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  
+
   const [activeTab, setActiveTab] = useState('overview');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // <-- NEW: Mobile sidebar state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const profileRef = useRef(null);
 
   const [pendingProducts, setPendingProducts] = useState([]);
@@ -31,6 +32,7 @@ export const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [categoryRequests, setCategoryRequests] = useState([]);
   const [offers, setOffers] = useState([]);
+  const [banners, setBanners] = useState([]);
 
   const [loading, setLoading] = useState(true);
 
@@ -38,6 +40,7 @@ export const AdminDashboard = () => {
   const [newCatImage, setNewCatImage] = useState(null);
   const [newOffer, setNewOffer] = useState({ title: '', start_date: '', end_date: '' });
   const [offerImageFile, setOfferImageFile] = useState(null);
+  const [bannerImageFile, setBannerImageFile] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,6 +62,15 @@ export const AdminDashboard = () => {
         setOrders(orderRes.data.results || orderRes.data || []);
         setCategoryRequests(catReqRes.data.results || catReqRes.data || []);
         setOffers(offerRes.data.results || offerRes.data || []);
+
+        // Safe fetch for banners in case the endpoint isn't fully migrated yet
+        try {
+          const bannerRes = await api.get('/admin/banners/');
+          setBanners(bannerRes.data.results || bannerRes.data || []);
+        } catch (bannerError) {
+          console.warn("Banners endpoint not ready yet", bannerError);
+        }
+
       } catch (error) {
         console.error(error);
         toast.error("Error loading admin data");
@@ -188,47 +200,77 @@ export const AdminDashboard = () => {
     }
   };
 
+  const handleCreateBanner = async (e) => {
+    e.preventDefault();
+    if (!bannerImageFile) return toast.error("Please provide an image for the banner");
+    const formData = new FormData();
+    formData.append('image', bannerImageFile);
+    formData.append('is_active', 'true');
+    formData.append('title', 'Promo Banner');
+    try {
+      const res = await api.post('/admin/banners/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setBanners([res.data, ...banners]);
+      setBannerImageFile(null);
+      const fileInput = document.getElementById('bannerImageInput');
+      if (fileInput) fileInput.value = '';
+      toast.success("Banner uploaded!");
+    } catch (error) {
+      toast.error("Failed to upload banner");
+    }
+  };
+
+  const handleDeleteBanner = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this banner?")) return;
+    try {
+      await api.delete(`/admin/banners/${id}/`);
+      setBanners(banners.filter(b => b.id !== id));
+      toast.success("Banner deleted");
+    } catch (error) {
+      toast.error("Failed to delete banner");
+    }
+  };
+
   if (loading) return (
     <div className="fixed inset-0 z-[60] bg-[#FAF8F5] flex items-center justify-center text-[#5A3825] font-sans">
       <div className="flex flex-col items-center gap-4">
         <svg className="animate-spin w-8 h-8" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
         </svg>
         <span className="font-bold tracking-widest uppercase">Loading Portal...</span>
       </div>
     </div>
   );
 
-  const pendingCatReqs  = categoryRequests.filter(r => r.status === 'pending');
+  const pendingCatReqs = categoryRequests.filter(r => r.status === 'pending');
   const pendingOfferReqs = offers.filter(o => o.status === 'pending');
 
   const navItems = [
-    { key: 'overview',    label: 'Overview',          Icon: Icons.Overview,    badge: null },
-    { key: 'vendors',     label: 'Pending Vendors',   Icon: Icons.Vendors,     badge: pendingVendors.length },
-    { key: 'products',    label: 'Pending Products',  Icon: Icons.Products,    badge: pendingProducts.length },
-    { key: 'users',       label: 'Users Directory',   Icon: Icons.Users,       badge: null },
-    { key: 'categories',  label: 'Categories',        Icon: Icons.Categories,  badge: pendingCatReqs.length },
-    { key: 'offers',      label: 'Offers',            Icon: Icons.Offers,      badge: pendingOfferReqs.length },
-    { key: 'orders',      label: 'Global Orders',     Icon: Icons.Orders,      badge: null },
+    { key: 'overview', label: 'Overview', Icon: Icons.Overview, badge: null },
+    { key: 'vendors', label: 'Pending Vendors', Icon: Icons.Vendors, badge: pendingVendors.length },
+    { key: 'products', label: 'Pending Products', Icon: Icons.Products, badge: pendingProducts.length },
+    { key: 'users', label: 'Users Directory', Icon: Icons.Users, badge: null },
+    { key: 'categories', label: 'Categories', Icon: Icons.Categories, badge: pendingCatReqs.length },
+    { key: 'offers', label: 'Offers', Icon: Icons.Offers, badge: pendingOfferReqs.length },
+    { key: 'banners', label: 'Promo Banners', Icon: Icons.Banners, badge: null },
+    { key: 'orders', label: 'Global Orders', Icon: Icons.Orders, badge: null },
   ];
 
   return (
     <div className="fixed inset-0 z-[60] flex bg-[#FAF8F5] font-sans overflow-hidden">
-      
+
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden backdrop-blur-sm transition-opacity" 
-          onClick={() => setIsSidebarOpen(false)} 
+        <div
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* ── Sidebar ── */}
-      <aside 
-        className={`absolute lg:relative w-64 bg-white border-r border-gray-200 flex flex-col h-full shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-50 transition-transform duration-300 ease-in-out ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+      <aside
+        className={`absolute lg:relative w-64 bg-white border-r border-gray-200 flex flex-col h-full shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-50 transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          }`}
       >
         {/* Logo Section */}
         <div className="h-20 flex items-center px-6 border-b border-gray-100 shrink-0 cursor-pointer" onClick={() => navigate('/')}>
@@ -236,7 +278,7 @@ export const AdminDashboard = () => {
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-2">
+        <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-2 custom-scrollbar">
           <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Admin Controls</p>
           {navItems.map(({ key, label, Icon, badge }) => {
             const isActive = activeTab === key;
@@ -245,13 +287,12 @@ export const AdminDashboard = () => {
                 key={key}
                 onClick={() => {
                   setActiveTab(key);
-                  setIsSidebarOpen(false); // Close sidebar on mobile after clicking
+                  setIsSidebarOpen(false);
                 }}
-                className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 group ${
-                  isActive 
-                    ? 'bg-[#5A3825] text-white shadow-md' 
+                className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 group ${isActive
+                    ? 'bg-[#5A3825] text-white shadow-md'
                     : 'text-gray-500 hover:bg-[#FAF8F5] hover:text-[#5A3825]'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <span className={`${isActive ? 'text-[#A87C51]' : 'text-gray-400 group-hover:text-[#A87C51]'} transition-colors`}>
@@ -277,21 +318,21 @@ export const AdminDashboard = () => {
 
       {/* ── Main Content Area ── */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        
+
         {/* Top Header */}
         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-4 sm:px-8 shrink-0 z-10 shadow-sm">
-          
+
           <div className="flex items-center gap-3 sm:gap-4">
             {/* Mobile Hamburger Button */}
-            <button 
-              onClick={() => setIsSidebarOpen(true)} 
+            <button
+              onClick={() => setIsSidebarOpen(true)}
               className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 hover:text-[#5A3825] rounded-lg transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            
+
             <h2 className="text-xl sm:text-2xl font-extrabold text-[#2C1E16] capitalize tracking-tight truncate">
               {activeTab.replace('_', ' ')}
             </h2>
@@ -299,8 +340,8 @@ export const AdminDashboard = () => {
 
           {/* Profile Dropdown */}
           <div className="relative" ref={profileRef}>
-            <button 
-              onClick={() => setIsProfileOpen(!isProfileOpen)} 
+            <button
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
               className="flex items-center gap-3 focus:outline-none p-1.5 rounded-full hover:bg-[#FAF8F5] transition-colors duration-200 border border-transparent hover:border-gray-200"
             >
               <div className="text-right hidden sm:block">
@@ -450,10 +491,10 @@ export const AdminDashboard = () => {
                       <tr key={u.id} className="admin-table-row hover:bg-[#FAF8F5] transition-colors duration-150">
                         <td className="px-6 py-4 font-medium text-gray-400">#{u.id}</td>
                         <td className="px-6 py-4 font-bold text-[#2C1E16] flex items-center gap-3">
-                           <div className="w-8 h-8 rounded-full bg-[#FAF8F5] text-[#A87C51] flex items-center justify-center font-bold text-xs border border-gray-200">
-                             {u.name.charAt(0).toUpperCase()}
-                           </div>
-                           {u.name}
+                          <div className="w-8 h-8 rounded-full bg-[#FAF8F5] text-[#A87C51] flex items-center justify-center font-bold text-xs border border-gray-200">
+                            {u.name.charAt(0).toUpperCase()}
+                          </div>
+                          {u.name}
                         </td>
                         <td className="px-6 py-4 text-gray-600">{u.email}</td>
                         <td className="px-6 py-4">
@@ -569,12 +610,12 @@ export const AdminDashboard = () => {
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                           <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Start Date</label>
-                           <input type="date" required value={newOffer.start_date} onChange={e => setNewOffer({ ...newOffer, start_date: e.target.value })} className="input-animated w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors text-sm" />
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Start Date</label>
+                          <input type="date" required value={newOffer.start_date} onChange={e => setNewOffer({ ...newOffer, start_date: e.target.value })} className="input-animated w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors text-sm" />
                         </div>
                         <div>
-                           <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">End Date</label>
-                           <input type="date" required value={newOffer.end_date} onChange={e => setNewOffer({ ...newOffer, end_date: e.target.value })} className="input-animated w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors text-sm" />
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">End Date</label>
+                          <input type="date" required value={newOffer.end_date} onChange={e => setNewOffer({ ...newOffer, end_date: e.target.value })} className="input-animated w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors text-sm" />
                         </div>
                       </div>
                       <div>
@@ -606,6 +647,64 @@ export const AdminDashboard = () => {
                           </div>
                         ))
                       }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Promo Banners */}
+          {activeTab === 'banners' && (
+            <div className="animate-fade-in flex flex-col gap-8">
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div className="xl:col-span-1">
+                  <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
+                    <h2 className="text-xl font-bold text-[#2C1E16] mb-6">Upload Banner</h2>
+                    <form onSubmit={handleCreateBanner} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Banner Graphic</label>
+                        <input id="bannerImageInput" type="file" accept="image/*" required onChange={e => setBannerImageFile(e.target.files[0])} disabled={banners.length >= 2} className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[#FAF8F5] file:text-[#5A3825] hover:file:bg-[#A87C51] hover:file:text-white file:transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" />
+                        <p className="text-xs text-gray-400 mt-2 ml-1">Upload high-quality promotional banners. Recommended ratio: 16:9.</p>
+                      </div>
+
+                      {/* Show warning if 2 banners exist */}
+                      {banners.length >= 2 && (
+                        <p className="text-xs font-bold text-red-500 ml-1">Maximum limit of 2 banners reached. Delete one to upload a new one.</p>
+                      )}
+
+                      <button type="submit" disabled={!bannerImageFile || banners.length >= 2} className="btn-primary w-full bg-[#5A3825] text-white py-3.5 rounded-xl font-bold uppercase tracking-widest hover:bg-[#3E2723] shadow-md mt-4 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Upload Banner
+                      </button>
+                    </form>
+                  </div>
+                </div>
+                <div className="xl:col-span-2">
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden h-full flex flex-col">
+                    <div className="px-6 py-5 border-b border-gray-100 bg-white shrink-0">
+                      <h2 className="text-lg font-bold text-[#2C1E16]">Live Banners</h2>
+                    </div>
+                    <div className="p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-6 bg-[#FAF8F5]/30">
+                      {banners.length === 0 ? (
+                        <div className="col-span-full py-12 text-center border-2 border-dashed border-[#A87C51]/30 rounded-xl bg-white">
+                          <span className="text-[#A87C51] font-bold tracking-[0.2em] uppercase text-xs block mb-2">System Status</span>
+                          <p className="text-[#5A3825] font-light">No custom banners uploaded. Default designs are live.</p>
+                        </div>
+                      ) : (
+                        banners.map(banner => (
+                          <div key={banner.id} className="relative group rounded-xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-white">
+                            <img src={banner.image} alt="Promo banner" className="w-full h-40 object-cover" />
+                            <div className="absolute inset-0 bg-[#2C1E16]/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
+                              <button onClick={() => handleDeleteBanner(banner.id)} className="bg-red-500 text-white px-6 py-2 rounded-full font-bold text-sm tracking-wider transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-red-600 shadow-md">
+                                Delete
+                              </button>
+                            </div>
+                            <div className="absolute top-3 left-3 bg-white/95 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest text-green-600 shadow-sm">
+                              Active
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>

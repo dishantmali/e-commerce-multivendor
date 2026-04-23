@@ -4,7 +4,7 @@ from django.db import models
 from .models import (
     CustomUser, VendorProfile, Product, Order, OrderItem,
     Category, Cart, CartItem, CategoryRequest, Offer , Wishlist ,
-    ProductReview, PlatformReview
+    ProductReview, PlatformReview , Banner
 )
 
 # ---------------- BASE SANITIZER (The Armor) ----------------
@@ -250,3 +250,9 @@ class WishlistSerializer(SanitizedSerializer):
     class Meta:
         model = Wishlist
         fields = ['id', 'product', 'created_at']
+
+# ---------------- BANNER ----------------
+class BannerSerializer(SanitizedSerializer):
+    class Meta:
+        model = Banner
+        fields = ['id', 'title', 'image', 'is_active']

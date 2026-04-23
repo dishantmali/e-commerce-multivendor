@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'cloudinary_storage',
     'django.contrib.staticfiles',
     'cloudinary',
     'myapp',
@@ -89,6 +88,23 @@ if os.getenv('DATABASE_URL'):
             conn_max_age=600
         )
     }
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+        'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+        'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+    }
+
+    # 3. Production Storage (Cloudinary for Media, Native for Static)
+    STORAGES = {
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
 else:
     # LOCAL DEVELOPMENT SETTINGS (Your Computer)
     DATABASES = {
@@ -100,6 +116,14 @@ else:
             'HOST': 'localhost',
             'PORT': '5432',
         }
+    }
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
     }
 
 
@@ -134,26 +158,7 @@ USE_I18N = True
 USE_TZ = True
 
 
-# 1. Cloudinary Configuration
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
-}
 
-# 2. Django 6.0 Native Storage Settings
-STORAGES = {
-    "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
-    },
-    "staticfiles": {
-        # Using Django's native storage to prevent WhiteNoise compression crashes
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
-}
-
-# 3. THE FIX: Add this legacy variable so django-cloudinary-storage stops crashing
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # 4. Standard URLs
 STATIC_URL = 'static/'

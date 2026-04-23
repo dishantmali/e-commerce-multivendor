@@ -116,13 +116,13 @@ export const HomePage = () => {
         api.get('/wishlist/').then(res => {
           const wData = res.data.results || res.data;
           setWishlist(wData.map(item => item.product.id));
-        }).catch(() => {});
+        }).catch(() => { });
       }
     } else {
       try {
         const guestW = JSON.parse(localStorage.getItem('guestWishlist')) || [];
         setWishlist(guestW.map(item => item.product.id));
-      } catch (e) {}
+      } catch (e) { }
     }
   }, [isAuthenticated, user]);
 
@@ -144,7 +144,7 @@ export const HomePage = () => {
       try {
         const stored = JSON.parse(localStorage.getItem('guestCart'));
         if (Array.isArray(stored)) guestCart = stored;
-      } catch (e) {}
+      } catch (e) { }
 
       const existingItem = guestCart.find(item => item.product_id === product.id);
       if (existingItem) {
@@ -187,7 +187,7 @@ export const HomePage = () => {
       try {
         const stored = JSON.parse(localStorage.getItem('guestWishlist'));
         if (Array.isArray(stored)) guestWishlist = stored;
-      } catch (e) {}
+      } catch (e) { }
 
       const exists = guestWishlist.find(item => item.product.id === product.id);
       if (exists) {
@@ -211,8 +211,8 @@ export const HomePage = () => {
     <div className="max-w-7xl mx-auto px-4 py-32 text-center text-[#5A3825]">Loading...</div>
   );
 
-  const ProductGrid = ({ products, limit = 12 }) => (
-    <div className="stagger-children grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+  const ProductGrid = ({ products, limit = 12, cols = "grid-cols-1 sm:grid-cols-2 md:grid-cols-4" }) => (
+    <div className={`stagger-children grid ${cols} gap-6`}>
       {products.slice(0, limit).map(p => {
         const isWishlisted = wishlist.includes(p.id);
         return (
@@ -268,12 +268,13 @@ export const HomePage = () => {
   return (
     <div className="font-sans bg-white pb-16">
 
-      {/* Offer Ticker */}
-      {data.offers && data.offers.length > 0 && (
-        <div className="w-full py-3 bg-[#A87C51] text-white overflow-hidden border-y border-[#5A3825]">
-          <div className="flex whitespace-nowrap overflow-hidden">
-            <div className="animate-scroll hover-pause flex items-center cursor-pointer">
-              {[...data.offers, ...data.offers, ...data.offers, ...data.offers].map((offer, idx) => (
+      {/* Offer / Welcome Ticker */}
+      <div className="w-full py-3 bg-[#A87C51] text-white overflow-hidden border-y border-[#5A3825]">
+        <div className="flex whitespace-nowrap overflow-hidden">
+          <div className="animate-scroll hover-pause flex items-center cursor-pointer">
+            {data.offers && data.offers.length > 0 ? (
+              // Show actual offers if they exist
+              [...data.offers, ...data.offers, ...data.offers, ...data.offers].map((offer, idx) => (
                 <div key={idx} className="flex items-center mx-6 text-sm md:text-base font-medium tracking-wide">
                   <span className="bg-white text-[#5A3825] px-3 py-1 rounded-full text-xs font-bold uppercase mr-3 shadow-sm">
                     LIVE OFFER
@@ -282,11 +283,22 @@ export const HomePage = () => {
                   <span className="ml-2 opacity-80">({offer.start_date} to {offer.end_date})</span>
                   <span className="mx-8 text-[#5A3825]">✦</span>
                 </div>
-              ))}
-            </div>
+              ))
+            ) : (
+              // Default Welcome Message if no offers exist
+              [...Array(10)].map((_, idx) => (
+                <div key={idx} className="flex items-center mx-6 text-sm md:text-base font-medium tracking-wide">
+                  <span className="bg-white text-[#5A3825] px-3 py-1 rounded-full text-xs font-bold uppercase mr-3 shadow-sm">
+                    WELCOME
+                  </span>
+                  <span>Welcome to Gujju Ni Dukan!</span>
+                  <span className="mx-8 text-[#5A3825]">✦</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
-      )}
+      </div>
 
       {/* Categories */}
       <div className="max-w-7xl mx-auto px-4 py-12 mt-6">
@@ -313,54 +325,80 @@ export const HomePage = () => {
       {/* Promo Banners */}
       <div className="w-full mt-10 mb-16">
         <div className="flex flex-col md:flex-row w-full min-h-[350px] lg:min-h-[450px]">
-          
-          {/* Poster 1 (Left 50%) */}
-          <div className="w-full md:w-1/2 bg-[#F5EFE6] p-8 md:p-12 lg:p-16 flex flex-col justify-center relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-transparent to-[#A87C51]/10 pointer-events-none"></div>
-            <div className="absolute -right-32 -top-32 w-96 h-96 bg-white/60 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000 pointer-events-none"></div>
-            
-            <div className="relative z-10 w-full max-w-xl mx-auto md:ml-auto md:mr-10 xl:mr-16">
-              <span className="text-[#A87C51] font-bold tracking-[0.3em] uppercase text-[10px] md:text-xs mb-3 block">Premium Quality</span>
-              <h3 className="text-4xl lg:text-6xl font-black text-[#2C1E16] mb-4 leading-[1.05] tracking-tight">
-                Artisanal<br/>Sweets.
-              </h3>
-              <p className="text-[#5A3825] mb-8 text-base md:text-lg font-light">
-                Taste the rich tradition and authentic flavors in every single bite.
-              </p>
-              <Link to="/shop" className="inline-flex items-center gap-3 bg-[#2C1E16] text-white px-8 py-3 font-bold tracking-widest uppercase text-xs hover:bg-[#A87C51] transition-colors duration-300">
-                Explore Collection
-                <svg className="w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </Link>
-            </div>
-          </div>
 
-          {/* Poster 2 (Right 50%) */}
-          <div className="w-full md:w-1/2 bg-[#1A110A] p-8 md:p-12 lg:p-16 flex flex-col justify-center relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-bl from-transparent to-[#A87C51]/10 pointer-events-none"></div>
-            <div className="absolute -left-32 -bottom-32 w-96 h-96 bg-[#A87C51]/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000 pointer-events-none"></div>
-            
-            <div className="relative z-10 w-full max-w-xl mx-auto md:mr-auto md:ml-10 xl:ml-16">
-              <span className="text-[#A87C51] font-bold tracking-[0.3em] uppercase text-[10px] md:text-xs mb-3 block">Freshly Ground</span>
-              <h3 className="text-4xl lg:text-6xl font-black text-white mb-4 leading-[1.05] tracking-tight">
-                Roasted<br/>Coffee.
-              </h3>
-              <p className="text-gray-400 mb-8 text-base md:text-lg font-light">
-                Start your morning right with our premium, hand-picked beans.
-              </p>
-              <Link to="/shop" className="inline-flex items-center gap-3 border border-[#A87C51] text-[#A87C51] px-8 py-3 font-bold tracking-widest uppercase text-xs hover:bg-[#A87C51] hover:text-[#1A110A] transition-colors duration-300">
-                Shop Coffee
-                <svg className="w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </Link>
+          {/* SLOT 1: Custom Banner OR Default Poster 1 */}
+          {data.banners && data.banners[0] ? (
+            <div className="w-full md:w-1/2 relative overflow-hidden group">
+              <img src={data.banners[0].image} alt="Promo" className="w-full h-full object-cover" />
             </div>
-          </div>
+          ) : (
+            <div className="w-full md:w-1/2 bg-[#F5EFE6] p-8 md:p-12 lg:p-16 flex flex-col justify-center relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-transparent to-[#A87C51]/10 pointer-events-none"></div>
+              <div className="absolute -right-32 -top-32 w-96 h-96 bg-white/60 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000 pointer-events-none"></div>
 
+              <div className="relative z-10 w-full max-w-xl mx-auto md:ml-auto md:mr-10 xl:mr-16">
+                <span className="text-[#A87C51] font-bold tracking-[0.3em] uppercase text-[10px] md:text-xs mb-3 block">Premium Quality</span>
+                <h3 className="text-4xl lg:text-6xl font-black text-[#2C1E16] mb-4 leading-[1.05] tracking-tight">Artisanal<br />Sweets.</h3>
+                <p className="text-[#5A3825] mb-8 text-base md:text-lg font-light">Taste the rich tradition and authentic flavors in every single bite.</p>
+                <Link to="/shop" className="inline-flex items-center gap-3 bg-[#2C1E16] text-white px-8 py-3 font-bold tracking-widest uppercase text-xs hover:bg-[#A87C51] transition-colors duration-300">
+                  Explore Collection
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* SLOT 2: Custom Banner OR Default Poster 2 */}
+          {data.banners && data.banners[1] ? (
+            <div className="w-full md:w-1/2 relative overflow-hidden group">
+              <img src={data.banners[1].image} alt="Promo" className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <div className="w-full md:w-1/2 bg-[#1A110A] p-8 md:p-12 lg:p-16 flex flex-col justify-center relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-bl from-transparent to-[#A87C51]/10 pointer-events-none"></div>
+              <div className="absolute -left-32 -bottom-32 w-96 h-96 bg-[#A87C51]/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000 pointer-events-none"></div>
+
+              <div className="relative z-10 w-full max-w-xl mx-auto md:mr-auto md:ml-10 xl:ml-16">
+                <span className="text-[#A87C51] font-bold tracking-[0.3em] uppercase text-[10px] md:text-xs mb-3 block">Freshly Ground</span>
+                <h3 className="text-4xl lg:text-6xl font-black text-white mb-4 leading-[1.05] tracking-tight">Roasted<br />Coffee.</h3>
+                <p className="text-gray-400 mb-8 text-base md:text-lg font-light">Start your morning right with our premium, hand-picked beans.</p>
+                <Link to="/shop" className="inline-flex items-center gap-3 border border-[#A87C51] text-[#A87C51] px-8 py-3 font-bold tracking-widest uppercase text-xs hover:bg-[#A87C51] hover:text-[#1A110A] transition-colors duration-300">
+                  Shop Coffee
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Trending */}
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <h2 className="animate-fade-in-up text-2xl font-bold text-[#2C1E16] mb-8">What's Trending</h2>
-        <ProductGrid products={data.featured_products} limit={4} />
+      {/* --- UPDATED: Trending & New Arrivals Split Section --- */}
+      <div className="max-w-7xl mx-auto px-4 py-12 mt-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+
+          {/* Left Side: Trending (Top 2) */}
+          <div>
+            <h2 className="animate-fade-in-up text-2xl font-bold text-[#2C1E16] mb-6 flex items-center gap-2">
+              🔥 Trending
+            </h2>
+            <ProductGrid
+              products={data.featured_products}
+              limit={2}
+              cols="grid-cols-1 sm:grid-cols-2"
+            />
+          </div>
+
+          {/* Right Side: New Arrivals (Top 2) */}
+          <div>
+            <h2 className="animate-fade-in-up text-2xl font-bold text-[#2C1E16] mb-6 flex items-center gap-2">
+              ✨ New Arrivals
+            </h2>
+            <ProductGrid
+              products={data.new_products}
+              limit={2}
+              cols="grid-cols-1 sm:grid-cols-2"
+            />
+          </div>
+
+        </div>
       </div>
 
       {/* Discover Products */}
@@ -406,14 +444,14 @@ export const HomePage = () => {
       {/* Top Vendors Carousel */}
       <div className="py-20 bg-[#FAF8F5] border-y border-[#A87C51]/20 mt-16 relative">
         <div className="max-w-7xl mx-auto px-4">
-          
+
           {/* Header Centered */}
           <div className="text-center mb-10 animate-fade-in-up">
             <span className="text-[#A87C51] font-bold tracking-widest uppercase text-xs">Our Partners</span>
             <h2 className="text-3xl font-bold text-[#2C1E16] mt-2">Trusted Top Vendors</h2>
           </div>
 
-          <div 
+          <div
             ref={vendorScrollRef}
             onMouseEnter={stopVendorScroll}
             onMouseLeave={startVendorScroll}
@@ -423,15 +461,15 @@ export const HomePage = () => {
           >
             {data.vendors && data.vendors.length > 0 ? (
               [...data.vendors, ...data.vendors, ...data.vendors].map((vendor, idx) => (
-                <div 
-                  key={idx} 
+                <div
+                  key={idx}
                   className="min-w-[240px] md:min-w-[280px] bg-white border border-[#A87C51]/20 rounded-2xl p-8 flex flex-col items-center justify-center snap-center group cursor-pointer transition-all duration-400 hover:-translate-y-4 hover:shadow-[0_20px_40px_rgba(90,56,37,0.12)] hover:border-[#5A3825]"
                 >
                   <div className="w-28 h-28 rounded-full bg-[#FAF8F5] mb-6 flex items-center justify-center overflow-hidden border-4 border-white shadow-[0_4px_15px_rgba(0,0,0,0.05)] group-hover:border-[#A87C51]/30 transition-all duration-400 group-hover:shadow-[0_8px_25px_rgba(168,124,81,0.25)] relative">
-                    <img 
-                      src={vendor.logo || '/logo.jpeg'} 
-                      alt={vendor.shop_name} 
-                      className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-500" 
+                    <img
+                      src={vendor.logo || '/logo.jpeg'}
+                      alt={vendor.shop_name}
+                      className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
                   <h3 className="font-bold text-[#2C1E16] text-xl text-center group-hover:text-[#A87C51] transition-colors">{vendor.shop_name}</h3>
@@ -441,7 +479,7 @@ export const HomePage = () => {
               <p className="text-gray-500 text-center w-full">No top vendors available at the moment.</p>
             )}
           </div>
-          
+
           {/* Centered Controls Below Carousel (Desktop & Mobile) */}
           <div className="flex justify-center gap-4 mt-6">
             <button onClick={scrollLeft} className="w-12 h-12 rounded-full bg-white shadow-[0_2px_10px_rgba(0,0,0,0.08)] border border-gray-100 flex items-center justify-center text-[#2C1E16] hover:bg-[#FAF8F5] transition-all duration-300 active:scale-95">
@@ -458,14 +496,14 @@ export const HomePage = () => {
       {/* Customer Reviews Carousel */}
       <div className="py-20 bg-white relative">
         <div className="max-w-7xl mx-auto px-4">
-          
+
           {/* Header Centered */}
           <div className="text-center mb-10 animate-fade-in-up">
             <span className="text-[#A87C51] font-bold tracking-widest uppercase text-xs">Testimonials</span>
             <h2 className="text-3xl font-bold text-[#2C1E16] mt-2">What Our Customers Say</h2>
           </div>
 
-          <div 
+          <div
             ref={reviewScrollRef}
             onMouseEnter={stopReviewScroll}
             onMouseLeave={startReviewScroll}
@@ -474,8 +512,8 @@ export const HomePage = () => {
             className="flex overflow-x-auto gap-6 pb-6 pt-4 px-2 w-full snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           >
             {[...staticReviews, ...staticReviews, ...staticReviews].map((review, idx) => (
-              <div 
-                key={idx} 
+              <div
+                key={idx}
                 className="min-w-[300px] md:min-w-[340px] bg-white border border-[#A87C51]/20 rounded-2xl p-8 flex flex-col snap-center group cursor-pointer transition-all duration-400 hover:-translate-y-4 hover:shadow-[0_20px_40px_rgba(90,56,37,0.12)] hover:border-[#5A3825]"
               >
                 <div className="flex items-center gap-4 mb-5">
@@ -500,7 +538,7 @@ export const HomePage = () => {
               </div>
             ))}
           </div>
-          
+
           {/* Centered Controls Below Carousel (Desktop & Mobile) */}
           <div className="flex justify-center gap-4 mt-6">
             <button onClick={scrollReviewsLeft} className="w-12 h-12 rounded-full bg-white shadow-[0_2px_10px_rgba(0,0,0,0.08)] border border-gray-100 flex items-center justify-center text-[#2C1E16] hover:bg-[#FAF8F5] transition-all duration-300 active:scale-95">

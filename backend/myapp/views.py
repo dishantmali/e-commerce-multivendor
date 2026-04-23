@@ -13,13 +13,13 @@ from django.db import transaction , models
 from .models import (
     CustomUser, Product, Order, VendorProfile, OrderItem,
     Category, Cart, CartItem, CategoryRequest, Offer , Wishlist,
-    ProductReview, PlatformReview
+    ProductReview, PlatformReview , Banner
 )
 from .serializers import (
     RegisterSerializer, CustomUserSerializer, ProductSerializer,
     OrderSerializer,OrderItemSerializer, VendorOrderUpdateSerializer, CategorySerializer,
     CartSerializer, CategoryRequestSerializer, OfferSerializer, WishlistSerializer ,
-    ProductReviewSerializer, PlatformReviewSerializer
+    ProductReviewSerializer, PlatformReviewSerializer , BannerSerializer
 )
 
 # Initialize Razorpay client
@@ -49,7 +49,9 @@ class HomePageView(APIView):
 
     def get(self, request):
         categories = Category.objects.all()
-        products = Product.objects.filter(status='approved')[:10]
+        products = Product.objects.filter(status='approved').annotate(
+            review_count=models.Count('reviews')
+        ).order_by('-review_count', '-created_at')[:10]
         new_products = Product.objects.filter(
             status='approved'
         ).order_by('-created_at')[:10]
@@ -61,7 +63,7 @@ class HomePageView(APIView):
         )
         
         top_vendors = VendorProfile.objects.filter(is_approved=True)[:10]
-
+        active_banners = Banner.objects.filter(is_active=True)
         return Response({
             "categories": CategorySerializer(
                 categories, many=True,
@@ -86,7 +88,8 @@ class HomePageView(APIView):
                     "logo": request.build_absolute_uri(v.logo.url) if v.logo else None
                 } 
                 for v in top_vendors
-            ]
+            ],
+            "banners": [{"id": b.id, "image": request.build_absolute_uri(b.image.url)} for b in active_banners],
         })
 
 
@@ -324,6 +327,42 @@ class AdminOrderListView(generics.ListAPIView):
         if self.request.user.role != 'admin':
             raise PermissionDenied("Only admin can view global orders.")
         return Order.objects.all().order_by('-created_at')
+    
+class AdminBannerView(APIView):
+    permission_classes = [permissions.IsAdminUser] 
+
+    def get(self, request):
+        # FIX 1: Order by 'id' since 'created_at' does not exist on the Banner model
+        banners = Banner.objects.all().order_by('id')
+        serializer = BannerSerializer(banners, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def post(self, request):
+        # STRICT LIMIT: Max 2 banners
+        if Banner.objects.count() >= 2:
+            return Response({"error": "Maximum of 2 banners allowed."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # FIX 2: Create a mutable copy of the data and inject a default title
+        data = request.data.copy()
+        if 'title' not in data:
+            data['title'] = f"Promo Banner {Banner.objects.count() + 1}"
+
+        serializer = BannerSerializer(data=data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        # If it fails, print the errors to the terminal so we can see exactly what went wrong
+        print("Banner Upload Errors:", serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        try:
+            banner = Banner.objects.get(pk=pk)
+            banner.delete()
+            return Response({"success": True}, status=status.HTTP_204_NO_CONTENT)
+        except Banner.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 # ---------- Vendor Category & Offer Requests ---------- #
 
