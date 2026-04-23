@@ -132,29 +132,31 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Cloudinary Configuration
+# 1. Cloudinary Configuration
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
 }
 
-# Use the new STORAGES setting required by Django 4.2+ and 6.0
+# 2. Django 6.0 Native Storage Settings
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
+        # Using Django's native storage to prevent WhiteNoise compression crashes
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
-# Static and Media URLs
+
+# 3. THE FIX: Add this legacy variable so django-cloudinary-storage stops crashing
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
+# 4. Standard URLs
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-# STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-
 MEDIA_URL = '/media/'
-# MEDIA_ROOT is not required for Cloudinary but kept for fallback
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Custom User Model
