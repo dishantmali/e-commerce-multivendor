@@ -199,3 +199,5 @@ CACHES = {
         'LOCATION': 'unique-snowflake',
     }
 }
+
+WHITENOISE_MANIFEST_STRICT = False
