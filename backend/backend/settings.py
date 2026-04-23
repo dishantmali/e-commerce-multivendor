@@ -145,7 +145,7 @@ AUTH_USER_MODEL = 'myapp.CustomUser'
 # CORS Settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://e-commerce-multivendor-nu.vercel.app/",
+    "https://e-commerce-multivendor-nu.vercel.app",
 ]
 # Django REST Framework Config
 REST_FRAMEWORK = {
