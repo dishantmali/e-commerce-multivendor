@@ -138,7 +138,7 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
 }
 
-# Unified Storage configuration for Django 4.2+ and 6.0
+# Use the new STORAGES setting required by Django 4.2+ and 6.0
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
@@ -152,6 +152,7 @@ STORAGES = {
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
+# MEDIA_ROOT is not required for Cloudinary but kept for fallback
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Custom User Model
