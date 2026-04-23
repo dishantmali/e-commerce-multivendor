@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# exit on error
 set -o errexit
 
-pip install -r requirements.txt
+# Upgrade pip
+python -m pip install --upgrade pip #
 
-python manage.py collectstatic --no-input
-# Apply migrations first to ensure the table exists
-python manage.py migrate
+# Install all requirements (including the newly added django-resized)
+pip install -r requirements.txt #
 
-# Create the superuser using environment variables
-# The '|| true' ensures the build doesn't fail if the user already exists
-python manage.py createsuperuser --noinput || true
+python manage.py collectstatic --no-input #
+python manage.py migrate #
+
+# Superuser creation (already handled in your script)
+python manage.py createsuperuser --noinput || true #
