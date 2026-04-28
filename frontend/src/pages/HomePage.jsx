@@ -1,56 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import api from '../api/axios'
 import toast from 'react-hot-toast'
 
-// ─── Dummy Data ───────────────────────────────────────────────────────────────
-const DUMMY_CATEGORIES = [
-  { id: 1, name: 'Sweets',   image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&q=80' },
-  { id: 2, name: 'Coffee',   image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&q=80' },
-  { id: 3, name: 'Snacks',   image: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=200&q=80' },
-  { id: 4, name: 'Pickles',  image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=200&q=80' },
-  { id: 5, name: 'Spices',   image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=200&q=80' },
-  { id: 6, name: 'Namkeen',  image: 'https://images.unsplash.com/photo-1623428454614-abaf00244e52?w=200&q=80' },
-];
-
-const DUMMY_PRODUCTS = [
-  { id: 1,  name: 'Kaju Katli',        price: '350', originalPrice: '420', stock_quantity: 20, category: 1, rating: 4.8, reviews: 1240, badge: 'Bestseller', image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80' },
-  { id: 2,  name: 'Mohanthal',         price: '280', originalPrice: '350', stock_quantity: 15, category: 1, rating: 4.6, reviews: 892,  badge: 'Popular',    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80' },
-  { id: 3,  name: 'Filter Coffee',     price: '220', originalPrice: '260', stock_quantity: 30, category: 2, rating: 4.9, reviews: 2100, badge: 'Top Rated',   image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&q=80' },
-  { id: 4,  name: 'Cold Brew',         price: '180', originalPrice: '220', stock_quantity: 25, category: 2, rating: 4.5, reviews: 670,  badge: 'New',         image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400&q=80' },
-  { id: 5,  name: 'Chakri',            price: '120', originalPrice: '150', stock_quantity: 50, category: 3, rating: 4.7, reviews: 1560, badge: 'Bestseller',  image: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&q=80' },
-  { id: 6,  name: 'Gathiya',           price: '90',  originalPrice: '110', stock_quantity: 60, category: 3, rating: 4.4, reviews: 430,  badge: null,          image: 'https://images.unsplash.com/photo-1623428454614-abaf00244e52?w=400&q=80' },
-  { id: 7,  name: 'Mango Pickle',      price: '160', originalPrice: '200', stock_quantity: 40, category: 4, rating: 4.8, reviews: 1890, badge: 'Bestseller',  image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80' },
-  { id: 8,  name: 'Lemon Pickle',      price: '140', originalPrice: '170', stock_quantity: 35, category: 4, rating: 4.3, reviews: 320,  badge: null,          image: 'https://images.unsplash.com/photo-1464454709131-ffd692591ee5?w=400&q=80' },
-  { id: 9,  name: 'Jeera Powder',      price: '60',  originalPrice: '80',  stock_quantity: 80, category: 5, rating: 4.6, reviews: 780,  badge: 'Value Pack',  image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80' },
-  { id: 10, name: 'Dhana Powder',      price: '55',  originalPrice: '70',  stock_quantity: 90, category: 5, rating: 4.4, reviews: 540,  badge: null,          image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80' },
-  { id: 11, name: 'Sev',               price: '80',  originalPrice: '100', stock_quantity: 70, category: 6, rating: 4.7, reviews: 1100, badge: 'Popular',     image: 'https://images.unsplash.com/photo-1623428454614-abaf00244e52?w=400&q=80' },
-  { id: 12, name: 'Bhujia',            price: '75',  originalPrice: '95',  stock_quantity: 65, category: 6, rating: 4.5, reviews: 890,  badge: null,          image: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&q=80' },
-  { id: 13, name: 'Aamrakhand',        price: '200', originalPrice: '250', stock_quantity: 20, category: 1, rating: 4.9, reviews: 2340, badge: 'Top Rated',   image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80' },
-  { id: 14, name: 'Espresso Blend',    price: '260', originalPrice: '310', stock_quantity: 18, category: 2, rating: 4.7, reviews: 760,  badge: 'New',         image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&q=80' },
-  { id: 15, name: 'Khakhra',           price: '100', originalPrice: '130', stock_quantity: 55, category: 3, rating: 4.6, reviews: 1230, badge: null,          image: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&q=80' },
-  { id: 16, name: 'Green Chilli Pickle',price: '130',originalPrice: '160', stock_quantity: 30, category: 4, rating: 4.4, reviews: 410,  badge: null,          image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80' },
-  { id: 17, name: 'Haldi Powder',      price: '50',  originalPrice: '65',  stock_quantity: 100,category: 5, rating: 4.5, reviews: 670,  badge: 'Value Pack',  image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80' },
-  { id: 18, name: 'Fafda',             price: '85',  originalPrice: '100', stock_quantity: 0,  category: 6, rating: 4.3, reviews: 290,  badge: null,          image: 'https://images.unsplash.com/photo-1623428454614-abaf00244e52?w=400&q=80' },
-  { id: 19, name: 'Ladoo',             price: '300', originalPrice: '380', stock_quantity: 22, category: 1, rating: 4.8, reviews: 1780, badge: 'Bestseller',  image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80' },
-  { id: 20, name: 'Masala Chai Blend', price: '190', originalPrice: '230', stock_quantity: 40, category: 2, rating: 4.9, reviews: 3200, badge: 'Top Rated',   image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&q=80' },
-];
-
-const DUMMY_VENDORS = [
-  { shop_name: 'Mithai Wala',      logo: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&q=80' },
-  { shop_name: 'Coffee Corner',    logo: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&q=80' },
-  { shop_name: 'Gujarati Grains',  logo: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=200&q=80' },
-  { shop_name: 'Pickle Palace',    logo: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=200&q=80' },
-  { shop_name: 'Snack Stop',       logo: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=200&q=80' },
-];
-
+// ─── Static Data (Kept as requested) ──────────────────────────────────────────
 const DUMMY_OFFERS = [
   { title: 'Get 10% off on first order with code GUJJU10', start_date: '01 Jun', end_date: '30 Jun' },
   { title: 'Free shipping on orders above ₹500',          start_date: '01 Jun', end_date: '31 Jul' },
   { title: 'Buy 2 Get 1 Free on all Namkeen items',       start_date: '15 Jun', end_date: '15 Jul' },
 ];
 
-// ─── NEW: Deal of the Day countdown data ────────────────────────────────────
 const DEAL_PRODUCTS = [
   { id: 1,  name: 'Kaju Katli',     price: '280', originalPrice: '420', discount: 33, image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80', stock_quantity: 20 },
   { id: 13, name: 'Aamrakhand',     price: '150', originalPrice: '250', discount: 40, image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',     stock_quantity: 20 },
@@ -59,17 +19,22 @@ const DEAL_PRODUCTS = [
   { id: 20, name: 'Masala Chai',    price: '130', originalPrice: '230', discount: 43, image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&q=80',  stock_quantity: 40 },
 ];
 
-// ─── NEW: Recently Viewed / Browsing History ─────────────────────────────────
-const RECENTLY_VIEWED = DUMMY_PRODUCTS.slice(10, 16);
+const RECENTLY_VIEWED = [
+  { id: 11, name: 'Sev',               price: '80',  originalPrice: '100', stock_quantity: 70, category: 6, rating: 4.7, reviews: 1100, badge: 'Popular',     image: 'https://images.unsplash.com/photo-1623428454614-abaf00244e52?w=400&q=80' },
+  { id: 12, name: 'Bhujia',            price: '75',  originalPrice: '95',  stock_quantity: 65, category: 6, rating: 4.5, reviews: 890,  badge: null,          image: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&q=80' },
+  { id: 13, name: 'Aamrakhand',        price: '200', originalPrice: '250', stock_quantity: 20, category: 1, rating: 4.9, reviews: 2340, badge: 'Top Rated',   image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80' },
+  { id: 14, name: 'Espresso Blend',    price: '260', originalPrice: '310', stock_quantity: 18, category: 2, rating: 4.7, reviews: 760,  badge: 'New',         image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&q=80' },
+  { id: 15, name: 'Khakhra',           price: '100', originalPrice: '130', stock_quantity: 55, category: 3, rating: 4.6, reviews: 1230, badge: null,          image: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&q=80' },
+  { id: 16, name: 'Green Chilli Pickle',price: '130',originalPrice: '160', stock_quantity: 30, category: 4, rating: 4.4, reviews: 410,  badge: null,          image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80' },
+];
 
-// ─── NEW: Mini-banner deals grid ─────────────────────────────────────────────
 const MINI_BANNERS = [
   { label: 'Sweets Fest', sub: 'Up to 40% off', color: 'from-[#F5EFE6] to-[#E8D5BC]', link: '/shop?category=1', emoji: '🍬' },
   { label: 'Coffee Week', sub: 'Premium blends', color: 'from-[#1A110A] to-[#3D2314]', dark: true, link: '/shop?category=2', emoji: '☕' },
   { label: 'Spice Route', sub: 'Fresh & aromatic', color: 'from-[#FAF3E0] to-[#F0E0BA]', link: '/shop?category=5', emoji: '🌶️' },
   { label: 'Namkeen Time', sub: 'Crispy snacks', color: 'from-[#2C1E16] to-[#5A3825]', dark: true, link: '/shop?category=6', emoji: '🥨' },
 ];
-// ─── NEW: Promo Banner Slider Data ───────────────────────────────────────────
+
 const PROMO_BANNERS = [
   {
     id: 1,
@@ -233,7 +198,7 @@ export const HomePage = () => {
   const scrollReviewsLeft  = () => reviewScrollRef.current?.scrollBy({ left: -340, behavior: 'smooth' });
   const scrollReviewsRight = () => reviewScrollRef.current?.scrollBy({ left:  340, behavior: 'smooth' });
 
-  // ─── NEW: Countdown timer for Deal of the Day ───────────────────────────────
+  // ─── Countdown timer for Deal of the Day ───────────────────────────────
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown(prev => {
@@ -250,20 +215,24 @@ export const HomePage = () => {
 
   const pad = (n) => String(n).padStart(2, '0');
 
-  // --- Load Dummy Data ---
+  // --- Fetch Real Data from Backend ---
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setData({
-        categories: DUMMY_CATEGORIES,
-        featured_products: DUMMY_PRODUCTS.slice(0, 6),
-        new_products: DUMMY_PRODUCTS,
-        offers: DUMMY_OFFERS,
-        vendors: DUMMY_VENDORS,
-        banners: null,
+    api.get('/homepage/')
+      .then(res => {
+        setData({
+          categories: res.data.categories || [],
+          featured_products: res.data.featured_products || [],
+          new_products: res.data.new_products || [],
+          offers: DUMMY_OFFERS, // Kept static as requested
+          vendors: res.data.vendors || [],
+          banners: null,
+        });
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to load homepage data:", err);
+        setLoading(false);
       });
-      setLoading(false);
-    }, 400);
-    return () => clearTimeout(timer);
   }, []);
 
   // --- Load wishlist from localStorage (guest) ---
@@ -289,7 +258,12 @@ export const HomePage = () => {
       if (user?.role === 'vendor' || user?.role === 'admin') {
         return toast.error(`${user.role}s cannot buy products.`)
       }
-      toast.success("Added to cart!");
+      try {
+        await api.post('/cart/add/', { product_id: product.id, quantity: 1 });
+        toast.success("Added to cart!");
+      } catch (err) {
+        toast.error(err.response?.data?.error || "Failed to add to cart.");
+      }
     } else {
       let guestCart = [];
       try {
@@ -315,9 +289,18 @@ export const HomePage = () => {
     if (e) e.stopPropagation();
     if (isAuthenticated) {
       if (user?.role === 'vendor' || user?.role === 'admin') return toast.error(`${user.role}s cannot use wishlists.`);
-      const isIn = wishlist.includes(product.id);
-      setWishlist(prev => isIn ? prev.filter(id => id !== product.id) : [...prev, product.id]);
-      toast.success(isIn ? "Removed from wishlist!" : "Added to wishlist!");
+      try {
+        const res = await api.post('/wishlist/toggle/', { product_id: product.id });
+        if (res.data.added) {
+          toast.success("Added to wishlist!");
+          setWishlist(prev => [...prev, product.id]);
+        } else {
+          toast.success("Removed from wishlist!");
+          setWishlist(prev => prev.filter(id => id !== product.id));
+        }
+      } catch (err) {
+        toast.error("Failed to update wishlist.");
+      }
     } else {
       let guestWishlist = [];
       try {
@@ -356,17 +339,6 @@ export const HomePage = () => {
     if (!original) return null;
     return Math.round(((original - price) / original) * 100);
   };
-
-  // ─── Star rating renderer ────────────────────────────────────────────────────
-  const renderStars = (rating) => (
-    <div className="flex items-center gap-0.5">
-      {[1,2,3,4,5].map(i => (
-        <svg key={i} className={`w-3 h-3 ${i <= Math.round(rating) ? 'text-yellow-400 fill-current' : 'text-gray-200 fill-current'}`} viewBox="0 0 20 20">
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      ))}
-    </div>
-  );
 
   const renderProductGrid = (products, limit = 12, cols = "grid-cols-1 sm:grid-cols-2 md:grid-cols-4") => (
     <div className={`stagger-children grid ${cols} gap-5`}>
@@ -449,7 +421,7 @@ export const HomePage = () => {
 
               {/* Price */}
               <div className="flex items-baseline gap-2 flex-wrap">
-                <span className="text-[#2C1E16] font-bold text-base">₹{p.price}</span>
+                <span className="text-[#2C1E16] font-bold text-base">₹{parseFloat(p.price).toLocaleString()}</span>
                 {p.originalPrice && (
                   <span className="text-gray-400 line-through text-xs">₹{p.originalPrice}</span>
                 )}
@@ -764,7 +736,7 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* ── NEW: Trust / Feature Badges (like Amazon) ─────────────────────── */}
+      {/* ── Trust / Feature Badges ─────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 mb-14">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
@@ -826,7 +798,7 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* ── NEW: Recently Viewed ──────────────────────────────────────────────── */}
+      {/* ── Recently Viewed ──────────────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 py-14">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-[#2C1E16]">🕐 Recently Viewed</h2>
@@ -911,7 +883,7 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* ── NEW: Newsletter / App Download strip ─────────────────────────────── */}
+      {/* ── Newsletter / App Download strip ─────────────────────────────── */}
       <div className="bg-gradient-to-r from-[#2C1E16] to-[#5A3825] py-12 mt-4">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <span className="text-[#A87C51] uppercase tracking-widest text-xs font-bold">Stay Updated</span>

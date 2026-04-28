@@ -3,60 +3,15 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SkeletonCard } from '../components/SkeletonCard';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-
-// ─── Dummy Data ───────────────────────────────────────────────────────────────
-const DUMMY_CATEGORIES = [
-  { id: 1, name: 'Sweets'  },
-  { id: 2, name: 'Coffee'  },
-  { id: 3, name: 'Snacks'  },
-  { id: 4, name: 'Pickles' },
-  { id: 5, name: 'Spices'  },
-  { id: 6, name: 'Namkeen' },
-];
-
-const DUMMY_PRODUCTS = [
-  { id: 1,  name: 'Kaju Katli',          price: '350', stock_quantity: 20, category: 1, image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80' },
-  { id: 2,  name: 'Mohanthal',           price: '280', stock_quantity: 15, category: 1, image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80' },
-  { id: 3,  name: 'Filter Coffee',       price: '220', stock_quantity: 30, category: 2, image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&q=80' },
-  { id: 4,  name: 'Cold Brew',           price: '180', stock_quantity: 25, category: 2, image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400&q=80' },
-  { id: 5,  name: 'Chakri',              price: '120', stock_quantity: 50, category: 3, image: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&q=80' },
-  { id: 6,  name: 'Gathiya',             price: '90',  stock_quantity: 60, category: 3, image: 'https://images.unsplash.com/photo-1623428454614-abaf00244e52?w=400&q=80' },
-  { id: 7,  name: 'Mango Pickle',        price: '160', stock_quantity: 40, category: 4, image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80' },
-  { id: 8,  name: 'Lemon Pickle',        price: '140', stock_quantity: 35, category: 4, image: 'https://images.unsplash.com/photo-1464454709131-ffd692591ee5?w=400&q=80' },
-  { id: 9,  name: 'Jeera Powder',        price: '60',  stock_quantity: 80, category: 5, image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80' },
-  { id: 10, name: 'Dhana Powder',        price: '55',  stock_quantity: 90, category: 5, image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80' },
-  { id: 11, name: 'Sev',                 price: '80',  stock_quantity: 70, category: 6, image: 'https://images.unsplash.com/photo-1623428454614-abaf00244e52?w=400&q=80' },
-  { id: 12, name: 'Bhujia',              price: '75',  stock_quantity: 65, category: 6, image: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&q=80' },
-  { id: 13, name: 'Aamrakhand',          price: '200', stock_quantity: 20, category: 1, image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80' },
-  { id: 14, name: 'Espresso Blend',      price: '260', stock_quantity: 18, category: 2, image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&q=80' },
-  { id: 15, name: 'Khakhra',             price: '100', stock_quantity: 55, category: 3, image: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&q=80' },
-  { id: 16, name: 'Green Chilli Pickle', price: '130', stock_quantity: 30, category: 4, image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80' },
-  { id: 17, name: 'Haldi Powder',        price: '50',  stock_quantity: 100,category: 5, image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80' },
-  { id: 18, name: 'Fafda',               price: '85',  stock_quantity: 0,  category: 6, image: 'https://images.unsplash.com/photo-1623428454614-abaf00244e52?w=400&q=80' },
-  { id: 19, name: 'Ladoo',               price: '300', stock_quantity: 22, category: 1, image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80' },
-  { id: 20, name: 'Masala Chai Blend',   price: '190', stock_quantity: 40, category: 2, image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&q=80' },
-  { id: 21, name: 'Chikki',              price: '110', stock_quantity: 45, category: 1, image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80' },
-  { id: 22, name: 'Arabica Beans',       price: '310', stock_quantity: 12, category: 2, image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400&q=80' },
-  { id: 23, name: 'Methi Thepla',        price: '95',  stock_quantity: 38, category: 3, image: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&q=80' },
-  { id: 24, name: 'Mixed Pickle',        price: '145', stock_quantity: 28, category: 4, image: 'https://images.unsplash.com/photo-1464454709131-ffd692591ee5?w=400&q=80' },
-  { id: 25, name: 'Kashmiri Mirch',      price: '70',  stock_quantity: 75, category: 5, image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80' },
-  { id: 26, name: 'Chana Dal Namkeen',   price: '65',  stock_quantity: 0,  category: 6, image: 'https://images.unsplash.com/photo-1623428454614-abaf00244e52?w=400&q=80' },
-  { id: 27, name: 'Barfi',               price: '320', stock_quantity: 18, category: 1, image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80' },
-  { id: 28, name: 'Robusta Blend',       price: '240', stock_quantity: 22, category: 2, image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&q=80' },
-  { id: 29, name: 'Patra',               price: '115', stock_quantity: 33, category: 3, image: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&q=80' },
-  { id: 30, name: 'Garlic Pickle',       price: '175', stock_quantity: 20, category: 4, image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80' },
-];
-
-const PRODUCTS_PER_PAGE = 9;
-// ─────────────────────────────────────────────────────────────────────────────
+import api from '../api/axios';
 
 export const ShopPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, isAuthenticated } = useAuth();
 
-  const [categories] = useState(DUMMY_CATEGORIES);
-  const [allProducts] = useState(DUMMY_PRODUCTS);
+  const [categories, setCategories] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [wishlist, setWishlist] = useState([]);
 
@@ -65,12 +20,8 @@ export const ShopPage = () => {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-
-  // Simulate loading
-  useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 400);
-    return () => clearTimeout(t);
-  }, []);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Sync category from URL
   useEffect(() => {
@@ -100,21 +51,47 @@ export const ShopPage = () => {
     }
   }, [isAuthenticated, user]);
 
-  // ─── Client-side filtering ──────────────────────────────────────────────────
-  const filteredProducts = allProducts.filter(p => {
-    const matchCategory = selectedCategory ? p.category === Number(selectedCategory) : true;
-    const matchSearch   = search ? p.name.toLowerCase().includes(search.toLowerCase()) : true;
-    const matchMin      = minPrice ? parseFloat(p.price) >= parseFloat(minPrice) : true;
-    const matchMax      = maxPrice ? parseFloat(p.price) <= parseFloat(maxPrice) : true;
-    return matchCategory && matchSearch && matchMin && matchMax;
-  });
+  // Fetch Categories
+  useEffect(() => {
+    api.get('/categories/')
+      .then(res => setCategories(res.data.results || res.data))
+      .catch(err => console.error(err));
+  }, []);
 
-  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
-  const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * PRODUCTS_PER_PAGE,
-    currentPage * PRODUCTS_PER_PAGE
-  );
-  // ───────────────────────────────────────────────────────────────────────────
+  // Fetch Products based on filters and pagination
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        let url = `/products/?page=${currentPage}`;
+        if (selectedCategory) url += `&category=${selectedCategory}`;
+        if (search) url += `&search=${search}`;
+        if (minPrice) url += `&min_price=${minPrice}`;
+        if (maxPrice) url += `&max_price=${maxPrice}`;
+
+        const res = await api.get(url);
+        if (res.data && res.data.results !== undefined) {
+          setFilteredProducts(res.data.results);
+          setTotalCount(res.data.count);
+          setTotalPages(Math.ceil(res.data.count / 12)); // PAGE_SIZE is 12 in backend
+        } else {
+          setFilteredProducts(res.data);
+          setTotalCount(res.data.length);
+          setTotalPages(Math.ceil(res.data.length / 12));
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const delayDebounceFn = setTimeout(() => {
+      fetchProducts();
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [currentPage, search, selectedCategory, minPrice, maxPrice]);
 
   const handleCategoryChange = (e) => {
     const val = e.target.value;
@@ -130,7 +107,12 @@ export const ShopPage = () => {
       if (user?.role === 'vendor' || user?.role === 'admin') {
         return toast.error(`${user.role}s cannot buy products.`);
       }
-      toast.success("Added to cart!");
+      try {
+        await api.post('/cart/add/', { product_id: product.id, quantity: 1 });
+        toast.success("Added to cart!");
+      } catch (err) {
+        toast.error(err.response?.data?.error || "Failed to add to cart.");
+      }
     } else {
       let guestCart = [];
       try {
@@ -157,9 +139,18 @@ export const ShopPage = () => {
     if (e) e.stopPropagation();
     if (isAuthenticated) {
       if (user?.role === 'vendor' || user?.role === 'admin') return toast.error(`${user.role}s cannot use wishlists.`);
-      const isIn = wishlist.includes(product.id);
-      setWishlist(prev => isIn ? prev.filter(id => id !== product.id) : [...prev, product.id]);
-      toast.success(isIn ? "Removed from wishlist!" : "Added to wishlist!");
+      try {
+        const res = await api.post('/wishlist/toggle/', { product_id: product.id });
+        if (res.data.added) {
+          toast.success("Added to wishlist!");
+          setWishlist(prev => [...prev, product.id]);
+        } else {
+          toast.success("Removed from wishlist!");
+          setWishlist(prev => prev.filter(id => id !== product.id));
+        }
+      } catch (err) {
+        toast.error("Failed to update wishlist.");
+      }
     } else {
       let guestWishlist = [];
       try {
@@ -261,7 +252,7 @@ export const ShopPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
             </div>
-          ) : paginatedProducts.length === 0 ? (
+          ) : filteredProducts.length === 0 ? (
             <div className="text-center py-20 bg-[#FAF8F5] rounded-xl border border-dashed border-gray-300 animate-fade-in">
               <h3 className="text-xl font-bold text-[#5A3825] mb-2">No products found</h3>
               <p className="text-gray-500">Try adjusting your search or filters.</p>
@@ -269,7 +260,7 @@ export const ShopPage = () => {
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 stagger-children">
-                {paginatedProducts.map(p => {
+                {filteredProducts.map(p => {
                   const isWishlisted = wishlist.includes(p.id);
                   return (
                     <div
@@ -336,7 +327,6 @@ export const ShopPage = () => {
 
                   {/* Page numbers */}
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
-                    // Show first, last, current, and neighbours; collapse others with ellipsis
                     const show =
                       page === 1 ||
                       page === totalPages ||
@@ -385,7 +375,7 @@ export const ShopPage = () => {
               {/* Page info */}
               {totalPages > 1 && (
                 <p className="text-center text-sm text-gray-400 mt-3">
-                  Page {currentPage} of {totalPages} · {filteredProducts.length} products
+                  Page {currentPage} of {totalPages} · {totalCount} products
                 </p>
               )}
             </>
