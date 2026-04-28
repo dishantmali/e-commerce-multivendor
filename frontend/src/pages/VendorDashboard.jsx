@@ -1,3 +1,4 @@
+// src/pages/VendorDashboard.jsx
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
@@ -12,13 +13,26 @@ const Icons = {
 
 export const VendorDashboard = () => {
   const [activeTab, setActiveTab] = useState('products');
+  const [viewType, setViewType] = useState('grid'); // 'grid' or 'list' for product view
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
+  // --- Inline List View States ---
+  const [updatedFields, setUpdatedFields] = useState({}); 
+  
+  // --- Grid View Restock States ---
   const [editingStockId, setEditingStockId] = useState(null);
   const [newStockValue, setNewStockValue] = useState('');
+
+  // --- Full Edit Modal States ---
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editImageFile, setEditImageFile] = useState(null);
+
+  // --- Form States ---
   const [newProduct, setNewProduct] = useState({ name: '', price: '', description: '', category: '', stock_quantity: '' });
   const [productImageFile, setProductImageFile] = useState(null);
   const [newCategory, setNewCategory] = useState({ name: '' });
@@ -42,6 +56,57 @@ export const VendorDashboard = () => {
     fetchData();
   }, []);
 
+  // --- 1. Inline Quick Update Logic (For List View) ---
+  const handleFieldChange = (productId, field, value) => {
+    setUpdatedFields(prev => ({
+      ...prev,
+      [productId]: { ...(prev[productId] || {}), [field]: value }
+    }));
+  };
+
+  const handleQuickSave = async (productId) => {
+    const changes = updatedFields[productId];
+    if (!changes) return;
+    setIsSaving(true);
+    try {
+      const res = await api.patch(`/vendor/products/${productId}/`, changes);
+      setProducts(products.map(p => p.id === productId ? res.data : p));
+      const newFields = { ...updatedFields };
+      delete newFields[productId];
+      setUpdatedFields(newFields);
+      toast.success("Product updated inline!");
+    } catch { toast.error("Quick update failed"); } finally { setIsSaving(false); }
+  };
+
+  // --- 2. Full Update Logic (For Edit Modal) ---
+  const openEditModal = (product) => {
+    setEditingProduct({ ...product });
+    setEditImageFile(null);
+    setIsEditModalOpen(true);
+  };
+
+  const handleFullUpdate = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('name', editingProduct.name);
+    formData.append('price', editingProduct.price);
+    formData.append('description', editingProduct.description);
+    formData.append('category', editingProduct.category);
+    formData.append('stock_quantity', editingProduct.stock_quantity);
+    if (editImageFile) formData.append('image', editImageFile);
+
+    try {
+      const res = await api.patch(`/vendor/products/${editingProduct.id}/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setProducts(products.map(p => p.id === editingProduct.id ? res.data : p));
+      toast.success("Product details updated successfully!");
+      setIsEditModalOpen(false);
+      setEditingProduct(null);
+    } catch { toast.error("Full update failed"); }
+  };
+
+  // --- 3. Grid Restock Logic ---
   const handleRestock = async (productId) => {
     if (!newStockValue || parseInt(newStockValue) < 1) return toast.error("Valid quantity required");
     try {
@@ -52,6 +117,7 @@ export const VendorDashboard = () => {
     } catch (err) { toast.error("Update failed"); }
   };
 
+  // --- Form Submit Handlers ---
   const handleAddProduct = async (e) => {
     e.preventDefault();
     if (!productImageFile) return toast.error("Please select an image");
@@ -163,63 +229,105 @@ export const VendorDashboard = () => {
           {/* My Products Tab */}
           {activeTab === 'products' && (
             <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
+              <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5] flex justify-between items-center">
                 <h2 className="text-lg font-bold text-[#2C1E16]">My Products</h2>
+                
+                {/* --- Grid / List View Toggle --- */}
+                <div className="flex bg-gray-200 p-1 rounded-lg">
+                  <button onClick={() => setViewType('grid')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${viewType === 'grid' ? 'bg-white shadow text-[#5A3825]' : 'text-gray-500 hover:text-gray-700'}`}>Grid</button>
+                  <button onClick={() => setViewType('list')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${viewType === 'list' ? 'bg-white shadow text-[#5A3825]' : 'text-gray-500 hover:text-gray-700'}`}>List Edit</button>
+                </div>
               </div>
-              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
+              
+              <div className="p-6">
                 {products.length === 0 ? (
                   <p className="text-gray-500 animate-fade-in col-span-full">No products added yet.</p>
-                ) : products.map(p => (
-                  <div
-                    key={p.id}
-                    className="product-card-anim border border-gray-100 rounded-xl p-4 flex flex-col bg-white animate-fade-in-up"
-                  >
-                    <div className="h-48 bg-[#FAF8F5] rounded-lg flex items-center justify-center mb-4 overflow-hidden">
-                      <img
-                        src={p.image}
-                        className="product-thumb max-h-full object-contain mix-blend-multiply"
-                        alt={p.name}
-                      />
-                    </div>
-                    <h3 className="font-bold text-[#2C1E16] truncate">{p.name}</h3>
-                    <p className="text-[#A87C51] font-bold mb-2 text-lg">₹{parseFloat(p.price).toLocaleString()}</p>
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-500">
-                        Stock: <span className={`font-bold transition-colors duration-300 ${p.stock_quantity === 0 ? 'text-red-500' : 'text-gray-800'}`}>{p.stock_quantity}</span>
-                      </p>
-                      {editingStockId === p.id ? (
-                        <div className="mt-2 flex gap-2 animate-fade-in">
-                          <input
-                            type="number"
-                            className="input-animated w-full p-2 border border-gray-200 text-sm outline-none focus:border-[#A87C51] rounded-md"
-                            value={newStockValue}
-                            onChange={(e) => setNewStockValue(e.target.value)}
-                          />
-                          <button
-                            onClick={() => handleRestock(p.id)}
-                            className="action-btn bg-[#5A3825] text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-[#3E2723]"
-                          >SAVE</button>
-                          <button
-                            onClick={() => setEditingStockId(null)}
-                            className="remove-btn text-gray-400 p-1 font-bold"
-                          >✕</button>
+                ) : viewType === 'grid' ? (
+                  
+                  /* --- GRID VIEW --- */
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
+                    {products.map(p => (
+                      <div key={p.id} className="product-card-anim border border-gray-100 rounded-xl p-4 flex flex-col bg-white animate-fade-in-up">
+                        <div className="h-48 bg-[#FAF8F5] rounded-lg flex items-center justify-center mb-4 overflow-hidden">
+                          <img src={p.image} className="product-thumb max-h-full object-contain mix-blend-multiply" alt={p.name} />
                         </div>
-                      ) : (
-                        p.status === 'approved' && p.stock_quantity === 0 && (
-                          <button
-                            onClick={() => { setEditingStockId(p.id); setNewStockValue(''); }}
-                            className="mt-2 w-full border border-[#5A3825] text-[#5A3825] rounded-full py-2 text-xs font-bold hover:bg-[#5A3825] hover:text-white transition-all duration-200 active:scale-95"
-                          >Restock</button>
-                        )
-                      )}
-                    </div>
-                    <div className="mt-auto pt-2 border-t border-gray-50">
-                      <span className={`text-[10px] px-2 py-1 uppercase font-bold text-white rounded-md transition-all duration-300 ${p.status === 'approved' ? 'bg-[#A87C51]' : p.status === 'rejected' ? 'bg-red-500' : 'bg-gray-400'}`}>
-                        {p.status}
-                      </span>
-                    </div>
+                        <h3 className="font-bold text-[#2C1E16] truncate">{p.name}</h3>
+                        <p className="text-[#A87C51] font-bold mb-2 text-lg">₹{parseFloat(p.price).toLocaleString()}</p>
+                        <div className="mb-4">
+                          <p className="text-sm text-gray-500">
+                            Stock: <span className={`font-bold transition-colors duration-300 ${p.stock_quantity === 0 ? 'text-red-500' : 'text-gray-800'}`}>{p.stock_quantity}</span>
+                          </p>
+                          {editingStockId === p.id ? (
+                            <div className="mt-2 flex gap-2 animate-fade-in">
+                              <input type="number" className="input-animated w-full p-2 border border-gray-200 text-sm outline-none focus:border-[#A87C51] rounded-md" value={newStockValue} onChange={(e) => setNewStockValue(e.target.value)} />
+                              <button onClick={() => handleRestock(p.id)} className="action-btn bg-[#5A3825] text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-[#3E2723]">SAVE</button>
+                              <button onClick={() => setEditingStockId(null)} className="remove-btn text-gray-400 p-1 font-bold">✕</button>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2 mt-3">
+                              <button onClick={() => openEditModal(p)} className="flex-1 bg-[#FAF8F5] text-[#5A3825] border border-[#A87C51]/30 py-2 rounded-full text-xs font-bold hover:border-[#5A3825] transition-all">Edit Details</button>
+                              {p.status === 'approved' && p.stock_quantity === 0 && (
+                                <button onClick={() => { setEditingStockId(p.id); setNewStockValue(''); }} className="flex-1 bg-[#5A3825] text-white py-2 rounded-full text-xs font-bold hover:bg-[#3E2723] transition-all duration-200">Restock</button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-auto pt-2 border-t border-gray-50">
+                          <span className={`text-[10px] px-2 py-1 uppercase font-bold text-white rounded-md transition-all duration-300 ${p.status === 'approved' ? 'bg-[#A87C51]' : p.status === 'rejected' ? 'bg-red-500' : 'bg-gray-400'}`}>
+                            {p.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+
+                ) : (
+
+                  /* --- LIST VIEW (Inline Editing) --- */
+                  <div className="overflow-x-auto animate-fade-in">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="text-[10px] uppercase text-gray-400 border-b border-gray-100 font-bold">
+                          <th className="pb-3 px-2">Product</th>
+                          <th className="pb-3 px-2">Price (₹)</th>
+                          <th className="pb-3 px-2">Stock</th>
+                          <th className="pb-3 px-2 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-sm">
+                        {products.map(p => {
+                          const hasChanges = !!updatedFields[p.id];
+                          return (
+                            <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                              <td className="py-4 px-2 flex items-center gap-3">
+                                <img src={p.image} className="w-10 h-10 object-cover rounded border border-gray-200" alt="" />
+                                <div>
+                                  <span className="font-bold text-[#2C1E16] block truncate max-w-[140px] sm:max-w-xs">{p.name}</span>
+                                  <span className={`text-[10px] uppercase font-bold ${p.status === 'approved' ? 'text-green-600' : p.status === 'rejected' ? 'text-red-500' : 'text-orange-400'}`}>{p.status}</span>
+                                </div>
+                              </td>
+                              <td className="py-4 px-2">
+                                <input type="number" defaultValue={p.price} onChange={e => handleFieldChange(p.id, 'price', e.target.value)} className="w-24 p-2 border border-gray-200 rounded outline-none focus:border-[#A87C51] transition-colors" />
+                              </td>
+                              <td className="py-4 px-2">
+                                <input type="number" defaultValue={p.stock_quantity} onChange={e => handleFieldChange(p.id, 'stock_quantity', e.target.value)} className="w-20 p-2 border border-gray-200 rounded outline-none focus:border-[#A87C51] transition-colors" />
+                              </td>
+                              <td className="py-4 px-2 text-right">
+                                {hasChanges ? (
+                                  <button onClick={() => handleQuickSave(p.id)} disabled={isSaving} className="bg-green-600 text-white px-4 py-1.5 rounded text-xs font-bold hover:bg-green-700 shadow-sm disabled:opacity-50">Save</button>
+                                ) : (
+                                  <button onClick={() => openEditModal(p)} className="text-gray-400 hover:text-[#5A3825] transition-colors" title="Full Edit">
+                                    <svg className="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -300,14 +408,26 @@ export const VendorDashboard = () => {
                       className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 hover:border-[#A87C51]/50" />
                   </div>
                 </div>
+                
+                {/* --- Added: Category Section with Request Shortcut --- */}
                 <div className="animate-fade-in-up delay-3">
-                  <label className="block text-sm font-bold text-gray-600 mb-1">Category</label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-sm font-bold text-gray-600">Category</label>
+                    <button 
+                      type="button" 
+                      onClick={() => setActiveTab('request_category')} 
+                      className="text-xs font-bold text-[#A87C51] hover:text-[#5A3825] hover:underline transition-colors"
+                    >
+                      Don't see your category? Request it
+                    </button>
+                  </div>
                   <select required value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}
                     className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 cursor-pointer hover:border-[#A87C51]/50">
                     <option value="" disabled>Select a category</option>
                     {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                   </select>
                 </div>
+
                 <div className="animate-fade-in-up delay-3">
                   <label className="block text-sm font-bold text-gray-600 mb-1">Description</label>
                   <textarea required value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} rows="4"
@@ -393,6 +513,77 @@ export const VendorDashboard = () => {
 
         </main>
       </div>
+
+      {/* --- Full Edit Modal (Matches Added Styles) --- */}
+      {isEditModalOpen && editingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2C1E16]/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden animate-fade-in-up transform transition-all">
+            <div className="px-6 py-4 border-b border-gray-100 bg-[#FAF8F5] flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-[#2C1E16]">Edit Product Details</h2>
+                <p className="text-xs text-gray-500 mt-1">Update information for {editingProduct.name}</p>
+              </div>
+              <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors p-2 hover:bg-white rounded-full">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <form onSubmit={handleFullUpdate} className="p-8 space-y-6 bg-white">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Product Name</label>
+                    <input type="text" required value={editingProduct.name} onChange={e => setEditingProduct({...editingProduct, name: e.target.value})}
+                      className="w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-colors" />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Price (₹)</label>
+                      <input type="number" required value={editingProduct.price} onChange={e => setEditingProduct({...editingProduct, price: e.target.value})}
+                        className="w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-colors" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Stock</label>
+                      <input type="number" required value={editingProduct.stock_quantity} onChange={e => setEditingProduct({...editingProduct, stock_quantity: e.target.value})}
+                        className="w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-colors" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Category</label>
+                    <select required value={editingProduct.category} onChange={e => setEditingProduct({...editingProduct, category: e.target.value})}
+                      className="w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-colors cursor-pointer">
+                      {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-5">
+                   <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Description</label>
+                    <textarea required rows="5" value={editingProduct.description} onChange={e => setEditingProduct({...editingProduct, description: e.target.value})}
+                      className="w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-colors resize-none" />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Update Image (Optional)</label>
+                    <input type="file" accept="image/*" onChange={e => setEditImageFile(e.target.files[0])}
+                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#FAF8F5] file:text-[#2C1E16] file:font-semibold file:cursor-pointer hover:file:bg-gray-100 transition-all border border-gray-200 rounded-lg p-1" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-gray-100 flex gap-4 justify-end">
+                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 py-3 border border-gray-200 text-gray-600 rounded-full font-bold uppercase tracking-widest hover:bg-gray-50 transition-colors text-sm">Cancel</button>
+                <button type="submit" className="px-8 py-3 bg-[#5A3825] text-white rounded-full font-bold uppercase tracking-widest hover:bg-[#3E2723] shadow-lg transition-colors text-sm">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
