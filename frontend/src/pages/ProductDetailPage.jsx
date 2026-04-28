@@ -77,7 +77,8 @@ export const ProductDetailPage = () => {
     }
   };
 
-  const handleBuyNow = () => {
+  // UPDATED: handleBuyNow function
+  const handleBuyNow = async () => {
     if (user && (user.role === 'vendor' || user.role === 'admin')) {
       return toast.error("Purchasing is disabled for vendor and admin accounts.");
     }
@@ -92,13 +93,17 @@ export const ProductDetailPage = () => {
       return toast.error(`Only ${product.stock_quantity} items available in stock.`);
     }
 
-    navigate('/checkout', { 
-      state: { 
-        isDirectBuy: true, 
-        product: product, 
-        quantity: quantity 
-      } 
-    });
+    setAddingToCart(true);
+    try {
+      // 1. Add the item to the cart
+      await api.post('/cart/add/', { product_id: product.id, quantity: quantity });
+      
+      // 2. Redirect straight to the cart page to handle payment
+      navigate('/cart');
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Failed to process Buy Now.");
+      setAddingToCart(false);
+    }
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-[#5A3825] font-bold">Loading product...</div>;
@@ -169,10 +174,10 @@ export const ProductDetailPage = () => {
                 
                 <button 
                   onClick={handleBuyNow}
-                  disabled={product.stock_quantity === 0}
+                  disabled={product.stock_quantity === 0 || addingToCart}
                   className="flex-1 bg-[#5A3825] text-white py-4 rounded-full font-bold uppercase tracking-widest hover:bg-[#3E2723] disabled:bg-gray-400 transition-all duration-200 shadow-lg active:scale-95 text-sm"
                 >
-                  {product.stock_quantity === 0 ? 'Out of Stock' : 'Buy Now'}
+                  {product.stock_quantity === 0 ? 'Out of Stock' : (addingToCart ? 'Processing...' : 'Buy Now')}
                 </button>
               </div>
             )}
