@@ -6,14 +6,203 @@ import { useAuth } from '../context/AuthContext';
 import dukanLogo from '../assets/dukan.jpeg'
 
 const Icons = {
-  Overview: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" /></svg>,
-  Vendors: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857" /></svg>,
-  Products: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>,
-  Users: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
+  Overview:   () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" /></svg>,
+  Vendors:    () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857" /></svg>,
+  Products:   () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>,
+  Users:      () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
   Categories: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
-  Orders: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>,
-  Offers: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  Banners: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+  Orders:     () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>,
+  Offers:     () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  Banners:    () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+};
+
+// ─── Dummy Overview Data ──────────────────────────────────────────────────────
+const DUMMY_STATS = [
+  { label: 'Total Orders',   value: '2,458',      change: '+18.6%', up: true,  icon: '🛍️',  color: 'from-[#FFF7ED] to-[#FFE4C4]',  iconBg: 'bg-orange-100',   iconColor: 'text-orange-500' },
+  { label: 'Total Revenue',  value: '₹12,45,680', change: '+24.5%', up: true,  icon: '💰',  color: 'from-[#F0FDF4] to-[#DCFCE7]',  iconBg: 'bg-green-100',    iconColor: 'text-green-600' },
+  { label: 'Total Products', value: '8,342',      change: '+12.3%', up: true,  icon: '📦',  color: 'from-[#EFF6FF] to-[#DBEAFE]',  iconBg: 'bg-blue-100',     iconColor: 'text-blue-500'  },
+  { label: 'Total Users',    value: '15,876',     change: '+20.1%', up: true,  icon: '👥',  color: 'from-[#FAF5FF] to-[#EDE9FE]',  iconBg: 'bg-purple-100',   iconColor: 'text-purple-500'},
+];
+
+const SALES_DATA = [
+  { day: 'May 10', orders: 180, revenue: 8500  },
+  { day: 'May 11', orders: 220, revenue: 12000 },
+  { day: 'May 12', orders: 195, revenue: 9800  },
+  { day: 'May 13', orders: 340, revenue: 18500 },
+  { day: 'May 14', orders: 280, revenue: 15200 },
+  { day: 'May 15', orders: 410, revenue: 22000 },
+  { day: 'May 16', orders: 375, revenue: 19800 },
+  { day: 'May 17', orders: 460, revenue: 24500 },
+  { day: 'May 18', orders: 390, revenue: 21000 },
+];
+
+const REVENUE_BREAKDOWN = [
+  { label: 'Vendor Earnings',     value: 8454380, pct: 67.9, color: '#5A3825' },
+  { label: 'Platform Commission', value: 2456300, pct: 19.7, color: '#A87C51' },
+  { label: 'Delivery Charges',    value: 1203200, pct: 9.7,  color: '#C4956A' },
+  { label: 'Other Income',        value: 334590,  pct: 2.7,  color: '#E8D5BC' },
+];
+
+const TOP_PRODUCTS = [
+  { name: 'Kaju Katli',         sku: 'SKU-SW-001', orders: 342, revenue: '₹1,71,000', img: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=80&q=80' },
+  { name: 'Filter Coffee Blend',sku: 'SKU-SW-002', orders: 289, revenue: '₹1,45,680', img: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=80&q=80' },
+  { name: 'Masala Chai',        sku: 'SKU-NK-003', orders: 256, revenue: '₹1,28,000', img: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=80&q=80' },
+  { name: 'Mango Pickle',       sku: 'SKU-PB-004', orders: 198, revenue: '₹59,000',   img: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=80&q=80' },
+  { name: 'Gathiya Namkeen',    sku: 'SKU-SN-005', orders: 176, revenue: '₹88,000',   img: 'https://images.unsplash.com/photo-1623428454614-abaf00244e52?w=80&q=80' },
+];
+
+const TOP_VENDORS = [
+  { name: 'Mithai Wala',     orders: 842, revenue: '₹4,25,600', avatar: 'M', color: '#5A3825' },
+  { name: 'Coffee Corner',   orders: 645, revenue: '₹2,93,500', avatar: 'C', color: '#A87C51' },
+  { name: 'Gadget Zone',     orders: 532, revenue: '₹2,10,500', avatar: 'G', color: '#6B7280' },
+  { name: 'Home Needs',      orders: 321, revenue: '₹1,35,200', avatar: 'H', color: '#3B82F6' },
+  { name: 'Daily Essentials',orders: 116, revenue: '₹65,400',   avatar: 'D', color: '#10B981' },
+];
+
+const ALERTS = [
+  { icon: '📦', label: '5 Products',   sub: 'Low in stock',           color: 'bg-red-50 border-red-200',    iconBg: 'bg-red-100',    textColor: 'text-red-600'    },
+  { icon: '👤', label: '2 Vendors',    sub: 'Inactive for 7+ days',   color: 'bg-yellow-50 border-yellow-200', iconBg: 'bg-yellow-100', textColor: 'text-yellow-600' },
+  { icon: '🎁', label: '3 Offers',     sub: 'Ending today',           color: 'bg-blue-50 border-blue-200',  iconBg: 'bg-blue-100',   textColor: 'text-blue-600'   },
+  { icon: '↩️', label: '19 Orders',    sub: 'Return requested',       color: 'bg-orange-50 border-orange-200', iconBg: 'bg-orange-100', textColor: 'text-orange-600' },
+  { icon: '📈', label: 'High Traffic', sub: 'Today ↑ 122%',          color: 'bg-green-50 border-green-200', iconBg: 'bg-green-100',  textColor: 'text-green-600'  },
+];
+
+const QUICK_ACTIONS = [
+  { icon: '🏷️', label: 'Add Category',            tab: 'categories' },
+  { icon: '🎫', label: 'Create Offer',             tab: 'offers'     },
+  { icon: '🖼️', label: 'Add Banner',               tab: 'banners'    },
+  { icon: '📦', label: 'Approve All Products',     tab: 'products'   },
+  { icon: '👥', label: 'Approve All Vendors',      tab: 'vendors'    },
+  { icon: '🛒', label: 'View Orders',              tab: 'orders'     },
+];
+
+const ORDERS_BAR = [180, 420, 310, 580, 490, 720, 640, 810, 750, 620, 880, 790, 950, 840, 720, 680, 910, 850, 780, 920, 860, 730, 810, 950, 880, 820, 760, 900, 840, 760, 820];
+
+const ORDER_STATUS = [
+  { label: 'Delivered',  count: 1450, pct: 59, color: '#5A3825' },
+  { label: 'Processing', count: 820,  pct: 21, color: '#A87C51' },
+  { label: 'Shipped',    count: 390,  pct: 13, color: '#C4956A' },
+  { label: 'Cancelled',  count: 188,  pct: 7,  color: '#E8D5BC' },
+];
+
+const TRAFFIC_DATA = [12,18,14,22,19,28,24,32,29,25,35,31,38,34,29,36,42,38,45,41,37,44,48,43,40,47,52,48,44,51];
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Mini sparkline SVG component
+const Sparkline = ({ data, color = '#A87C51', width = 80, height = 30 }) => {
+  const max = Math.max(...data); const min = Math.min(...data);
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((v - min) / (max - min || 1)) * height;
+    return `${x},${y}`;
+  }).join(' ');
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+};
+
+// Simple bar chart SVG
+const BarChart = ({ data, color = '#A87C51', width = 400, height = 120 }) => {
+  const max = Math.max(...data);
+  const barW = (width / data.length) - 2;
+  return (
+    <svg width="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+      {data.map((v, i) => {
+        const bh = (v / max) * (height - 4);
+        return <rect key={i} x={i * (width / data.length)} y={height - bh} width={barW} height={bh} rx="2" fill={color} opacity="0.8" />;
+      })}
+    </svg>
+  );
+};
+
+// Donut chart SVG
+const DonutChart = ({ segments, size = 130, thickness = 28 }) => {
+  const r = (size - thickness) / 2;
+  const cx = size / 2; const cy = size / 2;
+  const circ = 2 * Math.PI * r;
+  let offset = 0;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#F3EDE5" strokeWidth={thickness} />
+      {segments.map((seg, i) => {
+        const dash = (seg.pct / 100) * circ;
+        const gap = circ - dash;
+        const el = (
+          <circle
+            key={i}
+            cx={cx} cy={cy} r={r}
+            fill="none"
+            stroke={seg.color}
+            strokeWidth={thickness}
+            strokeDasharray={`${dash} ${gap}`}
+            strokeDashoffset={-offset}
+            strokeLinecap="butt"
+            style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }}
+          />
+        );
+        offset += dash;
+        return el;
+      })}
+    </svg>
+  );
+};
+
+// Area chart SVG for traffic
+const AreaChart = ({ data, color = '#A87C51', width = 400, height = 100 }) => {
+  const max = Math.max(...data); const min = Math.min(...data);
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - 8 - ((v - min) / (max - min || 1)) * (height - 16);
+    return `${x},${y}`;
+  });
+  const polyline = pts.join(' ');
+  const area = `${pts[0]} ` + pts.slice(1).join(' ') + ` ${width},${height} 0,${height}`;
+  return (
+    <svg width="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={area} fill="url(#areaGrad)" />
+      <polyline points={polyline} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+};
+
+// Sales line chart SVG
+const SalesLineChart = ({ data }) => {
+  const W = 500; const H = 120; const pad = 10;
+  const maxO = Math.max(...data.map(d => d.orders));
+  const maxR = Math.max(...data.map(d => d.revenue));
+  const ox = (i) => pad + (i / (data.length - 1)) * (W - pad * 2);
+  const oy = (v) => H - pad - ((v / maxO) * (H - pad * 2));
+  const ry = (v) => H - pad - ((v / maxR) * (H - pad * 2));
+  const orderPts = data.map((d, i) => `${ox(i)},${oy(d.orders)}`).join(' ');
+  const revPts   = data.map((d, i) => `${ox(i)},${ry(d.revenue)}`).join(' ');
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ overflow: 'visible' }}>
+      {/* Grid lines */}
+      {[0.25, 0.5, 0.75, 1].map(f => (
+        <line key={f} x1={pad} y1={H - pad - f * (H - pad * 2)} x2={W - pad} y2={H - pad - f * (H - pad * 2)}
+          stroke="#F0E8DF" strokeWidth="1" strokeDasharray="4 4" />
+      ))}
+      {/* Orders line */}
+      <polyline points={orderPts} fill="none" stroke="#2C1E16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Revenue line */}
+      <polyline points={revPts} fill="none" stroke="#A87C51" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="5 3" />
+      {/* Dots */}
+      {data.map((d, i) => (
+        <g key={i}>
+          <circle cx={ox(i)} cy={oy(d.orders)} r="3.5" fill="#2C1E16" stroke="white" strokeWidth="1.5" />
+          <circle cx={ox(i)} cy={ry(d.revenue)} r="3.5" fill="#A87C51" stroke="white" strokeWidth="1.5" />
+        </g>
+      ))}
+    </svg>
+  );
 };
 
 export const AdminDashboard = () => {
@@ -33,7 +222,6 @@ export const AdminDashboard = () => {
   const [categoryRequests, setCategoryRequests] = useState([]);
   const [offers, setOffers] = useState([]);
   const [banners, setBanners] = useState([]);
-
   const [loading, setLoading] = useState(true);
 
   const [newCatName, setNewCatName] = useState('');
@@ -41,6 +229,10 @@ export const AdminDashboard = () => {
   const [newOffer, setNewOffer] = useState({ title: '', start_date: '', end_date: '' });
   const [offerImageFile, setOfferImageFile] = useState(null);
   const [bannerImageFile, setBannerImageFile] = useState(null);
+  const [salesRange, setSalesRange] = useState('Last 7 Days');
+  const [revenueRange, setRevenueRange] = useState('This Month');
+  const [ordersRange, setOrdersRange] = useState('This Month');
+  const [trafficRange, setTrafficRange] = useState('This Month');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,7 +246,6 @@ export const AdminDashboard = () => {
           api.get('/admin/category-requests/'),
           api.get('/admin/offers/')
         ]);
-
         setPendingProducts(prodRes.data.results || prodRes.data || []);
         setPendingVendors(vendRes.data.results || vendRes.data || []);
         setUsers(userRes.data.results || userRes.data || []);
@@ -62,15 +253,10 @@ export const AdminDashboard = () => {
         setOrders(orderRes.data.results || orderRes.data || []);
         setCategoryRequests(catReqRes.data.results || catReqRes.data || []);
         setOffers(offerRes.data.results || offerRes.data || []);
-
-        // Safe fetch for banners in case the endpoint isn't fully migrated yet
         try {
           const bannerRes = await api.get('/admin/banners/');
           setBanners(bannerRes.data.results || bannerRes.data || []);
-        } catch (bannerError) {
-          console.warn("Banners endpoint not ready yet", bannerError);
-        }
-
+        } catch (e) { console.warn("Banners endpoint not ready yet", e); }
       } catch (error) {
         console.error(error);
         toast.error("Error loading admin data");
@@ -82,47 +268,28 @@ export const AdminDashboard = () => {
   }, []);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (profileRef.current && !profileRef.current.contains(event.target)) {
-        setIsProfileOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    const handler = (e) => { if (profileRef.current && !profileRef.current.contains(e.target)) setIsProfileOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const handleLogout = () => { logout(); navigate('/login'); };
 
   const handleAction = async (type, id, action) => {
     try {
-      if (type === 'product') {
-        await api.post(`/admin/products/${id}/action/`, { action });
-        setPendingProducts(pendingProducts.filter(p => p.id !== id));
-      } else if (type === 'vendor') {
-        await api.post(`/admin/vendors/${id}/action/`, { action });
-        setPendingVendors(pendingVendors.filter(v => v.id !== id));
-      }
+      if (type === 'product') { await api.post(`/admin/products/${id}/action/`, { action }); setPendingProducts(pendingProducts.filter(p => p.id !== id)); }
+      else if (type === 'vendor') { await api.post(`/admin/vendors/${id}/action/`, { action }); setPendingVendors(pendingVendors.filter(v => v.id !== id)); }
       toast.success(`${type} ${action}d successfully`);
-    } catch (error) {
-      toast.error(`Failed to ${action} ${type}`);
-    }
+    } catch { toast.error(`Failed to ${action} ${type}`); }
   };
 
   const handleCatRequestAction = async (id, action) => {
     try {
       await api.post(`/admin/category-requests/${id}/action/`, { action });
       setCategoryRequests(categoryRequests.filter(req => req.id !== id));
-      if (action === 'approve') {
-        const res = await api.get('/admin/categories/');
-        setCategories(res.data.results || res.data);
-      }
+      if (action === 'approve') { const res = await api.get('/admin/categories/'); setCategories(res.data.results || res.data); }
       toast.success(`Category request ${action}d`);
-    } catch (error) {
-      toast.error("Failed category request action");
-    }
+    } catch { toast.error("Failed category request action"); }
   };
 
   const handleOfferAction = async (id, action) => {
@@ -131,9 +298,7 @@ export const AdminDashboard = () => {
       const res = await api.get('/admin/offers/');
       setOffers(res.data.results || res.data);
       toast.success(`Offer ${action}d`);
-    } catch (error) {
-      toast.error("Failed offer action");
-    }
+    } catch { toast.error("Failed offer action"); }
   };
 
   const handleDeleteOffer = async (id) => {
@@ -142,9 +307,7 @@ export const AdminDashboard = () => {
       await api.delete(`/admin/offers/${id}/action/`);
       setOffers(offers.filter(o => o.id !== id));
       toast.success("Offer deleted");
-    } catch (error) {
-      toast.error("Failed to delete offer");
-    }
+    } catch { toast.error("Failed to delete offer"); }
   };
 
   const handleCreateCategory = async (e) => {
@@ -153,18 +316,13 @@ export const AdminDashboard = () => {
     const formData = new FormData();
     formData.append('name', newCatName);
     formData.append('image', newCatImage);
-
     try {
       const res = await api.post('/admin/categories/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setCategories([...categories, res.data]);
-      setNewCatName('');
-      setNewCatImage(null);
-      const fileInput = document.getElementById('catImageInput');
-      if (fileInput) fileInput.value = '';
+      setNewCatName(''); setNewCatImage(null);
+      const fi = document.getElementById('catImageInput'); if (fi) fi.value = '';
       toast.success("Category created!");
-    } catch (error) {
-      toast.error("Failed to create category");
-    }
+    } catch { toast.error("Failed to create category"); }
   };
 
   const handleDeleteCategory = async (id) => {
@@ -173,9 +331,7 @@ export const AdminDashboard = () => {
       await api.delete(`/admin/categories/${id}/`);
       setCategories(categories.filter(c => c.id !== id));
       toast.success("Category deleted");
-    } catch (error) {
-      toast.error("Failed to delete category");
-    }
+    } catch { toast.error("Failed to delete category"); }
   };
 
   const handleCreateOffer = async (e) => {
@@ -186,18 +342,13 @@ export const AdminDashboard = () => {
     formData.append('start_date', newOffer.start_date);
     formData.append('end_date', newOffer.end_date);
     formData.append('image', offerImageFile);
-
     try {
       const res = await api.post('/admin/offers/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setOffers([res.data, ...offers]);
-      setNewOffer({ title: '', start_date: '', end_date: '' });
-      setOfferImageFile(null);
-      const fileInput = document.getElementById('offerImageInput');
-      if (fileInput) fileInput.value = '';
+      setNewOffer({ title: '', start_date: '', end_date: '' }); setOfferImageFile(null);
+      const fi = document.getElementById('offerImageInput'); if (fi) fi.value = '';
       toast.success("Offer created!");
-    } catch (error) {
-      toast.error("Failed to create offer");
-    }
+    } catch { toast.error("Failed to create offer"); }
   };
 
   const handleCreateBanner = async (e) => {
@@ -209,14 +360,10 @@ export const AdminDashboard = () => {
     formData.append('title', 'Promo Banner');
     try {
       const res = await api.post('/admin/banners/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setBanners([res.data, ...banners]);
-      setBannerImageFile(null);
-      const fileInput = document.getElementById('bannerImageInput');
-      if (fileInput) fileInput.value = '';
+      setBanners([res.data, ...banners]); setBannerImageFile(null);
+      const fi = document.getElementById('bannerImageInput'); if (fi) fi.value = '';
       toast.success("Banner uploaded!");
-    } catch (error) {
-      toast.error("Failed to upload banner");
-    }
+    } catch { toast.error("Failed to upload banner"); }
   };
 
   const handleDeleteBanner = async (id) => {
@@ -225,9 +372,7 @@ export const AdminDashboard = () => {
       await api.delete(`/admin/banners/${id}/`);
       setBanners(banners.filter(b => b.id !== id));
       toast.success("Banner deleted");
-    } catch (error) {
-      toast.error("Failed to delete banner");
-    }
+    } catch { toast.error("Failed to delete banner"); }
   };
 
   if (loading) return (
@@ -242,76 +387,59 @@ export const AdminDashboard = () => {
     </div>
   );
 
-  const pendingCatReqs = categoryRequests.filter(r => r.status === 'pending');
+  const pendingCatReqs   = categoryRequests.filter(r => r.status === 'pending');
   const pendingOfferReqs = offers.filter(o => o.status === 'pending');
 
   const navItems = [
-    { key: 'overview', label: 'Overview', Icon: Icons.Overview, badge: null },
-    { key: 'vendors', label: 'Pending Vendors', Icon: Icons.Vendors, badge: pendingVendors.length },
-    { key: 'products', label: 'Pending Products', Icon: Icons.Products, badge: pendingProducts.length },
-    { key: 'users', label: 'Users Directory', Icon: Icons.Users, badge: null },
-    { key: 'categories', label: 'Categories', Icon: Icons.Categories, badge: pendingCatReqs.length },
-    { key: 'offers', label: 'Offers', Icon: Icons.Offers, badge: pendingOfferReqs.length },
-    { key: 'banners', label: 'Promo Banners', Icon: Icons.Banners, badge: null },
-    { key: 'orders', label: 'Global Orders', Icon: Icons.Orders, badge: null },
+    { key: 'overview',    label: 'Overview',          Icon: Icons.Overview,    badge: null },
+    { key: 'vendors',     label: 'Pending Vendors',   Icon: Icons.Vendors,     badge: pendingVendors.length },
+    { key: 'products',    label: 'Pending Products',  Icon: Icons.Products,    badge: pendingProducts.length },
+    { key: 'users',       label: 'Users Directory',   Icon: Icons.Users,       badge: null },
+    { key: 'categories',  label: 'Categories',        Icon: Icons.Categories,  badge: pendingCatReqs.length },
+    { key: 'offers',      label: 'Offers',            Icon: Icons.Offers,      badge: pendingOfferReqs.length },
+    { key: 'banners',     label: 'Promo Banners',     Icon: Icons.Banners,     badge: null },
+    { key: 'orders',      label: 'Global Orders',     Icon: Icons.Orders,      badge: null },
   ];
 
+  const RangeSelect = ({ value, onChange, options }) => (
+    <select value={value} onChange={e => onChange(e.target.value)}
+      className="text-xs font-semibold text-[#5A3825] bg-[#FAF8F5] border border-[#A87C51]/20 rounded-lg px-3 py-1.5 outline-none cursor-pointer hover:border-[#A87C51] transition-colors">
+      {options.map(o => <option key={o}>{o}</option>)}
+    </select>
+  );
+
   return (
-    <div className="fixed inset-0 z-[60] flex bg-[#FAF8F5] font-sans overflow-hidden">
+    <div className="fixed inset-0 z-[60] flex bg-[#F7F2EC] font-sans overflow-hidden">
 
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden backdrop-blur-sm transition-opacity"
-          onClick={() => setIsSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/40 z-40 lg:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
       )}
 
       {/* ── Sidebar ── */}
-      <aside
-        className={`absolute lg:relative w-64 bg-white border-r border-gray-200 flex flex-col h-full shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-50 transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-          }`}
-      >
-        {/* Logo Section */}
-        <div className="h-20 flex items-center px-6 border-b border-gray-100 shrink-0 cursor-pointer" onClick={() => navigate('/')}>
-          <img src={dukanLogo} alt="Logo" className="rounded-full object-cover mix-blend-multiply mr-3" />
+      <aside className={`absolute lg:relative w-64 bg-white border-r border-gray-100 flex flex-col h-full shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.04)] z-50 transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <div className="h-16 flex items-center px-5 border-b border-gray-100 shrink-0 cursor-pointer gap-3" onClick={() => navigate('/')}>
+          <img src={dukanLogo} alt="Logo" />
         </div>
-
-        {/* Navigation Links */}
-        <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-2 custom-scrollbar">
-          <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Admin Controls</p>
+        <nav className="flex-1 overflow-y-auto py-5 px-3 space-y-1">
+          <p className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">Admin Controls</p>
           {navItems.map(({ key, label, Icon, badge }) => {
             const isActive = activeTab === key;
             return (
-              <button
-                key={key}
-                onClick={() => {
-                  setActiveTab(key);
-                  setIsSidebarOpen(false);
-                }}
-                className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 group ${isActive
-                    ? 'bg-[#5A3825] text-white shadow-md'
-                    : 'text-gray-500 hover:bg-[#FAF8F5] hover:text-[#5A3825]'
-                  }`}
-              >
+              <button key={key} onClick={() => { setActiveTab(key); setIsSidebarOpen(false); }}
+                className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 group ${isActive ? 'bg-[#5A3825] text-white shadow-md' : 'text-gray-500 hover:bg-[#FAF8F5] hover:text-[#5A3825]'}`}>
                 <div className="flex items-center gap-3">
-                  <span className={`${isActive ? 'text-[#A87C51]' : 'text-gray-400 group-hover:text-[#A87C51]'} transition-colors`}>
-                    <Icon />
-                  </span>
+                  <span className={`${isActive ? 'text-[#C4956A]' : 'text-gray-400 group-hover:text-[#A87C51]'} transition-colors`}><Icon /></span>
                   {label}
                 </div>
                 {badge > 0 && (
-                  <span className={`px-2 py-0.5 text-xs rounded-full ${isActive ? 'bg-white text-[#5A3825]' : 'bg-[#A87C51] text-white'}`}>
-                    {badge}
-                  </span>
+                  <span className={`px-2 py-0.5 text-xs rounded-full font-bold ${isActive ? 'bg-white/20 text-white' : 'bg-[#A87C51] text-white'}`}>{badge}</span>
                 )}
               </button>
             );
           })}
         </nav>
-
-        {/* Bottom Sidebar area */}
-        <div className="p-6 border-t border-gray-100 bg-[#FAF8F5] shrink-0 text-center">
+        <div className="p-4 border-t border-gray-100 bg-[#FAF8F5] shrink-0 text-center">
           <p className="text-xs text-gray-400 font-medium">© {new Date().getFullYear()} Gujju Ni Dukan</p>
         </div>
       </aside>
@@ -320,84 +448,328 @@ export const AdminDashboard = () => {
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
 
         {/* Top Header */}
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-4 sm:px-8 shrink-0 z-10 shadow-sm">
-
-          <div className="flex items-center gap-3 sm:gap-4">
-            {/* Mobile Hamburger Button */}
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 hover:text-[#5A3825] rounded-lg transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-4 sm:px-6 shrink-0 z-10 shadow-sm">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
-
-            <h2 className="text-xl sm:text-2xl font-extrabold text-[#2C1E16] capitalize tracking-tight truncate">
-              {activeTab.replace('_', ' ')}
-            </h2>
+            {/* Search bar */}
+            <div className="hidden sm:flex items-center gap-2 bg-[#FAF8F5] border border-gray-200 rounded-xl px-4 py-2 w-64">
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              <input className="bg-transparent text-sm outline-none text-gray-600 placeholder:text-gray-400 w-full" placeholder="Search anything..." />
+            </div>
           </div>
 
-          {/* Profile Dropdown */}
-          <div className="relative" ref={profileRef}>
-            <button
-              onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="flex items-center gap-3 focus:outline-none p-1.5 rounded-full hover:bg-[#FAF8F5] transition-colors duration-200 border border-transparent hover:border-gray-200"
-            >
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold text-[#2C1E16] leading-none">{user?.name || 'Admin'}</p>
-                <p className="text-xs text-gray-500 mt-1 uppercase tracking-widest">{user?.role}</p>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#A87C51] to-[#5A3825] text-white flex items-center justify-center font-bold shadow-md">
-                {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
-              </div>
-              <svg className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+          <div className="flex items-center gap-3">
+            {/* Notification bell */}
+            <button className="relative p-2 rounded-xl hover:bg-[#FAF8F5] transition-colors">
+              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
 
-            {/* Dropdown Menu */}
-            <div className={`absolute right-0 mt-3 w-56 bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-50 transition-all duration-200 origin-top-right ${isProfileOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}`}>
-              <div className="px-4 py-3 border-b border-gray-50 mb-2">
-                <p className="text-sm font-bold text-[#2C1E16] truncate">{user?.name || 'Admin'}</p>
-                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+            {/* Profile */}
+            <div className="relative" ref={profileRef}>
+              <button onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="flex items-center gap-2.5 focus:outline-none p-1.5 rounded-xl hover:bg-[#FAF8F5] transition-colors border border-transparent hover:border-gray-200">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#A87C51] to-[#5A3825] text-white flex items-center justify-center font-bold text-sm shadow">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
+                </div>
+                <div className="text-left hidden sm:block">
+                  <p className="text-xs font-bold text-[#2C1E16] leading-none">{user?.name || 'Admin'}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wider">Super Admin</p>
+                </div>
+                <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+              </button>
+              <div className={`absolute right-0 mt-2 w-52 bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-50 transition-all duration-200 origin-top-right ${isProfileOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}`}>
+                <div className="px-4 py-3 border-b border-gray-50 mb-1">
+                  <p className="text-sm font-bold text-[#2C1E16] truncate">{user?.name || 'Admin'}</p>
+                  <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                </div>
+                <button onClick={() => { navigate('/'); setIsProfileOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-[#FAF8F5] hover:text-[#A87C51] transition-colors flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                  Return to Store
+                </button>
+                <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2 mt-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                  Sign Out
+                </button>
               </div>
-              <button onClick={() => { navigate('/'); setIsProfileOpen(false); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-[#FAF8F5] hover:text-[#A87C51] transition-colors flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-                Return to Store
-              </button>
-              <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2 mt-1">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                Sign Out
-              </button>
             </div>
           </div>
         </header>
 
-        {/* Scrollable Tab Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
+        {/* Scrollable Tab Content */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
 
-          {/* Overview */}
+          {/* ── OVERVIEW TAB ────────────────────────────────────────────────── */}
           {activeTab === 'overview' && (
-            <div className="animate-fade-in stagger-children grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="stat-card animate-fade-in-up bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-[#5A3825]">
-                <p className="text-sm font-bold text-gray-500 uppercase">Pending Vendors</p>
-                <h3 className="text-4xl font-black text-[#2C1E16] mt-2">{pendingVendors.length}</h3>
+            <div className="animate-fade-in space-y-6">
+
+              {/* ── Stat Cards ── */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {DUMMY_STATS.map((s, i) => (
+                  <div key={i} className={`bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow`}>
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{s.label}</p>
+                        <h3 className="text-2xl font-black text-[#2C1E16] mt-1 leading-none">{s.value}</h3>
+                      </div>
+                      <div className={`${s.iconBg} w-10 h-10 rounded-xl flex items-center justify-center text-xl`}>{s.icon}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${s.up ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+                        {s.up ? '↑' : '↓'} {s.change}
+                      </span>
+                      <span className="text-xs text-gray-400">vs last 7 days</span>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="stat-card animate-fade-in-up bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-[#A87C51]">
-                <p className="text-sm font-bold text-gray-500 uppercase">Pending Products</p>
-                <h3 className="text-4xl font-black text-[#2C1E16] mt-2">{pendingProducts.length}</h3>
+
+              {/* ── Quick Actions ── */}
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <h2 className="text-sm font-bold text-[#2C1E16] mb-4 uppercase tracking-wider">Quick Actions</h2>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                  {QUICK_ACTIONS.map((qa, i) => (
+                    <button key={i} onClick={() => setActiveTab(qa.tab)}
+                      className="flex flex-col items-center gap-2 p-3 rounded-xl border border-gray-100 hover:border-[#A87C51]/40 hover:bg-[#FAF8F5] transition-all duration-200 group">
+                      <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] flex items-center justify-center text-xl group-hover:bg-[#A87C51]/10 transition-colors">{qa.icon}</div>
+                      <span className="text-[11px] font-semibold text-gray-500 text-center leading-tight group-hover:text-[#5A3825]">{qa.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="stat-card animate-fade-in-up bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-blue-500">
-                <p className="text-sm font-bold text-gray-500 uppercase">Total Buyers</p>
-                <h3 className="text-4xl font-black text-[#2C1E16] mt-2">{users.length}</h3>
+
+              {/* ── Sales Overview + Revenue Breakdown ── */}
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+
+                {/* Sales Chart */}
+                <div className="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-sm font-bold text-[#2C1E16]">Sales Overview</h2>
+                    <RangeSelect value={salesRange} onChange={setSalesRange} options={['Last 7 Days','Last 14 Days','This Month']} />
+                  </div>
+                  {/* Legend */}
+                  <div className="flex items-center gap-5 mb-3">
+                    <div className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-[#2C1E16] inline-block rounded"></span><span className="text-xs text-gray-500">Orders</span></div>
+                    <div className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-[#A87C51] inline-block rounded" style={{borderTop:'2px dashed #A87C51', background:'none'}}></span><span className="text-xs text-gray-500">Revenue (₹)</span></div>
+                  </div>
+                  {/* Y-axis labels */}
+                  <div className="flex gap-3">
+                    <div className="flex flex-col justify-between text-[10px] text-gray-400 text-right w-6 py-1">
+                      <span>500</span><span>400</span><span>300</span><span>200</span><span>0</span>
+                    </div>
+                    <div className="flex-1 relative" style={{ height: '120px' }}>
+                      <SalesLineChart data={SALES_DATA} />
+                    </div>
+                    <div className="flex flex-col justify-between text-[10px] text-[#A87C51] text-left w-8 py-1">
+                      <span>25k</span><span>15k</span><span>10k</span><span>5k</span><span>0k</span>
+                    </div>
+                  </div>
+                  {/* X labels */}
+                  <div className="flex justify-between mt-2 pl-9 pr-8">
+                    {SALES_DATA.map(d => <span key={d.day} className="text-[10px] text-gray-400">{d.day.replace('May ', '')}</span>)}
+                  </div>
+                </div>
+
+                {/* Revenue Breakdown */}
+                <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-sm font-bold text-[#2C1E16]">Revenue Breakdown</h2>
+                    <RangeSelect value={revenueRange} onChange={setRevenueRange} options={['This Month','Last Month','This Year']} />
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="relative inline-flex items-center justify-center mb-4">
+                      <DonutChart segments={REVENUE_BREAKDOWN} size={140} thickness={26} />
+                      <div className="absolute text-center pointer-events-none">
+                        <p className="text-[10px] text-gray-400 font-medium">Total Revenue</p>
+                        <p className="text-sm font-black text-[#2C1E16] leading-tight">₹12,45,680</p>
+                      </div>
+                    </div>
+                    <div className="w-full space-y-2">
+                      {REVENUE_BREAKDOWN.map((seg, i) => (
+                        <div key={i} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: seg.color }} />
+                            <span className="text-xs text-gray-500">{seg.label}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-xs font-bold text-[#2C1E16]">₹{(seg.value / 100000).toFixed(2)}L</span>
+                            <span className="text-[10px] text-gray-400 ml-1.5">({seg.pct}%)</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="stat-card animate-fade-in-up bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-green-500">
-                <p className="text-sm font-bold text-gray-500 uppercase">Total Orders</p>
-                <h3 className="text-4xl font-black text-[#2C1E16] mt-2">{orders.length}</h3>
+
+              {/* ── Top Products + Top Vendors ── */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+                {/* Top Products */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+                    <h2 className="text-sm font-bold text-[#2C1E16]">Top Performing Products</h2>
+                    <button onClick={() => setActiveTab('products')} className="text-xs font-semibold text-[#A87C51] hover:text-[#5A3825] transition-colors">View All</button>
+                  </div>
+                  <div className="divide-y divide-gray-50">
+                    <div className="grid grid-cols-12 px-5 py-2 bg-[#FAF8F5]">
+                      <span className="col-span-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Product</span>
+                      <span className="col-span-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Orders</span>
+                      <span className="col-span-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Revenue</span>
+                    </div>
+                    {TOP_PRODUCTS.map((p, i) => (
+                      <div key={i} className="grid grid-cols-12 items-center px-5 py-3 hover:bg-[#FAF8F5] transition-colors">
+                        <div className="col-span-6 flex items-center gap-3">
+                          <img src={p.img} alt={p.name} className="w-9 h-9 rounded-lg object-cover border border-gray-100 mix-blend-multiply" />
+                          <div>
+                            <p className="text-xs font-bold text-[#2C1E16] truncate max-w-[120px]">{p.name}</p>
+                            <p className="text-[10px] text-gray-400">{p.sku}</p>
+                          </div>
+                        </div>
+                        <div className="col-span-3 text-center">
+                          <span className="text-xs font-bold text-[#2C1E16]">{p.orders}</span>
+                        </div>
+                        <div className="col-span-3 text-right">
+                          <span className="text-xs font-bold text-[#A87C51]">{p.revenue}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Top Vendors */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+                    <h2 className="text-sm font-bold text-[#2C1E16]">Top Performing Vendors</h2>
+                    <button onClick={() => setActiveTab('vendors')} className="text-xs font-semibold text-[#A87C51] hover:text-[#5A3825] transition-colors">View All</button>
+                  </div>
+                  <div className="divide-y divide-gray-50">
+                    <div className="grid grid-cols-12 px-5 py-2 bg-[#FAF8F5]">
+                      <span className="col-span-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Vendor</span>
+                      <span className="col-span-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Orders</span>
+                      <span className="col-span-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Revenue</span>
+                    </div>
+                    {TOP_VENDORS.map((v, i) => (
+                      <div key={i} className="grid grid-cols-12 items-center px-5 py-3 hover:bg-[#FAF8F5] transition-colors">
+                        <div className="col-span-6 flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 shadow-sm" style={{ background: v.color }}>{v.avatar}</div>
+                          <p className="text-xs font-bold text-[#2C1E16] truncate max-w-[120px]">{v.name}</p>
+                        </div>
+                        <div className="col-span-3 text-center">
+                          <span className="text-xs font-bold text-[#2C1E16]">{v.orders}</span>
+                        </div>
+                        <div className="col-span-3 text-right">
+                          <span className="text-xs font-bold text-[#A87C51]">{v.revenue}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
+
+              {/* ── Alerts & Insights ── */}
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <h2 className="text-sm font-bold text-[#2C1E16] mb-4">Alerts & Insights</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                  {ALERTS.map((a, i) => (
+                    <div key={i} className={`${a.color} border rounded-xl p-4 flex flex-col gap-2`}>
+                      <div className={`${a.iconBg} w-9 h-9 rounded-lg flex items-center justify-center text-lg`}>{a.icon}</div>
+                      <div>
+                        <p className={`text-sm font-bold ${a.textColor}`}>{a.label}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{a.sub}</p>
+                      </div>
+                      <button className={`text-xs font-semibold ${a.textColor} mt-auto hover:underline text-left`}>View Details →</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Orders Overview + Status + Traffic ── */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+                {/* Orders Bar Chart */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-sm font-bold text-[#2C1E16]">Orders Overview</h2>
+                    <RangeSelect value={ordersRange} onChange={setOrdersRange} options={['This Month','Last Month','This Year']} />
+                  </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#A87C51]"></div>
+                    <span className="text-xs text-gray-500">Orders</span>
+                  </div>
+                  {/* Y axis */}
+                  <div className="flex gap-2 items-end">
+                    <div className="flex flex-col justify-between text-[10px] text-gray-400 text-right shrink-0 pb-1" style={{height:'100px'}}>
+                      <span>1k</span><span>800</span><span>600</span><span>400</span><span>200</span><span>0</span>
+                    </div>
+                    <div className="flex-1" style={{height:'100px'}}>
+                      <BarChart data={ORDERS_BAR} color="#A87C51" height={100} />
+                    </div>
+                  </div>
+                  <div className="flex justify-between mt-1 pl-6">
+                    {['May 6','May 11','May 16','May 21','May 26','May 31'].map(l => (
+                      <span key={l} className="text-[9px] text-gray-400">{l}</span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Orders by Status Donut */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                  <h2 className="text-sm font-bold text-[#2C1E16] mb-4">Orders by Status</h2>
+                  <div className="flex flex-col items-center">
+                    <div className="relative inline-flex items-center justify-center mb-4">
+                      <DonutChart segments={ORDER_STATUS} size={130} thickness={24} />
+                      <div className="absolute text-center pointer-events-none">
+                        <p className="text-[10px] text-gray-400">Total Orders</p>
+                        <p className="text-base font-black text-[#2C1E16]">2,458</p>
+                      </div>
+                    </div>
+                    <div className="w-full space-y-2">
+                      {ORDER_STATUS.map((s, i) => (
+                        <div key={i} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: s.color }} />
+                            <span className="text-xs text-gray-500">{s.label}</span>
+                          </div>
+                          <span className="text-xs font-bold text-[#2C1E16]">{s.count} <span className="text-gray-400 font-normal">({s.pct}%)</span></span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Traffic Overview */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-sm font-bold text-[#2C1E16]">Traffic Overview</h2>
+                    <RangeSelect value={trafficRange} onChange={setTrafficRange} options={['This Month','Last Month','This Year']} />
+                  </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#A87C51]"></div>
+                    <span className="text-xs text-gray-500">Visitors</span>
+                  </div>
+                  <div className="flex gap-2 items-end">
+                    <div className="flex flex-col justify-between text-[10px] text-gray-400 text-right shrink-0 pb-1" style={{height:'100px'}}>
+                      <span>20k</span><span>15k</span><span>10k</span><span>5k</span><span>0</span>
+                    </div>
+                    <div className="flex-1" style={{height:'100px'}}>
+                      <AreaChart data={TRAFFIC_DATA} color="#A87C51" height={100} />
+                    </div>
+                  </div>
+                  <div className="flex justify-between mt-1 pl-6">
+                    {['May 1','May 11','May 21','May 31'].map(l => (
+                      <span key={l} className="text-[9px] text-gray-400">{l}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
             </div>
           )}
 
-          {/* Vendors */}
+          {/* ── VENDORS TAB ── */}
           {activeTab === 'vendors' && (
             <div className="animate-fade-in bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-6 py-5 border-b border-gray-100 bg-white">
@@ -417,18 +789,12 @@ export const AdminDashboard = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-50">
                         {pendingVendors.map(v => (
-                          <tr key={v.id} className="admin-table-row hover:bg-[#FAF8F5] transition-colors duration-150">
-                            <td className="px-6 py-4">
-                              <p className="font-bold text-[#2C1E16] text-base">{v.shop_name}</p>
-                              <p className="text-sm text-gray-500 line-clamp-1 mt-0.5">{v.address}</p>
-                            </td>
-                            <td className="px-6 py-4">
-                              <p className="text-sm text-[#2C1E16] font-medium">{v.email}</p>
-                              <p className="text-sm text-gray-500 mt-1">{v.phone}</p>
-                            </td>
+                          <tr key={v.id} className="hover:bg-[#FAF8F5] transition-colors duration-150">
+                            <td className="px-6 py-4"><p className="font-bold text-[#2C1E16] text-base">{v.shop_name}</p><p className="text-sm text-gray-500 line-clamp-1 mt-0.5">{v.address}</p></td>
+                            <td className="px-6 py-4"><p className="text-sm text-[#2C1E16] font-medium">{v.email}</p><p className="text-sm text-gray-500 mt-1">{v.phone}</p></td>
                             <td className="px-6 py-4 flex justify-end gap-3 items-center h-full">
-                              <button onClick={() => handleAction('vendor', v.id, 'reject')} className="action-btn px-5 py-2 text-xs font-bold uppercase text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Reject</button>
-                              <button onClick={() => handleAction('vendor', v.id, 'approve')} className="action-btn px-5 py-2 text-xs font-bold uppercase text-white bg-[#5A3825] hover:bg-[#3E2723] rounded-lg transition-colors shadow-md">Approve</button>
+                              <button onClick={() => handleAction('vendor', v.id, 'reject')} className="px-5 py-2 text-xs font-bold uppercase text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Reject</button>
+                              <button onClick={() => handleAction('vendor', v.id, 'approve')} className="px-5 py-2 text-xs font-bold uppercase text-white bg-[#5A3825] hover:bg-[#3E2723] rounded-lg transition-colors shadow-md">Approve</button>
                             </td>
                           </tr>
                         ))}
@@ -439,7 +805,7 @@ export const AdminDashboard = () => {
             </div>
           )}
 
-          {/* Products */}
+          {/* ── PRODUCTS TAB ── */}
           {activeTab === 'products' && (
             <div className="animate-fade-in bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-6 py-5 border-b border-gray-100 bg-white">
@@ -448,9 +814,9 @@ export const AdminDashboard = () => {
               {pendingProducts.length === 0
                 ? <div className="p-16 text-center text-gray-500 font-medium">No products awaiting review.</div>
                 : (
-                  <div className="p-6 stagger-children grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 bg-[#FAF8F5]/30">
+                  <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 bg-[#FAF8F5]/30">
                     {pendingProducts.map(p => (
-                      <div key={p.id} className="review-card animate-fade-in-up bg-white border border-gray-100 rounded-2xl overflow-hidden flex flex-col pt-4 hover:border-[#A87C51]/40 transition-colors">
+                      <div key={p.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden flex flex-col pt-4 hover:border-[#A87C51]/40 transition-colors">
                         <div className="relative aspect-square bg-[#FAF8F5] p-2 mx-4 rounded-xl flex items-center justify-center">
                           <img src={p.image} className="w-full h-full object-contain mix-blend-multiply" alt={p.name} />
                         </div>
@@ -459,8 +825,8 @@ export const AdminDashboard = () => {
                           <h3 className="font-bold text-[#2C1E16] text-lg truncate mb-1">{p.name}</h3>
                           <p className="text-[#2C1E16] font-bold mb-5">₹{parseFloat(p.price).toLocaleString()}</p>
                           <div className="mt-auto grid grid-cols-2 gap-3">
-                            <button onClick={() => handleAction('product', p.id, 'reject')} className="action-btn w-full py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Reject</button>
-                            <button onClick={() => handleAction('product', p.id, 'approve')} className="action-btn w-full py-2.5 text-xs font-bold text-white bg-[#5A3825] hover:bg-[#3E2723] rounded-lg transition-colors shadow-md">Approve</button>
+                            <button onClick={() => handleAction('product', p.id, 'reject')} className="w-full py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Reject</button>
+                            <button onClick={() => handleAction('product', p.id, 'approve')} className="w-full py-2.5 text-xs font-bold text-white bg-[#5A3825] hover:bg-[#3E2723] rounded-lg transition-colors shadow-md">Approve</button>
                           </div>
                         </div>
                       </div>
@@ -470,7 +836,7 @@ export const AdminDashboard = () => {
             </div>
           )}
 
-          {/* Users */}
+          {/* ── USERS TAB ── */}
           {activeTab === 'users' && (
             <div className="animate-fade-in bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-6 py-5 border-b border-gray-100 bg-white">
@@ -488,13 +854,15 @@ export const AdminDashboard = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {users.map(u => (
-                      <tr key={u.id} className="admin-table-row hover:bg-[#FAF8F5] transition-colors duration-150">
+                      <tr key={u.id} className="hover:bg-[#FAF8F5] transition-colors duration-150">
                         <td className="px-6 py-4 font-medium text-gray-400">#{u.id}</td>
-                        <td className="px-6 py-4 font-bold text-[#2C1E16] flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#FAF8F5] text-[#A87C51] flex items-center justify-center font-bold text-xs border border-gray-200">
-                            {u.name.charAt(0).toUpperCase()}
+                        <td className="px-6 py-4 font-bold text-[#2C1E16]">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-[#FAF8F5] text-[#A87C51] flex items-center justify-center font-bold text-xs border border-gray-200">
+                              {u.name.charAt(0).toUpperCase()}
+                            </div>
+                            {u.name}
                           </div>
-                          {u.name}
                         </td>
                         <td className="px-6 py-4 text-gray-600">{u.email}</td>
                         <td className="px-6 py-4">
@@ -508,7 +876,7 @@ export const AdminDashboard = () => {
             </div>
           )}
 
-          {/* Categories */}
+          {/* ── CATEGORIES TAB ── */}
           {activeTab === 'categories' && (
             <div className="animate-fade-in flex flex-col gap-8">
               {pendingCatReqs.length > 0 && (
@@ -516,22 +884,21 @@ export const AdminDashboard = () => {
                   <div className="px-6 py-5 border-b border-gray-100 bg-white">
                     <h2 className="text-lg font-bold text-[#2C1E16]">Pending Category Requests</h2>
                   </div>
-                  <div className="p-6 stagger-children grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 bg-[#FAF8F5]/30">
+                  <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 bg-[#FAF8F5]/30">
                     {pendingCatReqs.map(req => (
-                      <div key={req.id} className="review-card animate-fade-in-up bg-white border border-gray-100 rounded-2xl p-5 hover:border-[#A87C51]/40 transition-colors">
+                      <div key={req.id} className="bg-white border border-gray-100 rounded-2xl p-5 hover:border-[#A87C51]/40 transition-colors">
                         {req.image && <img src={req.image} className="w-full h-36 object-cover rounded-xl mb-5 shadow-sm" alt={req.name} />}
                         <p className="text-[10px] font-black text-[#A87C51] uppercase tracking-widest mb-1 truncate">Req by: {req.vendor_shop}</p>
                         <h3 className="font-bold text-[#2C1E16] text-xl truncate mb-5">{req.name}</h3>
                         <div className="grid grid-cols-2 gap-3">
-                          <button onClick={() => handleCatRequestAction(req.id, 'reject')} className="action-btn w-full py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Reject</button>
-                          <button onClick={() => handleCatRequestAction(req.id, 'approve')} className="action-btn w-full py-2.5 text-xs font-bold text-white bg-[#5A3825] hover:bg-[#3E2723] rounded-lg transition-colors shadow-md">Approve</button>
+                          <button onClick={() => handleCatRequestAction(req.id, 'reject')} className="w-full py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Reject</button>
+                          <button onClick={() => handleCatRequestAction(req.id, 'approve')} className="w-full py-2.5 text-xs font-bold text-white bg-[#5A3825] hover:bg-[#3E2723] rounded-lg transition-colors shadow-md">Approve</button>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 <div className="xl:col-span-1">
                   <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
@@ -539,13 +906,13 @@ export const AdminDashboard = () => {
                     <form onSubmit={handleCreateCategory} className="space-y-5">
                       <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Category Name</label>
-                        <input type="text" placeholder="e.g., Sweets" required value={newCatName} onChange={e => setNewCatName(e.target.value)} className="input-animated w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors" />
+                        <input type="text" placeholder="e.g., Sweets" required value={newCatName} onChange={e => setNewCatName(e.target.value)} className="w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors" />
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Cover Image</label>
                         <input id="catImageInput" type="file" accept="image/*" required onChange={e => setNewCatImage(e.target.files[0])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[#FAF8F5] file:text-[#5A3825] hover:file:bg-[#A87C51] hover:file:text-white file:transition-colors cursor-pointer" />
                       </div>
-                      <button type="submit" className="btn-primary w-full bg-[#5A3825] text-white py-3.5 rounded-xl font-bold uppercase tracking-widest hover:bg-[#3E2723] shadow-md mt-2">Publish Category</button>
+                      <button type="submit" className="w-full bg-[#5A3825] text-white py-3.5 rounded-xl font-bold uppercase tracking-widest hover:bg-[#3E2723] shadow-md mt-2">Publish Category</button>
                     </form>
                   </div>
                 </div>
@@ -558,12 +925,12 @@ export const AdminDashboard = () => {
                       {categories.length === 0
                         ? <p className="p-10 text-center text-gray-500">No categories active.</p>
                         : categories.map(cat => (
-                          <div key={cat.id} className="admin-list-item p-4 px-6 flex justify-between items-center hover:bg-[#FAF8F5] transition-colors">
+                          <div key={cat.id} className="p-4 px-6 flex justify-between items-center hover:bg-[#FAF8F5] transition-colors">
                             <div className="flex items-center gap-5">
                               {cat.image ? <img src={cat.image} className="w-14 h-14 object-cover rounded-xl border border-gray-100 shadow-sm" alt={cat.name} /> : <div className="w-14 h-14 rounded-xl bg-gray-100 border border-gray-200"></div>}
                               <span className="font-bold text-[#2C1E16] text-lg">{cat.name}</span>
                             </div>
-                            <button onClick={() => handleDeleteCategory(cat.id)} className="action-btn text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">Delete</button>
+                            <button onClick={() => handleDeleteCategory(cat.id)} className="text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">Delete</button>
                           </div>
                         ))
                       }
@@ -574,7 +941,7 @@ export const AdminDashboard = () => {
             </div>
           )}
 
-          {/* Offers */}
+          {/* ── OFFERS TAB ── */}
           {activeTab === 'offers' && (
             <div className="animate-fade-in flex flex-col gap-8">
               {pendingOfferReqs.length > 0 && (
@@ -582,23 +949,22 @@ export const AdminDashboard = () => {
                   <div className="px-6 py-5 border-b border-gray-100 bg-white">
                     <h2 className="text-lg font-bold text-[#2C1E16]">Pending Offer Requests</h2>
                   </div>
-                  <div className="p-6 stagger-children grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 bg-[#FAF8F5]/30">
+                  <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 bg-[#FAF8F5]/30">
                     {pendingOfferReqs.map(offer => (
-                      <div key={offer.id} className="review-card animate-fade-in-up bg-white border border-gray-100 rounded-2xl p-5 hover:border-[#A87C51]/40 transition-colors">
+                      <div key={offer.id} className="bg-white border border-gray-100 rounded-2xl p-5 hover:border-[#A87C51]/40 transition-colors">
                         {offer.image && <img src={offer.image} className="w-full h-36 object-cover rounded-xl mb-4 shadow-sm" alt={offer.title} />}
                         <p className="text-[10px] font-black text-[#A87C51] uppercase tracking-widest mb-1 truncate">Req by: {offer.vendor_shop}</p>
                         <h3 className="font-bold text-[#2C1E16] text-lg truncate">{offer.title}</h3>
                         <p className="text-xs font-medium text-gray-500 mb-5 bg-gray-50 inline-block px-2 py-1 rounded mt-2">{offer.start_date} → {offer.end_date}</p>
                         <div className="grid grid-cols-2 gap-3">
-                          <button onClick={() => handleOfferAction(offer.id, 'reject')} className="action-btn w-full py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Reject</button>
-                          <button onClick={() => handleOfferAction(offer.id, 'approve')} className="action-btn w-full py-2.5 text-xs font-bold text-white bg-[#5A3825] hover:bg-[#3E2723] rounded-lg transition-colors shadow-md">Approve</button>
+                          <button onClick={() => handleOfferAction(offer.id, 'reject')} className="w-full py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Reject</button>
+                          <button onClick={() => handleOfferAction(offer.id, 'approve')} className="w-full py-2.5 text-xs font-bold text-white bg-[#5A3825] hover:bg-[#3E2723] rounded-lg transition-colors shadow-md">Approve</button>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 <div className="xl:col-span-1">
                   <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
@@ -606,23 +972,23 @@ export const AdminDashboard = () => {
                     <form onSubmit={handleCreateOffer} className="space-y-4">
                       <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Offer Title</label>
-                        <input type="text" required value={newOffer.title} onChange={e => setNewOffer({ ...newOffer, title: e.target.value })} className="input-animated w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors" />
+                        <input type="text" required value={newOffer.title} onChange={e => setNewOffer({ ...newOffer, title: e.target.value })} className="w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors" />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Start Date</label>
-                          <input type="date" required value={newOffer.start_date} onChange={e => setNewOffer({ ...newOffer, start_date: e.target.value })} className="input-animated w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors text-sm" />
+                          <input type="date" required value={newOffer.start_date} onChange={e => setNewOffer({ ...newOffer, start_date: e.target.value })} className="w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors text-sm" />
                         </div>
                         <div>
                           <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">End Date</label>
-                          <input type="date" required value={newOffer.end_date} onChange={e => setNewOffer({ ...newOffer, end_date: e.target.value })} className="input-animated w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors text-sm" />
+                          <input type="date" required value={newOffer.end_date} onChange={e => setNewOffer({ ...newOffer, end_date: e.target.value })} className="w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors text-sm" />
                         </div>
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1 mt-2">Banner Graphic</label>
                         <input id="offerImageInput" type="file" accept="image/*" required onChange={e => setOfferImageFile(e.target.files[0])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[#FAF8F5] file:text-[#5A3825] hover:file:bg-[#A87C51] hover:file:text-white file:transition-colors cursor-pointer" />
                       </div>
-                      <button type="submit" className="btn-primary w-full bg-[#5A3825] text-white py-3.5 rounded-xl font-bold uppercase tracking-widest hover:bg-[#3E2723] shadow-md mt-4">Broadcast Offer</button>
+                      <button type="submit" className="w-full bg-[#5A3825] text-white py-3.5 rounded-xl font-bold uppercase tracking-widest hover:bg-[#3E2723] shadow-md mt-4">Broadcast Offer</button>
                     </form>
                   </div>
                 </div>
@@ -635,7 +1001,7 @@ export const AdminDashboard = () => {
                       {offers.filter(o => o.status === 'approved').length === 0
                         ? <p className="p-10 text-center text-gray-500">No live offers broadcasted.</p>
                         : offers.filter(o => o.status === 'approved').map(offer => (
-                          <div key={offer.id} className="admin-list-item p-4 px-6 flex justify-between items-center hover:bg-[#FAF8F5] transition-colors">
+                          <div key={offer.id} className="p-4 px-6 flex justify-between items-center hover:bg-[#FAF8F5] transition-colors">
                             <div className="flex items-center gap-5">
                               {offer.image && <img src={offer.image} className="w-24 h-14 object-cover rounded-lg border border-gray-100 shadow-sm" alt={offer.title} />}
                               <div>
@@ -643,7 +1009,7 @@ export const AdminDashboard = () => {
                                 <span className="text-xs font-medium text-[#A87C51] bg-[#A87C51]/10 px-2 py-0.5 rounded mt-1 inline-block">{offer.start_date} → {offer.end_date}</span>
                               </div>
                             </div>
-                            <button onClick={() => handleDeleteOffer(offer.id)} className="action-btn text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">Terminate</button>
+                            <button onClick={() => handleDeleteOffer(offer.id)} className="text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">Terminate</button>
                           </div>
                         ))
                       }
@@ -654,7 +1020,7 @@ export const AdminDashboard = () => {
             </div>
           )}
 
-          {/* Promo Banners */}
+          {/* ── BANNERS TAB ── */}
           {activeTab === 'banners' && (
             <div className="animate-fade-in flex flex-col gap-8">
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -667,13 +1033,10 @@ export const AdminDashboard = () => {
                         <input id="bannerImageInput" type="file" accept="image/*" required onChange={e => setBannerImageFile(e.target.files[0])} disabled={banners.length >= 2} className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[#FAF8F5] file:text-[#5A3825] hover:file:bg-[#A87C51] hover:file:text-white file:transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" />
                         <p className="text-xs text-gray-400 mt-2 ml-1">Upload high-quality promotional banners. Recommended ratio: 16:9.</p>
                       </div>
-
-                      {/* Show warning if 2 banners exist */}
                       {banners.length >= 2 && (
                         <p className="text-xs font-bold text-red-500 ml-1">Maximum limit of 2 banners reached. Delete one to upload a new one.</p>
                       )}
-
-                      <button type="submit" disabled={!bannerImageFile || banners.length >= 2} className="btn-primary w-full bg-[#5A3825] text-white py-3.5 rounded-xl font-bold uppercase tracking-widest hover:bg-[#3E2723] shadow-md mt-4 disabled:opacity-50 disabled:cursor-not-allowed">
+                      <button type="submit" disabled={!bannerImageFile || banners.length >= 2} className="w-full bg-[#5A3825] text-white py-3.5 rounded-xl font-bold uppercase tracking-widest hover:bg-[#3E2723] shadow-md mt-4 disabled:opacity-50 disabled:cursor-not-allowed">
                         Upload Banner
                       </button>
                     </form>
@@ -695,13 +1058,9 @@ export const AdminDashboard = () => {
                           <div key={banner.id} className="relative group rounded-xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-white">
                             <img src={banner.image} alt="Promo banner" className="w-full h-40 object-cover" />
                             <div className="absolute inset-0 bg-[#2C1E16]/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
-                              <button onClick={() => handleDeleteBanner(banner.id)} className="bg-red-500 text-white px-6 py-2 rounded-full font-bold text-sm tracking-wider transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-red-600 shadow-md">
-                                Delete
-                              </button>
+                              <button onClick={() => handleDeleteBanner(banner.id)} className="bg-red-500 text-white px-6 py-2 rounded-full font-bold text-sm tracking-wider transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-red-600 shadow-md">Delete</button>
                             </div>
-                            <div className="absolute top-3 left-3 bg-white/95 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest text-green-600 shadow-sm">
-                              Active
-                            </div>
+                            <div className="absolute top-3 left-3 bg-white/95 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest text-green-600 shadow-sm">Active</div>
                           </div>
                         ))
                       )}
@@ -712,7 +1071,7 @@ export const AdminDashboard = () => {
             </div>
           )}
 
-          {/* Orders */}
+          {/* ── ORDERS TAB ── */}
           {activeTab === 'orders' && (
             <div className="animate-fade-in bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-6 py-5 border-b border-gray-100 bg-white">
@@ -733,7 +1092,7 @@ export const AdminDashboard = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-50">
                         {orders.map(order => (
-                          <tr key={order.id} className="admin-table-row hover:bg-[#FAF8F5] transition-colors duration-150">
+                          <tr key={order.id} className="hover:bg-[#FAF8F5] transition-colors duration-150">
                             <td className="px-6 py-4 font-bold text-gray-400">#{order.id}</td>
                             <td className="px-6 py-4">
                               <p className="font-bold text-[#2C1E16] text-base">{order.buyer_name}</p>
