@@ -1,7 +1,7 @@
 from re import search
 from django.core.cache import cache
 import razorpay
-from datetime import date
+from datetime import date, timedelta
 from django.conf import settings
 from django.utils import timezone
 from rest_framework import generics, permissions, status
@@ -13,13 +13,14 @@ from django.db import transaction , models
 from .models import (
     CustomUser, Product, Order, VendorProfile, OrderItem,
     Category, Cart, CartItem, CategoryRequest, Offer , Wishlist,
-    ProductReview, PlatformReview , Banner
+    ProductReview, PlatformReview , Banner , SubscriptionPlan, VendorSubscription
 )
 from .serializers import (
     RegisterSerializer, CustomUserSerializer, ProductSerializer,
     OrderSerializer,OrderItemSerializer, VendorOrderUpdateSerializer, CategorySerializer,
     CartSerializer, CategoryRequestSerializer, OfferSerializer, WishlistSerializer ,
-    ProductReviewSerializer, PlatformReviewSerializer , BannerSerializer
+    ProductReviewSerializer, PlatformReviewSerializer , BannerSerializer ,
+    SubscriptionPlanSerializer, VendorSubscriptionSerializer
 )
 
 # Initialize Razorpay client
@@ -98,14 +99,15 @@ class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
 
     def get_queryset(self):
-        queryset = Product.objects.filter(status='approved')
+        # FIX: Ensure we ONLY fetch products that are approved AND active
+        queryset = Product.objects.filter(status='approved', is_active=True)
 
         # Category Filter
         category_id = self.request.query_params.get('category')
         if category_id:
             queryset = queryset.filter(category_id=category_id)
 
-        # Search Filter (Checks name or description)
+        # Search Filter
         search = self.request.query_params.get('search')
         if search:
             queryset = queryset.filter(
@@ -114,6 +116,7 @@ class ProductListView(generics.ListAPIView):
                 models.Q(vendor__shop_name__icontains=search) |
                 models.Q(category__name__icontains=search)
             )
+            
         # Price Filters
         min_price = self.request.query_params.get('min_price')
         max_price = self.request.query_params.get('max_price')
@@ -161,6 +164,7 @@ class VendorProductListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         if self.request.user.role != 'vendor':
             return Product.objects.none()
+        # FIX 3: Only return active (un-archived) products to the vendor dashboard
         return Product.objects.filter(vendor__user=self.request.user)
 
     def perform_create(self, serializer):
@@ -175,6 +179,21 @@ class VendorProductListCreateView(generics.ListCreateAPIView):
         if not vendor_profile.is_approved:
             raise PermissionDenied("Vendor not approved by admin.")
 
+        # --- NEW: Subscription Limit Check ---
+        try:
+            sub = VendorSubscription.objects.get(vendor=vendor_profile)
+            if not sub.is_valid():
+                raise PermissionDenied("Your subscription has expired or is inactive. Please upgrade.")
+            
+            # FIX 1: Count ONLY active products against their subscription limit
+            current_count = Product.objects.filter(vendor=vendor_profile, is_active=True).count()
+            
+            if current_count >= sub.plan.product_limit:
+                raise PermissionDenied(f"Plan limit reached! You can only have up to {sub.plan.product_limit} active products. Archive old products or upgrade your plan.")
+        except VendorSubscription.DoesNotExist:
+            raise PermissionDenied("You need an active subscription plan to add products.")
+        # -------------------------------------
+
         serializer.save(vendor=vendor_profile, status='pending')
 
 
@@ -185,8 +204,17 @@ class VendorProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         if self.request.user.role != 'vendor':
             return Product.objects.none()
+        # Ensure vendors can only edit active products
         return Product.objects.filter(vendor__user=self.request.user)
 
+    # --- FIX 2: SOFT DELETE (ARCHIVE) ---
+    def perform_destroy(self, instance):
+        # Instead of a hard delete, we archive it.
+        instance.is_active = False
+        
+        # Calling .save() here automatically triggers the logic we wrote in models.py 
+        # to find and cancel any 'pending' orders associated with this product!
+        instance.save()
 
 # ---------------- Admin APIs ---------------- #
 class AdminProductApprovalView(APIView):
@@ -207,18 +235,18 @@ class AdminProductApprovalView(APIView):
             return Response({"error": "Invalid action"}, status=400)
 
         if product.status == 'approved' and action == 'approve':
-            return Response(
-                {"message": "Product already approved"}, status=400)
+            return Response({"message": "Product already approved"}, status=400)
 
         if action == 'approve':
             product.status = 'approved'
+            product.is_active = True
         else:
             product.status = 'rejected'
+            product.is_active = False # SOFT DELETE / ARCHIVE
 
         product.save()
 
         return Response({"message": f"Product {action}d successfully"})
-
 
 class AdminVendorApprovalView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -236,20 +264,24 @@ class AdminVendorApprovalView(APIView):
 
         if action == 'approve':
             if vendor.is_approved:
-                return Response(
-                    {"message": "Vendor already approved"}, status=400)
+                return Response({"message": "Vendor already approved"}, status=400)
             vendor.is_approved = True
+            vendor.is_active = True  # Ensure active
+            vendor.save()
+            Product.objects.filter(vendor=vendor).update(is_active=True)
+            return Response({"message": "Vendor approved successfully"})
 
         elif action == 'reject':
-            vendor.delete()
-            return Response({"message": "Vendor rejected and removed"})
+            # --- ENTERPRISE SOFT DELETE ---
+            vendor.is_approved = False
+            vendor.is_active = False
+            vendor.save()
+            
+            # Automatically suspend all their products so buyers can't see them
+            Product.objects.filter(vendor=vendor).update(is_active=False)           
+            return Response({"message": "Vendor account suspended. Products hidden."})
 
-        else:
-            return Response({"error": "Invalid action"}, status=400)
-
-        vendor.save()
-        return Response({"message": "Vendor approved successfully"})
-
+        return Response({"error": "Invalid action"}, status=400)
 
 class AdminPendingProductsView(generics.ListAPIView):
     serializer_class = ProductSerializer
@@ -257,8 +289,9 @@ class AdminPendingProductsView(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.role != 'admin':
-            raise PermissionDenied("Only admin can view pending products.")
-        return Product.objects.filter(status='pending')
+            raise PermissionDenied("Only admin can view products.")
+        # Return ALL products, putting 'pending' at the top
+        return Product.objects.all().order_by('status', '-created_at')
 
 
 class AdminPendingVendorsView(generics.ListAPIView):
@@ -267,11 +300,11 @@ class AdminPendingVendorsView(generics.ListAPIView):
     def get_queryset(self):
         if self.request.user.role != 'admin':
             raise PermissionDenied("Only admin can view vendors.")
-        return VendorProfile.objects.filter(is_approved=False)
+        # Return ALL vendors, putting unapproved ones at the top
+        return VendorProfile.objects.all().order_by('is_approved', '-id')
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-
         data = [
             {
                 "id": v.id,
@@ -279,12 +312,12 @@ class AdminPendingVendorsView(generics.ListAPIView):
                 "email": v.user.email,
                 "phone": v.phone,
                 "address": v.address,
+                "is_approved": v.is_approved,
+                "is_active": v.is_active
             }
             for v in queryset
         ]
-
         return Response(data)
-
 
 class AdminUserListView(generics.ListAPIView):
     serializer_class = CustomUserSerializer
@@ -363,6 +396,26 @@ class AdminBannerView(APIView):
             return Response({"success": True}, status=status.HTTP_204_NO_CONTENT)
         except Banner.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        
+# ---------------- ADMIN SUBSCRIPTION APIs ---------------- #
+
+class AdminSubscriptionPlanListCreateView(generics.ListCreateAPIView):
+    """Admin can view all plans and create new ones"""
+    serializer_class = SubscriptionPlanSerializer
+    permission_classes = [permissions.IsAdminUser]
+    queryset = SubscriptionPlan.objects.all().order_by('price')
+
+class AdminSubscriptionPlanDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Admin can edit (update limits/price) or delete a plan"""
+    serializer_class = SubscriptionPlanSerializer
+    permission_classes = [permissions.IsAdminUser]
+    queryset = SubscriptionPlan.objects.all()
+
+class AdminVendorSubscriptionsView(generics.ListAPIView):
+    """Admin can see which vendor is on which plan"""
+    serializer_class = VendorSubscriptionSerializer
+    permission_classes = [permissions.IsAdminUser]
+    queryset = VendorSubscription.objects.all().order_by('-start_date')
 
 # ---------- Vendor Category & Offer Requests ---------- #
 
@@ -1045,3 +1098,115 @@ class VendorReviewListView(generics.ListAPIView):
         
         # Let the vendor see all reviews left on their products
         return ProductReview.objects.filter(vendor=user.vendor_profile).order_by('-created_at')
+    
+# ---------------- SUBSCRIPTION APIs ---------------- #
+
+class SubscriptionPlanListView(generics.ListAPIView):
+    """Fetch all active pricing plans"""
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SubscriptionPlanSerializer
+    queryset = SubscriptionPlan.objects.filter(is_active=True).order_by('price')
+
+
+class CurrentSubscriptionView(APIView):
+    """Fetch the logged-in vendor's current subscription"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'vendor':
+            raise PermissionDenied("Only vendors have subscriptions.")
+        
+        vendor = request.user.vendor_profile
+        try:
+            sub = VendorSubscription.objects.get(vendor=vendor)
+            return Response(VendorSubscriptionSerializer(sub).data)
+        except VendorSubscription.DoesNotExist:
+            return Response({"error": "No active subscription"}, status=404)
+
+
+class CreateSubscriptionOrderView(APIView):
+    """Create a Razorpay order for purchasing a plan"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        if request.user.role != 'vendor':
+            raise PermissionDenied("Only vendors can subscribe.")
+        
+        plan_id = request.data.get('plan_id')
+        try:
+            plan = SubscriptionPlan.objects.get(id=plan_id, is_active=True)
+        except SubscriptionPlan.DoesNotExist:
+            return Response({"error": "Plan not found."}, status=404)
+        
+        amount_in_paise = int(plan.price * 100)
+
+        # Handle "Free" plans immediately without Razorpay
+        if amount_in_paise == 0:
+            vendor = request.user.vendor_profile
+            VendorSubscription.objects.update_or_create(
+                vendor=vendor,
+                defaults={
+                    'plan': plan,
+                    'is_active': True,
+                    'start_date': timezone.now(),
+                    'end_date': timezone.now() + timedelta(days=plan.duration_days)
+                }
+            )
+            return Response({"message": "Free plan activated successfully!"})
+
+        # Paid Plans: Create Razorpay Order
+        razorpay_order = razorpay_client.order.create({
+            "amount": amount_in_paise,
+            "currency": "INR",
+            "payment_capture": 1,
+        })
+
+        return Response({
+            "razorpay_order_id": razorpay_order["id"],
+            "razorpay_key_id": settings.RAZORPAY_KEY_ID,
+            "amount": amount_in_paise,
+            "currency": "INR",
+            "plan_name": plan.name,
+            "plan_id": plan.id
+        })
+
+
+class VerifySubscriptionPaymentView(APIView):
+    """Verify Razorpay payment and activate the plan"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        if request.user.role != 'vendor':
+            raise PermissionDenied("Only vendors can subscribe.")
+        
+        razorpay_order_id = request.data.get('razorpay_order_id')
+        razorpay_payment_id = request.data.get('razorpay_payment_id')
+        razorpay_signature = request.data.get('razorpay_signature')
+        plan_id = request.data.get('plan_id')
+
+        try:
+            razorpay_client.utility.verify_payment_signature({
+                'razorpay_order_id': razorpay_order_id,
+                'razorpay_payment_id': razorpay_payment_id,
+                'razorpay_signature': razorpay_signature,
+            })
+        except Exception:
+            return Response({"error": "Payment verification failed."}, status=400)
+
+        plan = SubscriptionPlan.objects.get(id=plan_id)
+        vendor = request.user.vendor_profile
+        
+        # Activate the subscription
+        sub, created = VendorSubscription.objects.update_or_create(
+            vendor=vendor,
+            defaults={
+                'plan': plan,
+                'is_active': True,
+                'start_date': timezone.now(),
+                'end_date': timezone.now() + timedelta(days=plan.duration_days),
+                'razorpay_order_id': razorpay_order_id,
+                'razorpay_payment_id': razorpay_payment_id
+            }
+        )
+
+        return Response({"message": "Subscription activated successfully!"})

@@ -4,7 +4,7 @@ from django.db import models
 from .models import (
     CustomUser, VendorProfile, Product, Order, OrderItem,
     Category, Cart, CartItem, CategoryRequest, Offer , Wishlist ,
-    ProductReview, PlatformReview , Banner
+    ProductReview, PlatformReview , Banner , SubscriptionPlan, VendorSubscription
 )
 
 # ---------------- BASE SANITIZER (The Armor) ----------------
@@ -114,7 +114,8 @@ class ProductSerializer(SanitizedSerializer):
             'category',
             'created_at',
             'average_rating',
-            'review_count'
+            'review_count',
+            'is_active'
         ]
         read_only_fields = ['vendor', 'status']
 
@@ -256,3 +257,16 @@ class BannerSerializer(SanitizedSerializer):
     class Meta:
         model = Banner
         fields = ['id', 'title', 'image', 'is_active']
+
+# ---------------- SUBSCRIPTIONS ----------------
+class SubscriptionPlanSerializer(SanitizedSerializer):
+    class Meta:
+        model = SubscriptionPlan
+        fields = '__all__'
+
+class VendorSubscriptionSerializer(SanitizedSerializer):
+    plan_details = SubscriptionPlanSerializer(source='plan', read_only=True)
+
+    class Meta:
+        model = VendorSubscription
+        fields = ['id', 'plan', 'plan_details', 'start_date', 'end_date', 'is_active']

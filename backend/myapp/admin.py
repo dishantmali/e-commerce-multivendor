@@ -11,7 +11,9 @@ from .models import (
     CategoryRequest,
     Offer,
     ProductReview,
-    PlatformReview
+    PlatformReview,
+    SubscriptionPlan, 
+    VendorSubscription
 )
 
 
@@ -136,3 +138,15 @@ class PlatformReviewAdmin(admin.ModelAdmin):
     def unfeature_reviews(self, request, queryset):
         queryset.update(is_featured=False)
     unfeature_reviews.short_description = "Remove selected reviews from homepage"
+
+
+@admin.register(SubscriptionPlan)
+class SubscriptionPlanAdmin(admin.ModelAdmin):
+    list_display = ('name', 'price', 'product_limit', 'duration_days', 'is_active')
+    list_filter = ('is_active',)
+
+@admin.register(VendorSubscription)
+class VendorSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('vendor', 'plan', 'is_active', 'end_date')
+    list_filter = ('is_active', 'plan')
+    search_fields = ('vendor__shop_name',)

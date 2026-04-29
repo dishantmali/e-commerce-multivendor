@@ -1,31 +1,51 @@
 // src/pages/VendorDashboard.jsx
-import { useState, useEffect } from 'react';
-import api from '../api/axios';
-import toast from 'react-hot-toast';
+import { useState, useEffect } from "react";
+import api from "../api/axios";
+import toast from "react-hot-toast";
 
 const Icons = {
-  Products: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>,
-  AddProduct: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>,
-  Category: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
-  Offer: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  Orders: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>,
+  Products: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+  ),
+  Archive: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+  ),
+  AddProduct: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+  ),
+  Category: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+  ),
+  Offer: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+  ),
+  Orders: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+  ),
+  Subscription: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+  ),
 };
 
 export const VendorDashboard = () => {
-  const [activeTab, setActiveTab] = useState('products');
-  const [viewType, setViewType] = useState('grid'); // 'grid' or 'list' for product view
-  const [products, setProducts] = useState([]);
+  const [activeTab, setActiveTab] = useState("products");
+  const [viewType, setViewType] = useState("grid");
+  const [allProducts, setAllProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
+  // --- Subscription States ---
+  const [subscriptionPlans, setSubscriptionPlans] = useState([]);
+  const [currentSubscription, setCurrentSubscription] = useState(null);
+
   // --- Inline List View States ---
-  const [updatedFields, setUpdatedFields] = useState({}); 
-  
+  const [updatedFields, setUpdatedFields] = useState({});
+
   // --- Grid View Restock States ---
   const [editingStockId, setEditingStockId] = useState(null);
-  const [newStockValue, setNewStockValue] = useState('');
+  const [newStockValue, setNewStockValue] = useState("");
 
   // --- Full Edit Modal States ---
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -33,35 +53,121 @@ export const VendorDashboard = () => {
   const [editImageFile, setEditImageFile] = useState(null);
 
   // --- Form States ---
-  const [newProduct, setNewProduct] = useState({ name: '', price: '', description: '', category: '', stock_quantity: '' });
+  const [newProduct, setNewProduct] = useState({ name: "", price: "", description: "", category: "", stock_quantity: "" });
   const [productImageFile, setProductImageFile] = useState(null);
-  const [newCategory, setNewCategory] = useState({ name: '' });
+  const [newCategory, setNewCategory] = useState({ name: "" });
   const [categoryImageFile, setCategoryImageFile] = useState(null);
-  const [newOffer, setNewOffer] = useState({ title: '', start_date: '', end_date: '' });
+  const [newOffer, setNewOffer] = useState({ title: "", start_date: "", end_date: "" });
   const [offerImageFile, setOfferImageFile] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [prodRes, catRes, ordRes] = await Promise.all([
-          api.get('/vendor/products/'), 
-          api.get('/categories/'),
-          api.get('/orders/')
+          api.get("/vendor/products/"),
+          api.get("/categories/"),
+          api.get("/orders/"),
         ]);
-        setProducts(prodRes.data.results || prodRes.data || []);
+        setAllProducts(prodRes.data.results || prodRes.data || []);
         setCategories(catRes.data.results || catRes.data || []);
         setOrders(ordRes.data.results || ordRes.data || []);
-      } catch (error) { toast.error("Failed to load dashboard"); } finally { setLoading(false); }
+
+        // Safely fetch subscription data (Admin might not have set it up yet)
+        try {
+          const plansRes = await api.get("/vendor/subscription/plans/");
+          setSubscriptionPlans(plansRes.data.results || plansRes.data || []);
+        } catch (e) { console.warn("Plans not loaded"); }
+
+        try {
+          const subRes = await api.get("/vendor/subscription/current/");
+          setCurrentSubscription(subRes.data);
+        } catch (e) { setCurrentSubscription(null); }
+
+      } catch (error) {
+        toast.error("Failed to load dashboard");
+      } finally {
+        setLoading(false);
+      }
     };
     fetchData();
   }, []);
 
-  // --- 1. Inline Quick Update Logic (For List View) ---
+  // --- RAZORPAY SCRIPT LOADER ---
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  // --- SUBSCRIBE HANDLER ---
+  const handleSubscribe = async (plan) => {
+    // Handle Free Plans Instantly
+    if (parseFloat(plan.price) === 0) {
+      try {
+        await api.post("/vendor/subscription/create-order/", { plan_id: plan.id });
+        toast.success("Free Plan Activated!");
+        const subRes = await api.get("/vendor/subscription/current/");
+        setCurrentSubscription(subRes.data);
+      } catch (e) {
+        toast.error("Failed to activate plan.");
+      }
+      return;
+    }
+
+    // Handle Paid Plans with Razorpay
+    const res = await loadRazorpay();
+    if (!res) {
+      toast.error("Razorpay SDK failed to load. Please check your connection.");
+      return;
+    }
+
+    try {
+      // 1. Create order on backend
+      const orderRes = await api.post("/vendor/subscription/create-order/", { plan_id: plan.id });
+      const { razorpay_order_id, razorpay_key_id, amount, currency } = orderRes.data;
+
+      // 2. Open Razorpay Checkout Modal
+      const options = {
+        key: razorpay_key_id,
+        amount: amount,
+        currency: currency,
+        name: "Gujju Ni Dukan",
+        description: `Subscription: ${plan.name}`,
+        order_id: razorpay_order_id,
+        handler: async function (response) {
+          try {
+            // 3. Verify Payment on Backend
+            await api.post("/vendor/subscription/verify/", {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              plan_id: plan.id,
+            });
+            toast.success("Payment Successful! Plan activated.");
+            const subRes = await api.get("/vendor/subscription/current/");
+            setCurrentSubscription(subRes.data);
+          } catch (err) {
+            toast.error("Payment verification failed.");
+          }
+        },
+        theme: {
+          color: "#5A3825",
+        },
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to initiate payment");
+    }
+  };
+
   const handleFieldChange = (productId, field, value) => {
-    setUpdatedFields(prev => ({
-      ...prev,
-      [productId]: { ...(prev[productId] || {}), [field]: value }
-    }));
+    setUpdatedFields((prev) => ({ ...prev, [productId]: { ...(prev[productId] || {}), [field]: value } }));
   };
 
   const handleQuickSave = async (productId) => {
@@ -70,15 +176,18 @@ export const VendorDashboard = () => {
     setIsSaving(true);
     try {
       const res = await api.patch(`/vendor/products/${productId}/`, changes);
-      setProducts(products.map(p => p.id === productId ? res.data : p));
+      setAllProducts(allProducts.map((p) => (p.id === productId ? res.data : p)));
       const newFields = { ...updatedFields };
       delete newFields[productId];
       setUpdatedFields(newFields);
       toast.success("Product updated inline!");
-    } catch { toast.error("Quick update failed"); } finally { setIsSaving(false); }
+    } catch {
+      toast.error("Quick update failed");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  // --- 2. Full Update Logic (For Edit Modal) ---
   const openEditModal = (product) => {
     setEditingProduct({ ...product });
     setEditImageFile(null);
@@ -88,101 +197,130 @@ export const VendorDashboard = () => {
   const handleFullUpdate = async (e) => {
     e.preventDefault();
     const formData = new FormData();
-    formData.append('name', editingProduct.name);
-    formData.append('price', editingProduct.price);
-    formData.append('description', editingProduct.description);
-    formData.append('category', editingProduct.category);
-    formData.append('stock_quantity', editingProduct.stock_quantity);
-    if (editImageFile) formData.append('image', editImageFile);
+    formData.append("name", editingProduct.name);
+    formData.append("price", editingProduct.price);
+    formData.append("description", editingProduct.description);
+    formData.append("category", editingProduct.category);
+    formData.append("stock_quantity", editingProduct.stock_quantity);
+    if (editImageFile) formData.append("image", editImageFile);
 
     try {
-      const res = await api.patch(`/vendor/products/${editingProduct.id}/`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      setProducts(products.map(p => p.id === editingProduct.id ? res.data : p));
+      const res = await api.patch(`/vendor/products/${editingProduct.id}/`, formData, { headers: { "Content-Type": "multipart/form-data" } });
+      setAllProducts(allProducts.map((p) => (p.id === editingProduct.id ? res.data : p)));
       toast.success("Product details updated successfully!");
       setIsEditModalOpen(false);
       setEditingProduct(null);
-    } catch { toast.error("Full update failed"); }
+    } catch {
+      toast.error("Full update failed");
+    }
   };
 
-  // --- 3. Grid Restock Logic ---
   const handleRestock = async (productId) => {
     if (!newStockValue || parseInt(newStockValue) < 1) return toast.error("Valid quantity required");
     try {
       const res = await api.patch(`/vendor/products/${productId}/`, { stock_quantity: newStockValue });
-      setProducts(products.map(p => p.id === productId ? res.data : p));
-      setEditingStockId(null); setNewStockValue('');
+      setAllProducts(allProducts.map((p) => (p.id === productId ? res.data : p)));
+      setEditingStockId(null);
+      setNewStockValue("");
       toast.success("Stock updated!");
-    } catch (err) { toast.error("Update failed"); }
+    } catch (err) {
+      toast.error("Update failed");
+    }
   };
 
-  // --- Form Submit Handlers ---
+  const handleDeleteProduct = async (productId) => {
+    if (!window.confirm("Are you sure you want to archive this product? It will be removed from the store.")) return;
+    try {
+      await api.delete(`/vendor/products/${productId}/`);
+      setAllProducts(allProducts.map(p => p.id === productId ? { ...p, is_active: false } : p));
+      toast.success("Product successfully archived");
+    } catch (err) {
+      toast.error("Failed to archive product");
+    }
+  };
+
+  const handleRestoreProduct = async (productId) => {
+    try {
+      await api.patch(`/vendor/products/${productId}/`, { is_active: true });
+      setAllProducts(allProducts.map(p => p.id === productId ? { ...p, is_active: true } : p));
+      toast.success("Product successfully restored");
+    } catch (err) {
+      toast.error("Failed to restore product");
+    }
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
     if (!productImageFile) return toast.error("Please select an image");
     const formData = new FormData();
     Object.entries(newProduct).forEach(([key, value]) => formData.append(key, value));
-    formData.append('image', productImageFile);
+    formData.append("image", productImageFile);
 
     try {
-      const res = await api.post('/vendor/products/', formData, { headers: { 'Content-Type': 'multipart/form-data' }});
-      setProducts([res.data, ...products]);
+      const res = await api.post("/vendor/products/", formData, { headers: { "Content-Type": "multipart/form-data" } });
+      setAllProducts([res.data, ...allProducts]);
       toast.success("Product added! Waiting for admin approval.");
-      setNewProduct({ name: '', price: '', description: '', category: '', stock_quantity: '' });
+      setNewProduct({ name: "", price: "", description: "", category: "", stock_quantity: "" });
       setProductImageFile(null);
-      setActiveTab('products');
-    } catch (err) { toast.error("Failed to add product"); }
+      setActiveTab("products");
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to add product");
+    }
   };
 
   const handleRequestCategory = async (e) => {
     e.preventDefault();
     const formData = new FormData();
-    formData.append('name', newCategory.name);
-    formData.append('image', categoryImageFile);
+    formData.append("name", newCategory.name);
+    formData.append("image", categoryImageFile);
     try {
-      await api.post('/vendor/category-requests/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await api.post("/vendor/category-requests/", formData, { headers: { "Content-Type": "multipart/form-data" } });
       toast.success("Category requested!");
-      setNewCategory({ name: '' });
+      setNewCategory({ name: "" });
       setCategoryImageFile(null);
-    } catch { toast.error("Failed to request category"); }
+    } catch {
+      toast.error("Failed to request category");
+    }
   };
 
   const handleRequestOffer = async (e) => {
     e.preventDefault();
     const formData = new FormData();
     Object.entries(newOffer).forEach(([key, value]) => formData.append(key, value));
-    formData.append('image', offerImageFile);
+    formData.append("image", offerImageFile);
     try {
-      await api.post('/vendor/offer-requests/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await api.post("/vendor/offer-requests/", formData, { headers: { "Content-Type": "multipart/form-data" } });
       toast.success("Offer requested!");
-      setNewOffer({ title: '', start_date: '', end_date: '' });
+      setNewOffer({ title: "", start_date: "", end_date: "" });
       setOfferImageFile(null);
-    } catch { toast.error("Failed to request offer"); }
+    } catch {
+      toast.error("Failed to request offer");
+    }
   };
 
-  if (loading) return (
-    <div className="p-10 text-center text-[#5A3825] flex items-center justify-center gap-2">
-      <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-      </svg>
-      Loading...
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="p-10 text-center text-[#5A3825] flex items-center justify-center gap-2">
+        <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+        </svg>
+        Loading...
+      </div>
+    );
+
+  // --- FILTERING ---
+  const activeProductsList = allProducts.filter(p => p.is_active !== false);
+  const archivedProductsList = allProducts.filter(p => p.is_active === false);
 
   return (
     <div className="w-full px-4 sm:px-8 lg:px-12 py-10 font-sans bg-[#FAF8F5] min-h-[calc(100vh-80px)]">
-
-      {/* Header */}
       <div className="mb-8 animate-fade-in-up">
         <h1 className="text-3xl font-bold text-[#2C1E16]">Vendor Dashboard</h1>
         <p className="text-gray-500 mt-1">Manage your catalog and request marketplace features.</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
-
-        {/* Sidebar */}
         <aside className="w-full lg:w-64 shrink-0 animate-fade-in-left">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 bg-[#5A3825]">
@@ -190,63 +328,51 @@ export const VendorDashboard = () => {
             </div>
             <nav className="flex flex-col">
               {[
-                { key: 'products', label: 'My Catalog', Icon: Icons.Products, badge: null },
-                { key: 'orders', label: 'Order Fulfillment', Icon: Icons.Orders, badge: orders.filter(o => o.status === 'pending').length },
-                { key: 'add_product', label: 'Add Product', Icon: Icons.AddProduct, badge: null },
-                { key: 'request_category', label: 'Request Category', Icon: Icons.Category, badge: null },
-                { key: 'request_offer', label: 'Request Offer', Icon: Icons.Offer, badge: null },
+                { key: "products", label: "Active Products", Icon: Icons.Products, badge: null },
+                { key: "archived", label: "Archived Products", Icon: Icons.Archive, badge: null },
+                { key: "orders", label: "Order Fulfillment", Icon: Icons.Orders, badge: orders.filter((o) => o.status === "pending").length },
+                { key: "add_product", label: "Add Product", Icon: Icons.AddProduct, badge: null },
+                { key: "subscription", label: "Subscription Plan", Icon: Icons.Subscription, badge: null },
+                { key: "request_category", label: "Request Category", Icon: Icons.Category, badge: null },
+                { key: "request_offer", label: "Request Offer", Icon: Icons.Offer, badge: null },
               ].map(({ key, label, Icon, badge }) => (
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
                   className={`admin-nav-item flex items-center justify-between px-6 py-4 text-sm font-medium border-t border-gray-100 transition-all duration-200 ${
-                    activeTab === key
-                      ? 'bg-[#5A3825] text-white shadow-inner'
-                      : 'text-gray-600 hover:bg-[#FAF8F5] hover:text-[#5A3825] hover:pl-8'
+                    activeTab === key ? "bg-[#5A3825] text-white shadow-inner" : "text-gray-600 hover:bg-[#FAF8F5] hover:text-[#5A3825] hover:pl-8"
                   }`}
-                  style={{ transitionProperty: 'background, color, padding' }}
+                  style={{ transitionProperty: "background, color, padding" }}
                 >
                   <div className="flex items-center gap-3">
-                    <span className={`transition-transform duration-200 ${activeTab === key ? 'scale-110' : ''}`}>
-                      <Icon />
-                    </span>
+                    <span className={`transition-transform duration-200 ${activeTab === key ? "scale-110" : ""}`}><Icon /></span>
                     {label}
                   </div>
-                  {badge > 0 && (
-                    <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${activeTab === key ? 'bg-white text-[#5A3825]' : 'bg-[#A87C51] text-white'}`}>
-                      {badge}
-                    </span>
-                  )}
+                  {badge > 0 && <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${activeTab === key ? "bg-white text-[#5A3825]" : "bg-[#A87C51] text-white"}`}>{badge}</span>}
                 </button>
               ))}
             </nav>
           </div>
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1">
-
-          {/* My Products Tab */}
-          {activeTab === 'products' && (
+          {/* Active Products Tab */}
+          {activeTab === "products" && (
             <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5] flex justify-between items-center">
-                <h2 className="text-lg font-bold text-[#2C1E16]">My Products</h2>
-                
-                {/* --- Grid / List View Toggle --- */}
+                <h2 className="text-lg font-bold text-[#2C1E16]">Active Products</h2>
                 <div className="flex bg-gray-200 p-1 rounded-lg">
-                  <button onClick={() => setViewType('grid')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${viewType === 'grid' ? 'bg-white shadow text-[#5A3825]' : 'text-gray-500 hover:text-gray-700'}`}>Grid</button>
-                  <button onClick={() => setViewType('list')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${viewType === 'list' ? 'bg-white shadow text-[#5A3825]' : 'text-gray-500 hover:text-gray-700'}`}>List Edit</button>
+                  <button onClick={() => setViewType("grid")} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${viewType === "grid" ? "bg-white shadow text-[#5A3825]" : "text-gray-500 hover:text-gray-700"}`}>Grid</button>
+                  <button onClick={() => setViewType("list")} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${viewType === "list" ? "bg-white shadow text-[#5A3825]" : "text-gray-500 hover:text-gray-700"}`}>List Edit</button>
                 </div>
               </div>
-              
+
               <div className="p-6">
-                {products.length === 0 ? (
-                  <p className="text-gray-500 animate-fade-in col-span-full">No products added yet.</p>
-                ) : viewType === 'grid' ? (
-                  
-                  /* --- GRID VIEW --- */
+                {activeProductsList.length === 0 ? (
+                  <p className="text-gray-500 animate-fade-in col-span-full">No active products.</p>
+                ) : viewType === "grid" ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
-                    {products.map(p => (
+                    {activeProductsList.map((p) => (
                       <div key={p.id} className="product-card-anim border border-gray-100 rounded-xl p-4 flex flex-col bg-white animate-fade-in-up">
                         <div className="h-48 bg-[#FAF8F5] rounded-lg flex items-center justify-center mb-4 overflow-hidden">
                           <img src={p.image} className="product-thumb max-h-full object-contain mix-blend-multiply" alt={p.name} />
@@ -254,9 +380,7 @@ export const VendorDashboard = () => {
                         <h3 className="font-bold text-[#2C1E16] truncate">{p.name}</h3>
                         <p className="text-[#A87C51] font-bold mb-2 text-lg">₹{parseFloat(p.price).toLocaleString()}</p>
                         <div className="mb-4">
-                          <p className="text-sm text-gray-500">
-                            Stock: <span className={`font-bold transition-colors duration-300 ${p.stock_quantity === 0 ? 'text-red-500' : 'text-gray-800'}`}>{p.stock_quantity}</span>
-                          </p>
+                          <p className="text-sm text-gray-500">Stock: <span className={`font-bold transition-colors duration-300 ${p.stock_quantity === 0 ? "text-red-500" : "text-gray-800"}`}>{p.stock_quantity}</span></p>
                           {editingStockId === p.id ? (
                             <div className="mt-2 flex gap-2 animate-fade-in">
                               <input type="number" className="input-animated w-full p-2 border border-gray-200 text-sm outline-none focus:border-[#A87C51] rounded-md" value={newStockValue} onChange={(e) => setNewStockValue(e.target.value)} />
@@ -265,25 +389,21 @@ export const VendorDashboard = () => {
                             </div>
                           ) : (
                             <div className="flex gap-2 mt-3">
-                              <button onClick={() => openEditModal(p)} className="flex-1 bg-[#FAF8F5] text-[#5A3825] border border-[#A87C51]/30 py-2 rounded-full text-xs font-bold hover:border-[#5A3825] transition-all">Edit Details</button>
-                              {p.status === 'approved' && p.stock_quantity === 0 && (
-                                <button onClick={() => { setEditingStockId(p.id); setNewStockValue(''); }} className="flex-1 bg-[#5A3825] text-white py-2 rounded-full text-xs font-bold hover:bg-[#3E2723] transition-all duration-200">Restock</button>
+                              <button onClick={() => openEditModal(p)} className="flex-1 bg-[#FAF8F5] text-[#5A3825] border border-[#A87C51]/30 py-2 rounded-md text-xs font-bold hover:border-[#5A3825] transition-all">Edit</button>
+                              {p.status === "approved" && p.stock_quantity === 0 && (
+                                <button onClick={() => { setEditingStockId(p.id); setNewStockValue(""); }} className="flex-1 bg-[#5A3825] text-white py-2 rounded-md text-xs font-bold hover:bg-[#3E2723] transition-all">Restock</button>
                               )}
+                              <button onClick={() => handleDeleteProduct(p.id)} className="px-3 bg-red-50 text-red-600 border border-red-100 rounded-md text-xs font-bold hover:bg-red-100 transition-all" title="Archive Product">✕</button>
                             </div>
                           )}
                         </div>
                         <div className="mt-auto pt-2 border-t border-gray-50">
-                          <span className={`text-[10px] px-2 py-1 uppercase font-bold text-white rounded-md transition-all duration-300 ${p.status === 'approved' ? 'bg-[#A87C51]' : p.status === 'rejected' ? 'bg-red-500' : 'bg-gray-400'}`}>
-                            {p.status}
-                          </span>
+                          <span className={`text-[10px] px-2 py-1 uppercase font-bold text-white rounded-md transition-all duration-300 ${p.status === "approved" ? "bg-[#A87C51]" : p.status === "rejected" ? "bg-red-500" : "bg-gray-400"}`}>{p.status}</span>
                         </div>
                       </div>
                     ))}
                   </div>
-
                 ) : (
-
-                  /* --- LIST VIEW (Inline Editing) --- */
                   <div className="overflow-x-auto animate-fade-in">
                     <table className="w-full text-left">
                       <thead>
@@ -295,7 +415,7 @@ export const VendorDashboard = () => {
                         </tr>
                       </thead>
                       <tbody className="text-sm">
-                        {products.map(p => {
+                        {activeProductsList.map((p) => {
                           const hasChanges = !!updatedFields[p.id];
                           return (
                             <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
@@ -303,22 +423,27 @@ export const VendorDashboard = () => {
                                 <img src={p.image} className="w-10 h-10 object-cover rounded border border-gray-200" alt="" />
                                 <div>
                                   <span className="font-bold text-[#2C1E16] block truncate max-w-[140px] sm:max-w-xs">{p.name}</span>
-                                  <span className={`text-[10px] uppercase font-bold ${p.status === 'approved' ? 'text-green-600' : p.status === 'rejected' ? 'text-red-500' : 'text-orange-400'}`}>{p.status}</span>
+                                  <span className={`text-[10px] uppercase font-bold ${p.status === "approved" ? "text-green-600" : p.status === "rejected" ? "text-red-500" : "text-orange-400"}`}>{p.status}</span>
                                 </div>
                               </td>
                               <td className="py-4 px-2">
-                                <input type="number" defaultValue={p.price} onChange={e => handleFieldChange(p.id, 'price', e.target.value)} className="w-24 p-2 border border-gray-200 rounded outline-none focus:border-[#A87C51] transition-colors" />
+                                <input type="number" defaultValue={p.price} onChange={(e) => handleFieldChange(p.id, "price", e.target.value)} className="w-24 p-2 border border-gray-200 rounded outline-none focus:border-[#A87C51] transition-colors" />
                               </td>
                               <td className="py-4 px-2">
-                                <input type="number" defaultValue={p.stock_quantity} onChange={e => handleFieldChange(p.id, 'stock_quantity', e.target.value)} className="w-20 p-2 border border-gray-200 rounded outline-none focus:border-[#A87C51] transition-colors" />
+                                <input type="number" defaultValue={p.stock_quantity} onChange={(e) => handleFieldChange(p.id, "stock_quantity", e.target.value)} className="w-20 p-2 border border-gray-200 rounded outline-none focus:border-[#A87C51] transition-colors" />
                               </td>
                               <td className="py-4 px-2 text-right">
                                 {hasChanges ? (
                                   <button onClick={() => handleQuickSave(p.id)} disabled={isSaving} className="bg-green-600 text-white px-4 py-1.5 rounded text-xs font-bold hover:bg-green-700 shadow-sm disabled:opacity-50">Save</button>
                                 ) : (
-                                  <button onClick={() => openEditModal(p)} className="text-gray-400 hover:text-[#5A3825] transition-colors" title="Full Edit">
-                                    <svg className="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                  </button>
+                                  <div className="flex justify-end items-center">
+                                    <button onClick={() => openEditModal(p)} className="text-gray-400 hover:text-[#5A3825] transition-colors" title="Full Edit">
+                                      <svg className="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                    </button>
+                                    <button onClick={() => handleDeleteProduct(p.id)} className="text-red-400 hover:text-red-600 transition-colors ml-3" title="Archive">
+                                      <svg className="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                  </div>
                                 )}
                               </td>
                             </tr>
@@ -332,8 +457,52 @@ export const VendorDashboard = () => {
             </div>
           )}
 
+          {/* Archived Products Tab */}
+          {activeTab === "archived" && (
+            <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
+                <h2 className="text-lg font-bold text-[#2C1E16]">Archived Products</h2>
+              </div>
+              <div className="p-6">
+                {archivedProductsList.length === 0 ? (
+                  <p className="text-gray-500">No archived products.</p>
+                ) : (
+                  <div className="overflow-x-auto w-full">
+                    <table className="w-full text-left whitespace-nowrap">
+                      <thead className="bg-[#FAF8F5] text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+                        <tr>
+                          <th className="px-6 py-4 font-bold">Product</th>
+                          <th className="px-6 py-4 font-bold">Price</th>
+                          <th className="px-6 py-4 font-bold text-center">Status</th>
+                          <th className="px-6 py-4 font-bold text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50 text-sm">
+                        {archivedProductsList.map((p) => (
+                          <tr key={p.id} className="hover:bg-[#FAF8F5] transition-colors duration-150">
+                            <td className="px-6 py-4 flex items-center gap-3">
+                              <img src={p.image} className="w-10 h-10 object-cover rounded border border-gray-200 opacity-50" alt="" />
+                              <span className="font-bold text-gray-500 block truncate max-w-[140px] sm:max-w-xs">{p.name}</span>
+                            </td>
+                            <td className="px-6 py-4 text-gray-500">₹{parseFloat(p.price).toLocaleString()}</td>
+                            <td className="px-6 py-4 text-center">
+                              <span className="px-3 py-1 bg-red-100 text-red-700 text-[10px] font-black uppercase tracking-wider rounded-md">Archived</span>
+                            </td>
+                            <td className="px-6 py-4 flex justify-end">
+                              <button onClick={() => handleRestoreProduct(p.id)} className="px-4 py-2 text-xs font-bold uppercase text-gray-600 border border-gray-200 hover:bg-gray-50 rounded-lg transition-colors">Restore</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Order Fulfillment Tab */}
-          {activeTab === 'orders' && (
+          {activeTab === "orders" && (
             <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
                 <h2 className="text-lg font-bold text-[#2C1E16]">Order Fulfillment</h2>
@@ -341,51 +510,47 @@ export const VendorDashboard = () => {
               <div className="p-6 space-y-4">
                 {orders.length === 0 ? (
                   <p className="text-gray-500">No orders to fulfill yet.</p>
-                ) : orders.map(item => (
-                  <div key={item.id} className="border border-gray-200 rounded-xl p-5 bg-white flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center gap-4">
-                      <img src={item.product_details?.image} alt="" className="w-16 h-16 object-cover rounded-lg border bg-[#FAF8F5]" />
-                      <div>
-                        <p className="text-xs text-gray-500 font-bold tracking-widest">ORDER #{item.order_id} • {new Date(item.order_date).toLocaleDateString()}</p>
-                        <p className="font-bold text-[#2C1E16] text-lg">{item.product_details?.name} (x{item.quantity})</p>
-                        <p className="text-sm text-gray-600 mt-1"><span className="font-bold">Buyer:</span> {item.buyer_name}</p>
-                        <p className="text-sm text-gray-600"><span className="font-bold">Address:</span> {item.address} | <span className="font-bold">Phone:</span> {item.phone}</p>
+                ) : (
+                  orders.map((item) => (
+                    <div key={item.id} className="border border-gray-200 rounded-xl p-5 bg-white flex flex-col md:flex-row justify-between items-center gap-4">
+                      <div className="flex items-center gap-4">
+                        <img src={item.product_details?.image} alt="" className="w-16 h-16 object-cover rounded-lg border bg-[#FAF8F5]" />
+                        <div>
+                          <p className="text-xs text-gray-500 font-bold tracking-widest">ORDER #{item.order_id} • {new Date(item.order_date).toLocaleDateString()}</p>
+                          <p className="font-bold text-[#2C1E16] text-lg">{item.product_details?.name} (x{item.quantity})</p>
+                          <p className="text-sm text-gray-600 mt-1"><span className="font-bold">Buyer:</span> {item.buyer_name}</p>
+                          <p className="text-sm text-gray-600"><span className="font-bold">Address:</span> {item.address} | <span className="font-bold">Phone:</span> {item.phone}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2 min-w-[150px]">
+                        <label className="text-xs font-bold text-gray-500 uppercase">Update Status</label>
+                        <select
+                          className={`p-2 border rounded-lg text-sm font-bold outline-none transition-colors duration-200 ${item.status === "pending" ? "bg-yellow-50 text-yellow-700 border-yellow-200 focus:border-yellow-400" : item.status === "confirmed" ? "bg-blue-50 text-blue-700 border-blue-200 focus:border-blue-400" : item.status === "shipped" ? "bg-purple-50 text-purple-700 border-purple-200 focus:border-purple-400" : "bg-green-50 text-green-700 border-green-200 focus:border-green-400"}`}
+                          value={item.status}
+                          onChange={async (e) => {
+                            const newStatus = e.target.value;
+                            try {
+                              await api.patch(`/vendor/order-items/${item.id}/status/`, { status: newStatus });
+                              setOrders(orders.map((o) => (o.id === item.id ? { ...o, status: newStatus } : o)));
+                              toast.success("Status Updated");
+                            } catch { toast.error("Failed to update"); }
+                          }}
+                        >
+                          <option value="pending" className="bg-white text-gray-700">Pending</option>
+                          <option value="confirmed" className="bg-white text-gray-700">Confirmed</option>
+                          <option value="shipped" className="bg-white text-gray-700">Shipped</option>
+                          <option value="delivered" className="bg-white text-gray-700">Delivered</option>
+                        </select>
                       </div>
                     </div>
-                    
-                    <div className="flex flex-col gap-2 min-w-[150px]">
-                      <label className="text-xs font-bold text-gray-500 uppercase">Update Status</label>
-                      <select 
-                        className={`p-2 border rounded-lg text-sm font-bold outline-none transition-colors duration-200 ${
-                          item.status === 'pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-200 focus:border-yellow-400' :
-                          item.status === 'confirmed' ? 'bg-blue-50 text-blue-700 border-blue-200 focus:border-blue-400' :
-                          item.status === 'shipped' ? 'bg-purple-50 text-purple-700 border-purple-200 focus:border-purple-400' :
-                          'bg-green-50 text-green-700 border-green-200 focus:border-green-400'
-                        }`}
-                        value={item.status}
-                        onChange={async (e) => {
-                          const newStatus = e.target.value;
-                          try {
-                            await api.patch(`/vendor/order-items/${item.id}/status/`, { status: newStatus });
-                            setOrders(orders.map(o => o.id === item.id ? { ...o, status: newStatus } : o));
-                            toast.success("Status Updated");
-                          } catch { toast.error("Failed to update"); }
-                        }}
-                      >
-                        <option value="pending" className="bg-white text-gray-700">Pending</option>
-                        <option value="confirmed" className="bg-white text-gray-700">Confirmed</option>
-                        <option value="shipped" className="bg-white text-gray-700">Shipped</option>
-                        <option value="delivered" className="bg-white text-gray-700">Delivered</option>
-                      </select>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           )}
 
           {/* Add Product Tab */}
-          {activeTab === 'add_product' && (
+          {activeTab === "add_product" && (
             <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
                 <h2 className="text-lg font-bold text-[#2C1E16]">Add New Product</h2>
@@ -393,62 +558,127 @@ export const VendorDashboard = () => {
               <form onSubmit={handleAddProduct} className="p-6 space-y-5 max-w-2xl">
                 <div className="animate-fade-in-up delay-1">
                   <label className="block text-sm font-bold text-gray-600 mb-1">Product Name</label>
-                  <input type="text" required value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})}
-                    className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 hover:border-[#A87C51]/50" />
+                  <input type="text" required value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 hover:border-[#A87C51]/50" />
                 </div>
                 <div className="grid grid-cols-2 gap-4 animate-fade-in-up delay-2">
                   <div>
                     <label className="block text-sm font-bold text-gray-600 mb-1">Price (₹)</label>
-                    <input type="number" required value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})}
-                      className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 hover:border-[#A87C51]/50" />
+                    <input type="number" required value={newProduct.price} onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })} className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 hover:border-[#A87C51]/50" />
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-600 mb-1">Initial Stock</label>
-                    <input type="number" required value={newProduct.stock_quantity} onChange={e => setNewProduct({...newProduct, stock_quantity: e.target.value})}
-                      className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 hover:border-[#A87C51]/50" />
+                    <input type="number" required value={newProduct.stock_quantity} onChange={(e) => setNewProduct({ ...newProduct, stock_quantity: e.target.value })} className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 hover:border-[#A87C51]/50" />
                   </div>
                 </div>
-                
-                {/* --- Added: Category Section with Request Shortcut --- */}
                 <div className="animate-fade-in-up delay-3">
                   <div className="flex justify-between items-center mb-1">
                     <label className="block text-sm font-bold text-gray-600">Category</label>
-                    <button 
-                      type="button" 
-                      onClick={() => setActiveTab('request_category')} 
-                      className="text-xs font-bold text-[#A87C51] hover:text-[#5A3825] hover:underline transition-colors"
-                    >
-                      Don't see your category? Request it
-                    </button>
+                    <button type="button" onClick={() => setActiveTab("request_category")} className="text-xs font-bold text-[#A87C51] hover:text-[#5A3825] hover:underline transition-colors">Don't see your category? Request it</button>
                   </div>
-                  <select required value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}
-                    className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 cursor-pointer hover:border-[#A87C51]/50">
+                  <select required value={newProduct.category} onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })} className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 cursor-pointer hover:border-[#A87C51]/50">
                     <option value="" disabled>Select a category</option>
-                    {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                    {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                   </select>
                 </div>
-
                 <div className="animate-fade-in-up delay-3">
                   <label className="block text-sm font-bold text-gray-600 mb-1">Description</label>
-                  <textarea required value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} rows="4"
-                    className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 resize-none hover:border-[#A87C51]/50"></textarea>
+                  <textarea required value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} rows="4" className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 resize-none hover:border-[#A87C51]/50"></textarea>
                 </div>
                 <div className="animate-fade-in-up delay-4">
                   <label className="block text-sm font-bold text-gray-600 mb-1">Product Image</label>
-                  <input type="file" accept="image/*" required onChange={e => setProductImageFile(e.target.files[0])}
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#FAF8F5] file:text-[#2C1E16] file:cursor-pointer file:transition-colors file:hover:bg-[#5A3825] file:hover:text-white" />
+                  <input type="file" accept="image/*" required onChange={(e) => setProductImageFile(e.target.files[0])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#FAF8F5] file:text-[#2C1E16] file:cursor-pointer file:transition-colors file:hover:bg-[#5A3825] file:hover:text-white" />
                 </div>
                 <div className="animate-fade-in-up delay-5">
-                  <button type="submit" className="btn-primary w-full bg-[#5A3825] text-white py-3 rounded-full font-bold uppercase tracking-wider hover:bg-[#3E2723] transition-all duration-200">
-                    Submit for Approval
-                  </button>
+                  <button type="submit" className="btn-primary w-full bg-[#5A3825] text-white py-3 rounded-full font-bold uppercase tracking-wider hover:bg-[#3E2723] transition-all duration-200">Submit for Approval</button>
                 </div>
               </form>
             </div>
           )}
 
+          {/* Subscription Plan Tab */}
+          {activeTab === "subscription" && (
+            <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
+                <h2 className="text-lg font-bold text-[#2C1E16]">Manage Subscription</h2>
+                <p className="text-sm text-gray-500 mt-1">Upgrade your plan to list more products on the platform.</p>
+              </div>
+              <div className="p-6">
+                
+                {/* Current Plan Card */}
+                <div className="mb-8 p-6 border border-[#A87C51]/30 bg-[#FAF8F5] rounded-xl flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
+                  <div>
+                    <p className="text-xs font-bold text-[#A87C51] uppercase tracking-widest">Current Plan</p>
+                    <h3 className="text-2xl font-bold text-[#2C1E16] mt-1">
+                      {currentSubscription?.plan_details?.name || "No Active Plan"}
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-2">
+                      <span className="font-bold text-[#5A3825]">
+                        {activeProductsList.length} / {currentSubscription?.plan_details?.product_limit || 0}
+                      </span> active products listed
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    {currentSubscription?.is_active ? (
+                      <>
+                        <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full uppercase shadow-sm">Active</span>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Expires: {currentSubscription?.end_date ? new Date(currentSubscription.end_date).toLocaleDateString() : 'Never'}
+                        </p>
+                      </>
+                    ) : (
+                      <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full uppercase shadow-sm">Inactive</span>
+                    )}
+                  </div>
+                </div>
+
+                <h3 className="text-lg font-bold text-[#2C1E16] mb-4">Available Plans</h3>
+                
+                {subscriptionPlans.length === 0 ? (
+                  <div className="py-10 text-center border-2 border-dashed border-[#A87C51]/30 rounded-xl bg-white">
+                    <p className="text-[#5A3825] font-light">No subscription plans available at the moment. Please contact the administrator.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {subscriptionPlans.map((plan) => (
+                      <div key={plan.id} className="border border-gray-200 bg-white rounded-xl p-6 shadow-sm hover:shadow-lg transition-all relative overflow-hidden flex flex-col">
+                        <h4 className="text-xl font-bold text-[#2C1E16]">{plan.name}</h4>
+                        <p className="text-3xl font-bold text-[#A87C51] mt-2">₹{parseFloat(plan.price).toLocaleString()}<span className="text-sm text-gray-500 font-normal">/mo</span></p>
+                        
+                        <ul className="mt-6 space-y-3 text-sm text-gray-600 flex-1">
+                          <li className="flex items-center gap-2">
+                            <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg> 
+                            List up to {plan.product_limit} products
+                          </li>
+                          {plan.features && plan.features.split(',').map((f, i) => (
+                            <li key={i} className="flex items-center gap-2">
+                              <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg> 
+                              {f.trim()}
+                            </li>
+                          ))}
+                        </ul>
+
+                        {currentSubscription?.plan_details?.id === plan.id && currentSubscription?.is_active ? (
+                          <button disabled className="mt-8 w-full py-3 bg-gray-100 text-gray-400 rounded-full font-bold uppercase tracking-wider text-xs cursor-not-allowed">
+                            Current Plan
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => handleSubscribe(plan)} 
+                            className="mt-8 w-full py-3 bg-[#5A3825] text-white rounded-full font-bold uppercase tracking-wider text-xs hover:bg-[#3E2723] transition-colors shadow-md transform hover:-translate-y-0.5"
+                          >
+                            Subscribe
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Request Category Tab */}
-          {activeTab === 'request_category' && (
+          {activeTab === "request_category" && (
             <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
                 <h2 className="text-lg font-bold text-[#2C1E16]">Request a New Category</h2>
@@ -456,25 +686,21 @@ export const VendorDashboard = () => {
               <form onSubmit={handleRequestCategory} className="p-6 space-y-5 max-w-md">
                 <div className="animate-fade-in-up delay-1">
                   <label className="block text-sm font-bold text-gray-600 mb-1">Category Name</label>
-                  <input type="text" required value={newCategory.name} onChange={e => setNewCategory({name: e.target.value})}
-                    className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 hover:border-[#A87C51]/50" />
+                  <input type="text" required value={newCategory.name} onChange={(e) => setNewCategory({ name: e.target.value })} className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 hover:border-[#A87C51]/50" />
                 </div>
                 <div className="animate-fade-in-up delay-2">
                   <label className="block text-sm font-bold text-gray-600 mb-1">Reference Image</label>
-                  <input type="file" accept="image/*" required onChange={e => setCategoryImageFile(e.target.files[0])}
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#FAF8F5] file:text-[#2C1E16] file:cursor-pointer file:transition-colors file:hover:bg-[#5A3825] file:hover:text-white" />
+                  <input type="file" accept="image/*" required onChange={(e) => setCategoryImageFile(e.target.files[0])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#FAF8F5] file:text-[#2C1E16] file:cursor-pointer file:transition-colors file:hover:bg-[#5A3825] file:hover:text-white" />
                 </div>
                 <div className="animate-fade-in-up delay-3">
-                  <button type="submit" className="btn-primary w-full bg-[#5A3825] text-white py-3 rounded-full font-bold uppercase tracking-wider hover:bg-[#3E2723] transition-all duration-200">
-                    Submit Request
-                  </button>
+                  <button type="submit" className="btn-primary w-full bg-[#5A3825] text-white py-3 rounded-full font-bold uppercase tracking-wider hover:bg-[#3E2723] transition-all duration-200">Submit Request</button>
                 </div>
               </form>
             </div>
           )}
 
           {/* Request Offer Tab */}
-          {activeTab === 'request_offer' && (
+          {activeTab === "request_offer" && (
             <div className="animate-fade-in bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF8F5]">
                 <h2 className="text-lg font-bold text-[#2C1E16]">Request a Promo Offer</h2>
@@ -482,39 +708,32 @@ export const VendorDashboard = () => {
               <form onSubmit={handleRequestOffer} className="p-6 space-y-5 max-w-md">
                 <div className="animate-fade-in-up delay-1">
                   <label className="block text-sm font-bold text-gray-600 mb-1">Offer Title</label>
-                  <input type="text" required value={newOffer.title} onChange={e => setNewOffer({...newOffer, title: e.target.value})}
-                    className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 hover:border-[#A87C51]/50" />
+                  <input type="text" required value={newOffer.title} onChange={(e) => setNewOffer({ ...newOffer, title: e.target.value })} className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 hover:border-[#A87C51]/50" />
                 </div>
                 <div className="grid grid-cols-2 gap-4 animate-fade-in-up delay-2">
                   <div>
                     <label className="block text-sm font-bold text-gray-600 mb-1">Start Date</label>
-                    <input type="date" required value={newOffer.start_date} onChange={e => setNewOffer({...newOffer, start_date: e.target.value})}
-                      className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 cursor-pointer hover:border-[#A87C51]/50" />
+                    <input type="date" required value={newOffer.start_date} onChange={(e) => setNewOffer({ ...newOffer, start_date: e.target.value })} className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 cursor-pointer hover:border-[#A87C51]/50" />
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-600 mb-1">End Date</label>
-                    <input type="date" required value={newOffer.end_date} onChange={e => setNewOffer({...newOffer, end_date: e.target.value})}
-                      className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 cursor-pointer hover:border-[#A87C51]/50" />
+                    <input type="date" required value={newOffer.end_date} onChange={(e) => setNewOffer({ ...newOffer, end_date: e.target.value })} className="input-animated w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-all duration-200 cursor-pointer hover:border-[#A87C51]/50" />
                   </div>
                 </div>
                 <div className="animate-fade-in-up delay-3">
                   <label className="block text-sm font-bold text-gray-600 mb-1">Banner Image</label>
-                  <input type="file" accept="image/*" required onChange={e => setOfferImageFile(e.target.files[0])}
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#FAF8F5] file:text-[#2C1E16] file:cursor-pointer file:transition-colors file:hover:bg-[#5A3825] file:hover:text-white" />
+                  <input type="file" accept="image/*" required onChange={(e) => setOfferImageFile(e.target.files[0])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#FAF8F5] file:text-[#2C1E16] file:cursor-pointer file:transition-colors file:hover:bg-[#5A3825] file:hover:text-white" />
                 </div>
                 <div className="animate-fade-in-up delay-4">
-                  <button type="submit" className="btn-primary w-full bg-[#5A3825] text-white py-3 rounded-full font-bold uppercase tracking-wider hover:bg-[#3E2723] transition-all duration-200">
-                    Submit Request
-                  </button>
+                  <button type="submit" className="btn-primary w-full bg-[#5A3825] text-white py-3 rounded-full font-bold uppercase tracking-wider hover:bg-[#3E2723] transition-all duration-200">Submit Request</button>
                 </div>
               </form>
             </div>
           )}
-
         </main>
       </div>
 
-      {/* --- Full Edit Modal (Matches Added Styles) --- */}
+      {/* --- Full Edit Modal --- */}
       {isEditModalOpen && editingProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2C1E16]/60 backdrop-blur-sm p-4 animate-fade-in">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden animate-fade-in-up transform transition-all">
@@ -527,54 +746,42 @@ export const VendorDashboard = () => {
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-            
+
             <form onSubmit={handleFullUpdate} className="p-8 space-y-6 bg-white">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                
                 <div className="space-y-5">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Product Name</label>
-                    <input type="text" required value={editingProduct.name} onChange={e => setEditingProduct({...editingProduct, name: e.target.value})}
-                      className="w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-colors" />
+                    <input type="text" required value={editingProduct.name} onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value }) } className="w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-colors" />
                   </div>
-                  
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Price (₹)</label>
-                      <input type="number" required value={editingProduct.price} onChange={e => setEditingProduct({...editingProduct, price: e.target.value})}
-                        className="w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-colors" />
+                      <input type="number" required value={editingProduct.price} onChange={(e) => setEditingProduct({ ...editingProduct, price: e.target.value }) } className="w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-colors" />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Stock</label>
-                      <input type="number" required value={editingProduct.stock_quantity} onChange={e => setEditingProduct({...editingProduct, stock_quantity: e.target.value})}
-                        className="w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-colors" />
+                      <input type="number" required value={editingProduct.stock_quantity} onChange={(e) => setEditingProduct({ ...editingProduct, stock_quantity: e.target.value }) } className="w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-colors" />
                     </div>
                   </div>
-
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Category</label>
-                    <select required value={editingProduct.category} onChange={e => setEditingProduct({...editingProduct, category: e.target.value})}
-                      className="w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-colors cursor-pointer">
-                      {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                    <select required value={editingProduct.category} onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value }) } className="w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-colors cursor-pointer">
+                      {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                     </select>
                   </div>
                 </div>
-
                 <div className="space-y-5">
-                   <div>
+                  <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Description</label>
-                    <textarea required rows="5" value={editingProduct.description} onChange={e => setEditingProduct({...editingProduct, description: e.target.value})}
-                      className="w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-colors resize-none" />
+                    <textarea required rows="5" value={editingProduct.description} onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value }) } className="w-full p-3 bg-[#FAF8F5] border border-gray-200 rounded-lg outline-none focus:border-[#A87C51] transition-colors resize-none" />
                   </div>
-
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Update Image (Optional)</label>
-                    <input type="file" accept="image/*" onChange={e => setEditImageFile(e.target.files[0])}
-                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#FAF8F5] file:text-[#2C1E16] file:font-semibold file:cursor-pointer hover:file:bg-gray-100 transition-all border border-gray-200 rounded-lg p-1" />
+                    <input type="file" accept="image/*" onChange={(e) => setEditImageFile(e.target.files[0])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#FAF8F5] file:text-[#2C1E16] file:font-semibold file:cursor-pointer hover:file:bg-gray-100 transition-all border border-gray-200 rounded-lg p-1" />
                   </div>
                 </div>
               </div>
-
               <div className="pt-6 border-t border-gray-100 flex gap-4 justify-end">
                 <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 py-3 border border-gray-200 text-gray-600 rounded-full font-bold uppercase tracking-widest hover:bg-gray-50 transition-colors text-sm">Cancel</button>
                 <button type="submit" className="px-8 py-3 bg-[#5A3825] text-white rounded-full font-bold uppercase tracking-widest hover:bg-[#3E2723] shadow-lg transition-colors text-sm">Save Changes</button>
@@ -583,7 +790,6 @@ export const VendorDashboard = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };

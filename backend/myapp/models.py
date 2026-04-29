@@ -6,6 +6,7 @@ from django_resized import ResizedImageField
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.core.cache import cache
+from django.utils import timezone
 
 mobile_num_validator = RegexValidator(
     regex=r'^\d{10}$',
@@ -48,6 +49,20 @@ class VendorProfile(models.Model):
         blank=True
     )
     is_approved = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            old_vendor = VendorProfile.objects.get(pk=self.pk)
+            # If vendor was active/approved, but is now suspended/rejected
+            if old_vendor.is_active and (not self.is_active or not self.is_approved):
+                # Find all PENDING order items for this vendor
+                pending_items = OrderItem.objects.filter(vendor=self, status='pending')
+                for item in pending_items:
+                    item.status = 'cancelled'
+                    item.save()
+                    
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.shop_name
@@ -118,9 +133,25 @@ class Product(models.Model):
         default='pending',
         db_index=True # Added for performance
     )
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['-created_at']
+    
+    def save(self, *args, **kwargs):
+        # Check if the product is being deactivated
+        if self.pk:
+            old_product = Product.objects.get(pk=self.pk)
+            # If it was active, but is now inactive OR rejected
+            if old_product.is_active and (not self.is_active or self.status == 'rejected'):
+                # Find all PENDING order items for this product
+                pending_items = OrderItem.objects.filter(product=self, status='pending')
+                for item in pending_items:
+                    item.status = 'cancelled'
+                    item.save()
+                    # You could optionally trigger an email notification to the buyer here
+                    
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -163,6 +194,9 @@ class OrderItem(models.Model):
     vendor = models.ForeignKey('VendorProfile', on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    product_name_snapshot = models.CharField(max_length=255, blank=True, null=True)
+    vendor_shop_snapshot = models.CharField(max_length=255, blank=True, null=True)
+    price_snapshot = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
     # Tracking Fields Moved Here
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
@@ -175,6 +209,16 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.product.name} (x{self.quantity}) - {self.status}"
+    
+    def save(self, *args, **kwargs):
+        # Automatically take a snapshot when the order is first created
+        if not self.pk:
+            if self.product:
+                self.product_name_snapshot = self.product.name
+                self.price_snapshot = self.product.price
+            if self.vendor:
+                self.vendor_shop_snapshot = self.vendor.shop_name
+        super().save(*args, **kwargs)
 
 class Cart(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
@@ -252,3 +296,38 @@ class PlatformReview(models.Model):
 
     def __str__(self):
         return f"Platform Feedback by {self.user.email}"
+    
+class SubscriptionPlan(models.Model):
+    name = models.CharField(max_length=100) # e.g., "Free Tier", "Pro Vendor"
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    product_limit = models.PositiveIntegerField(help_text="Max products vendor can list")
+    duration_days = models.PositiveIntegerField(default=30)
+    features = models.TextField(help_text="Comma separated features for frontend display", blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} (₹{self.price})"
+
+class VendorSubscription(models.Model):
+    vendor = models.OneToOneField(
+        VendorProfile, 
+        on_delete=models.CASCADE, 
+        related_name='subscription'
+    )
+    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True)
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=False)
+    
+    # Payment tracking
+    razorpay_order_id = models.CharField(max_length=255, blank=True, null=True)
+    razorpay_payment_id = models.CharField(max_length=255, blank=True, null=True)
+
+    def is_valid(self):
+        if self.is_active and self.end_date and self.end_date > timezone.now():
+            return True
+        return False
+
+    def __str__(self):
+        return f"{self.vendor.shop_name} - {self.plan.name if self.plan else 'No Plan'}"

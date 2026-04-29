@@ -22,7 +22,8 @@ from .views import (
     AdminCategoryDetailView, AdminOrderListView,
     AdminCategoryRequestListView, AdminCategoryRequestActionView,
     AdminOfferListCreateView, AdminOfferActionView,
-    AdminBannerView,
+    AdminBannerView,AdminSubscriptionPlanListCreateView, AdminSubscriptionPlanDetailView,
+    AdminVendorSubscriptionsView,
 
     # Category
     CategoryListView,WishlistToggleView,WishlistListView,MergeWishlistView,
@@ -31,7 +32,9 @@ from .views import (
     # Homepage
     HomePageView,
     # Reviews
-    ProductReviewListCreateView, PlatformReviewListCreateView, VendorReviewListView
+    ProductReviewListCreateView, PlatformReviewListCreateView, VendorReviewListView ,
+    SubscriptionPlanListView, CurrentSubscriptionView,
+    CreateSubscriptionOrderView, VerifySubscriptionPaymentView
 )
 
 urlpatterns = [
@@ -69,6 +72,18 @@ urlpatterns = [
     path('vendor/offer-requests/',
          VendorOfferRequestView.as_view(),
          name='vendor_offer_requests'),
+    path('vendor/subscription/plans/',
+        SubscriptionPlanListView.as_view(),
+        name='subscription_plans'),
+    path('vendor/subscription/current/',
+        CurrentSubscriptionView.as_view(),
+        name='current_subscription'),
+    path('vendor/subscription/create-order/',
+        CreateSubscriptionOrderView.as_view(),
+        name='create_subscription_order'),
+    path('vendor/subscription/verify/',
+        VerifySubscriptionPaymentView.as_view(),
+        name='verify_subscription_payment'),
 
     # ---------------- ADMIN ---------------- #
     path('admin/products/pending/',
@@ -109,6 +124,15 @@ urlpatterns = [
     path('admin/offers/<int:pk>/action/',
          AdminOfferActionView.as_view(),
          name='admin_offer_action'),
+    path('admin/subscription-plans/',
+         AdminSubscriptionPlanListCreateView.as_view(),
+         name='admin_subscription_plans'),
+    path('admin/subscription-plans/<int:pk>/',
+         AdminSubscriptionPlanDetailView.as_view(),
+         name='admin_subscription_plan_detail'),
+    path('admin/vendor-subscriptions/',
+         AdminVendorSubscriptionsView.as_view(),
+         name='admin_vendor_subscriptions'),
 
     # ---------------- CATEGORY ---------------- #
     path('categories/', CategoryListView.as_view(), name='category_list'),

@@ -13,7 +13,8 @@ const Icons = {
   Categories: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
   Orders:     () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>,
   Offers:     () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  Banners:    () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+  Banners:    () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
+  Subscriptions:()=> <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
 };
 
 // ─── Dummy Overview Data ──────────────────────────────────────────────────────
@@ -71,8 +72,8 @@ const QUICK_ACTIONS = [
   { icon: '🏷️', label: 'Add Category',            tab: 'categories' },
   { icon: '🎫', label: 'Create Offer',             tab: 'offers'     },
   { icon: '🖼️', label: 'Add Banner',               tab: 'banners'    },
-  { icon: '📦', label: 'Approve All Products',     tab: 'products'   },
-  { icon: '👥', label: 'Approve All Vendors',      tab: 'vendors'    },
+  { icon: '📦', label: 'Manage Products',          tab: 'products'   },
+  { icon: '👥', label: 'Manage Vendors',           tab: 'vendors'    },
   { icon: '🛒', label: 'View Orders',              tab: 'orders'     },
 ];
 
@@ -86,24 +87,8 @@ const ORDER_STATUS = [
 ];
 
 const TRAFFIC_DATA = [12,18,14,22,19,28,24,32,29,25,35,31,38,34,29,36,42,38,45,41,37,44,48,43,40,47,52,48,44,51];
-// ─────────────────────────────────────────────────────────────────────────────
 
-// Mini sparkline SVG component
-const Sparkline = ({ data, color = '#A87C51', width = 80, height = 30 }) => {
-  const max = Math.max(...data); const min = Math.min(...data);
-  const pts = data.map((v, i) => {
-    const x = (i / (data.length - 1)) * width;
-    const y = height - ((v - min) / (max - min || 1)) * height;
-    return `${x},${y}`;
-  }).join(' ');
-  return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-};
-
-// Simple bar chart SVG
+// SVG Components
 const BarChart = ({ data, color = '#A87C51', width = 400, height = 120 }) => {
   const max = Math.max(...data);
   const barW = (width / data.length) - 2;
@@ -117,7 +102,6 @@ const BarChart = ({ data, color = '#A87C51', width = 400, height = 120 }) => {
   );
 };
 
-// Donut chart SVG
 const DonutChart = ({ segments, size = 130, thickness = 28 }) => {
   const r = (size - thickness) / 2;
   const cx = size / 2; const cy = size / 2;
@@ -131,25 +115,17 @@ const DonutChart = ({ segments, size = 130, thickness = 28 }) => {
         const gap = circ - dash;
         const el = (
           <circle
-            key={i}
-            cx={cx} cy={cy} r={r}
-            fill="none"
-            stroke={seg.color}
-            strokeWidth={thickness}
-            strokeDasharray={`${dash} ${gap}`}
-            strokeDashoffset={-offset}
-            strokeLinecap="butt"
+            key={i} cx={cx} cy={cy} r={r} fill="none" stroke={seg.color} strokeWidth={thickness}
+            strokeDasharray={`${dash} ${gap}`} strokeDashoffset={-offset} strokeLinecap="butt"
             style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }}
           />
         );
-        offset += dash;
-        return el;
+        offset += dash; return el;
       })}
     </svg>
   );
 };
 
-// Area chart SVG for traffic
 const AreaChart = ({ data, color = '#A87C51', width = 400, height = 100 }) => {
   const max = Math.max(...data); const min = Math.min(...data);
   const pts = data.map((v, i) => {
@@ -173,7 +149,6 @@ const AreaChart = ({ data, color = '#A87C51', width = 400, height = 100 }) => {
   );
 };
 
-// Sales line chart SVG
 const SalesLineChart = ({ data }) => {
   const W = 500; const H = 120; const pad = 10;
   const maxO = Math.max(...data.map(d => d.orders));
@@ -185,16 +160,11 @@ const SalesLineChart = ({ data }) => {
   const revPts   = data.map((d, i) => `${ox(i)},${ry(d.revenue)}`).join(' ');
   return (
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ overflow: 'visible' }}>
-      {/* Grid lines */}
       {[0.25, 0.5, 0.75, 1].map(f => (
-        <line key={f} x1={pad} y1={H - pad - f * (H - pad * 2)} x2={W - pad} y2={H - pad - f * (H - pad * 2)}
-          stroke="#F0E8DF" strokeWidth="1" strokeDasharray="4 4" />
+        <line key={f} x1={pad} y1={H - pad - f * (H - pad * 2)} x2={W - pad} y2={H - pad - f * (H - pad * 2)} stroke="#F0E8DF" strokeWidth="1" strokeDasharray="4 4" />
       ))}
-      {/* Orders line */}
       <polyline points={orderPts} fill="none" stroke="#2C1E16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      {/* Revenue line */}
       <polyline points={revPts} fill="none" stroke="#A87C51" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="5 3" />
-      {/* Dots */}
       {data.map((d, i) => (
         <g key={i}>
           <circle cx={ox(i)} cy={oy(d.orders)} r="3.5" fill="#2C1E16" stroke="white" strokeWidth="1.5" />
@@ -214,13 +184,19 @@ export const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const profileRef = useRef(null);
 
-  const [pendingProducts, setPendingProducts] = useState([]);
-  const [pendingVendors, setPendingVendors] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [allVendors, setAllVendors] = useState([]);
   const [users, setUsers] = useState([]);
   const [categories, setCategories] = useState([]);
   const [orders, setOrders] = useState([]);
   const [categoryRequests, setCategoryRequests] = useState([]);
   const [offers, setOffers] = useState([]);
+  
+  const [subscriptionPlans, setSubscriptionPlans] = useState([]);
+  const [vendorSubscriptions, setVendorSubscriptions] = useState([]);
+  const [newPlan, setNewPlan] = useState({ name: '', price: '', product_limit: '', duration_days: 30, features: '' });
+  const [editingPlan, setEditingPlan] = useState(null);
+
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -238,25 +214,34 @@ export const AdminDashboard = () => {
     const fetchData = async () => {
       try {
         const [prodRes, vendRes, userRes, catRes, orderRes, catReqRes, offerRes] = await Promise.all([
-          api.get('/admin/products/pending/'),
-          api.get('/admin/vendors/pending/'),
+          api.get('/admin/products/pending/'), 
+          api.get('/admin/vendors/pending/'),  
           api.get('/admin/users/'),
           api.get('/admin/categories/'),
           api.get('/admin/orders/'),
           api.get('/admin/category-requests/'),
           api.get('/admin/offers/')
         ]);
-        setPendingProducts(prodRes.data.results || prodRes.data || []);
-        setPendingVendors(vendRes.data.results || vendRes.data || []);
+        setAllProducts(prodRes.data.results || prodRes.data || []);
+        setAllVendors(vendRes.data.results || vendRes.data || []);
         setUsers(userRes.data.results || userRes.data || []);
         setCategories(catRes.data.results || catRes.data || []);
         setOrders(orderRes.data.results || orderRes.data || []);
         setCategoryRequests(catReqRes.data.results || catReqRes.data || []);
         setOffers(offerRes.data.results || offerRes.data || []);
+        
         try {
           const bannerRes = await api.get('/admin/banners/');
           setBanners(bannerRes.data.results || bannerRes.data || []);
         } catch (e) { console.warn("Banners endpoint not ready yet", e); }
+        
+        try {
+          const subRes = await api.get('/admin/subscription-plans/');
+          const vendSubRes = await api.get('/admin/vendor-subscriptions/');
+          setSubscriptionPlans(subRes.data.results || subRes.data || []);
+          setVendorSubscriptions(vendSubRes.data.results || vendSubRes.data || []);
+        } catch (e) { console.warn("Subscription endpoints not ready yet", e); }
+
       } catch (error) {
         console.error(error);
         toast.error("Error loading admin data");
@@ -275,12 +260,33 @@ export const AdminDashboard = () => {
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
+  // --- ACTIONS (APPROVE / REJECT) ---
   const handleAction = async (type, id, action) => {
     try {
-      if (type === 'product') { await api.post(`/admin/products/${id}/action/`, { action }); setPendingProducts(pendingProducts.filter(p => p.id !== id)); }
-      else if (type === 'vendor') { await api.post(`/admin/vendors/${id}/action/`, { action }); setPendingVendors(pendingVendors.filter(v => v.id !== id)); }
+      if (type === 'product') { 
+        await api.post(`/admin/products/${id}/action/`, { action }); 
+        setAllProducts(allProducts.map(p => 
+          p.id === id 
+            ? { ...p, status: action === 'approve' ? 'approved' : 'rejected', is_active: action === 'approve' } 
+            : p
+        ));
+      }
+      else if (type === 'vendor') { 
+        await api.post(`/admin/vendors/${id}/action/`, { action }); 
+        setAllVendors(allVendors.map(v => 
+          v.id === id 
+            ? { ...v, is_approved: action === 'approve', is_active: action === 'approve' } 
+            : v
+        ));
+
+        // products to "Archived" (or Restores them) without needing a page refresh!
+        const prodRes = await api.get('/admin/products/pending/');
+        setAllProducts(prodRes.data.results || prodRes.data || []);
+      }
       toast.success(`${type} ${action}d successfully`);
-    } catch { toast.error(`Failed to ${action} ${type}`); }
+    } catch { 
+      toast.error(`Failed to ${action} ${type}`); 
+    }
   };
 
   const handleCatRequestAction = async (id, action) => {
@@ -375,6 +381,47 @@ export const AdminDashboard = () => {
     } catch { toast.error("Failed to delete banner"); }
   };
 
+  const handleSavePlan = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingPlan) {
+        const res = await api.put(`/admin/subscription-plans/${editingPlan.id}/`, newPlan);
+        setSubscriptionPlans(subscriptionPlans.map(p => p.id === editingPlan.id ? res.data : p));
+        toast.success("Plan updated!");
+      } else {
+        const res = await api.post('/admin/subscription-plans/', newPlan);
+        setSubscriptionPlans([...subscriptionPlans, res.data]);
+        toast.success("Plan created!");
+      }
+      setNewPlan({ name: '', price: '', product_limit: '', duration_days: 30, features: '' });
+      setEditingPlan(null);
+    } catch (err) {
+      toast.error("Failed to save plan");
+    }
+  };
+
+  const handleDeletePlan = async (id) => {
+    if(!window.confirm("Delete this pricing plan? Vendors on this plan might be affected.")) return;
+    try {
+      await api.delete(`/admin/subscription-plans/${id}/`);
+      setSubscriptionPlans(subscriptionPlans.filter(p => p.id !== id));
+      toast.success("Plan deleted");
+    } catch {
+      toast.error("Failed to delete plan");
+    }
+  };
+
+  const handleEditPlan = (plan) => {
+    setEditingPlan(plan);
+    setNewPlan({
+      name: plan.name,
+      price: plan.price,
+      product_limit: plan.product_limit,
+      duration_days: plan.duration_days,
+      features: plan.features || ''
+    });
+  };
+
   if (loading) return (
     <div className="fixed inset-0 z-[60] bg-[#FAF8F5] flex items-center justify-center text-[#5A3825] font-sans">
       <div className="flex flex-col items-center gap-4">
@@ -387,18 +434,28 @@ export const AdminDashboard = () => {
     </div>
   );
 
+  // --- SAFE FILTERING ---
+  // Using '!== false' ensures that if the backend hasn't updated the old records yet (undefined), they default to TRUE.
+  
+  const pendingVendorsList = allVendors.filter(v => !v.is_approved && v.is_active !== false); 
+  const directoryVendorsList = allVendors.filter(v => v.is_approved || v.is_active === false);
+
+  const pendingProductsList = allProducts.filter(p => p.status === 'pending');
+  const directoryProductsList = allProducts.filter(p => p.status !== 'pending');
+
   const pendingCatReqs   = categoryRequests.filter(r => r.status === 'pending');
   const pendingOfferReqs = offers.filter(o => o.status === 'pending');
 
   const navItems = [
-    { key: 'overview',    label: 'Overview',          Icon: Icons.Overview,    badge: null },
-    { key: 'vendors',     label: 'Pending Vendors',   Icon: Icons.Vendors,     badge: pendingVendors.length },
-    { key: 'products',    label: 'Pending Products',  Icon: Icons.Products,    badge: pendingProducts.length },
-    { key: 'users',       label: 'Users Directory',   Icon: Icons.Users,       badge: null },
-    { key: 'categories',  label: 'Categories',        Icon: Icons.Categories,  badge: pendingCatReqs.length },
-    { key: 'offers',      label: 'Offers',            Icon: Icons.Offers,      badge: pendingOfferReqs.length },
-    { key: 'banners',     label: 'Promo Banners',     Icon: Icons.Banners,     badge: null },
-    { key: 'orders',      label: 'Global Orders',     Icon: Icons.Orders,      badge: null },
+    { key: 'overview',       label: 'Overview',          Icon: Icons.Overview,    badge: null },
+    { key: 'vendors',        label: 'Manage Vendors',    Icon: Icons.Vendors,     badge: pendingVendorsList.length }, 
+    { key: 'products',       label: 'Manage Products',   Icon: Icons.Products,    badge: pendingProductsList.length }, 
+    { key: 'users',          label: 'Users Directory',   Icon: Icons.Users,       badge: null },
+    { key: 'subscriptions',  label: 'Manage Subs',       Icon: Icons.Subscriptions, badge: null },
+    { key: 'categories',     label: 'Categories',        Icon: Icons.Categories,  badge: pendingCatReqs.length },
+    { key: 'offers',         label: 'Offers',            Icon: Icons.Offers,      badge: pendingOfferReqs.length },
+    { key: 'banners',        label: 'Promo Banners',     Icon: Icons.Banners,     badge: null },
+    { key: 'orders',         label: 'Global Orders',     Icon: Icons.Orders,      badge: null },
   ];
 
   const RangeSelect = ({ value, onChange, options }) => (
@@ -421,7 +478,7 @@ export const AdminDashboard = () => {
         <div className="h-16 flex items-center px-5 border-b border-gray-100 shrink-0 cursor-pointer gap-3" onClick={() => navigate('/')}>
           <img src={dukanLogo} alt="Logo" />
         </div>
-        <nav className="flex-1 overflow-y-auto py-5 px-3 space-y-1">
+        <nav className="flex-1 overflow-y-auto py-5 px-3 space-y-1 custom-scrollbar">
           <p className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">Admin Controls</p>
           {navItems.map(({ key, label, Icon, badge }) => {
             const isActive = activeTab === key;
@@ -542,19 +599,15 @@ export const AdminDashboard = () => {
 
               {/* ── Sales Overview + Revenue Breakdown ── */}
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-
-                {/* Sales Chart */}
                 <div className="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-sm font-bold text-[#2C1E16]">Sales Overview</h2>
                     <RangeSelect value={salesRange} onChange={setSalesRange} options={['Last 7 Days','Last 14 Days','This Month']} />
                   </div>
-                  {/* Legend */}
                   <div className="flex items-center gap-5 mb-3">
                     <div className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-[#2C1E16] inline-block rounded"></span><span className="text-xs text-gray-500">Orders</span></div>
                     <div className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-[#A87C51] inline-block rounded" style={{borderTop:'2px dashed #A87C51', background:'none'}}></span><span className="text-xs text-gray-500">Revenue (₹)</span></div>
                   </div>
-                  {/* Y-axis labels */}
                   <div className="flex gap-3">
                     <div className="flex flex-col justify-between text-[10px] text-gray-400 text-right w-6 py-1">
                       <span>500</span><span>400</span><span>300</span><span>200</span><span>0</span>
@@ -566,13 +619,11 @@ export const AdminDashboard = () => {
                       <span>25k</span><span>15k</span><span>10k</span><span>5k</span><span>0k</span>
                     </div>
                   </div>
-                  {/* X labels */}
                   <div className="flex justify-between mt-2 pl-9 pr-8">
                     {SALES_DATA.map(d => <span key={d.day} className="text-[10px] text-gray-400">{d.day.replace('May ', '')}</span>)}
                   </div>
                 </div>
 
-                {/* Revenue Breakdown */}
                 <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-sm font-bold text-[#2C1E16]">Revenue Breakdown</h2>
@@ -606,8 +657,6 @@ export const AdminDashboard = () => {
 
               {/* ── Top Products + Top Vendors ── */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-                {/* Top Products */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
                     <h2 className="text-sm font-bold text-[#2C1E16]">Top Performing Products</h2>
@@ -639,7 +688,6 @@ export const AdminDashboard = () => {
                   </div>
                 </div>
 
-                {/* Top Vendors */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
                     <h2 className="text-sm font-bold text-[#2C1E16]">Top Performing Vendors</h2>
@@ -685,99 +733,21 @@ export const AdminDashboard = () => {
                   ))}
                 </div>
               </div>
-
-              {/* ── Orders Overview + Status + Traffic ── */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-                {/* Orders Bar Chart */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-sm font-bold text-[#2C1E16]">Orders Overview</h2>
-                    <RangeSelect value={ordersRange} onChange={setOrdersRange} options={['This Month','Last Month','This Year']} />
-                  </div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#A87C51]"></div>
-                    <span className="text-xs text-gray-500">Orders</span>
-                  </div>
-                  {/* Y axis */}
-                  <div className="flex gap-2 items-end">
-                    <div className="flex flex-col justify-between text-[10px] text-gray-400 text-right shrink-0 pb-1" style={{height:'100px'}}>
-                      <span>1k</span><span>800</span><span>600</span><span>400</span><span>200</span><span>0</span>
-                    </div>
-                    <div className="flex-1" style={{height:'100px'}}>
-                      <BarChart data={ORDERS_BAR} color="#A87C51" height={100} />
-                    </div>
-                  </div>
-                  <div className="flex justify-between mt-1 pl-6">
-                    {['May 6','May 11','May 16','May 21','May 26','May 31'].map(l => (
-                      <span key={l} className="text-[9px] text-gray-400">{l}</span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Orders by Status Donut */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                  <h2 className="text-sm font-bold text-[#2C1E16] mb-4">Orders by Status</h2>
-                  <div className="flex flex-col items-center">
-                    <div className="relative inline-flex items-center justify-center mb-4">
-                      <DonutChart segments={ORDER_STATUS} size={130} thickness={24} />
-                      <div className="absolute text-center pointer-events-none">
-                        <p className="text-[10px] text-gray-400">Total Orders</p>
-                        <p className="text-base font-black text-[#2C1E16]">2,458</p>
-                      </div>
-                    </div>
-                    <div className="w-full space-y-2">
-                      {ORDER_STATUS.map((s, i) => (
-                        <div key={i} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: s.color }} />
-                            <span className="text-xs text-gray-500">{s.label}</span>
-                          </div>
-                          <span className="text-xs font-bold text-[#2C1E16]">{s.count} <span className="text-gray-400 font-normal">({s.pct}%)</span></span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Traffic Overview */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-sm font-bold text-[#2C1E16]">Traffic Overview</h2>
-                    <RangeSelect value={trafficRange} onChange={setTrafficRange} options={['This Month','Last Month','This Year']} />
-                  </div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#A87C51]"></div>
-                    <span className="text-xs text-gray-500">Visitors</span>
-                  </div>
-                  <div className="flex gap-2 items-end">
-                    <div className="flex flex-col justify-between text-[10px] text-gray-400 text-right shrink-0 pb-1" style={{height:'100px'}}>
-                      <span>20k</span><span>15k</span><span>10k</span><span>5k</span><span>0</span>
-                    </div>
-                    <div className="flex-1" style={{height:'100px'}}>
-                      <AreaChart data={TRAFFIC_DATA} color="#A87C51" height={100} />
-                    </div>
-                  </div>
-                  <div className="flex justify-between mt-1 pl-6">
-                    {['May 1','May 11','May 21','May 31'].map(l => (
-                      <span key={l} className="text-[9px] text-gray-400">{l}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
             </div>
           )}
 
-          {/* ── VENDORS TAB ── */}
+          {/* ── VENDORS TAB (GROUPS BOTH REQUESTS & DIRECTORY) ── */}
           {activeTab === 'vendors' && (
-            <div className="animate-fade-in bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-100 bg-white">
-                <h2 className="text-lg font-bold text-[#2C1E16]">Vendor Applications</h2>
-              </div>
-              {pendingVendors.length === 0
-                ? <div className="p-16 text-center text-gray-500 font-medium">No pending vendor applications.</div>
-                : (
+            <div className="animate-fade-in flex flex-col gap-8">
+              
+              {/* Pending Vendors Section */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-6 py-5 border-b border-gray-100 bg-white">
+                  <h2 className="text-lg font-bold text-[#2C1E16]">Pending Vendor Applications</h2>
+                </div>
+                {pendingVendorsList.length === 0 ? (
+                  <div className="p-10 text-center text-gray-500 font-medium bg-[#FAF8F5]/30">No pending vendor applications.</div>
+                ) : (
                   <div className="overflow-x-auto w-full">
                     <table className="w-full text-left whitespace-nowrap">
                       <thead className="bg-[#FAF8F5] text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
@@ -788,7 +758,7 @@ export const AdminDashboard = () => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
-                        {pendingVendors.map(v => (
+                        {pendingVendorsList.map(v => (
                           <tr key={v.id} className="hover:bg-[#FAF8F5] transition-colors duration-150">
                             <td className="px-6 py-4"><p className="font-bold text-[#2C1E16] text-base">{v.shop_name}</p><p className="text-sm text-gray-500 line-clamp-1 mt-0.5">{v.address}</p></td>
                             <td className="px-6 py-4"><p className="text-sm text-[#2C1E16] font-medium">{v.email}</p><p className="text-sm text-gray-500 mt-1">{v.phone}</p></td>
@@ -802,37 +772,168 @@ export const AdminDashboard = () => {
                     </table>
                   </div>
                 )}
+              </div>
+
+              {/* Approved/Suspended Vendors Directory Section */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-6 py-5 border-b border-gray-100 bg-white">
+                  <h2 className="text-lg font-bold text-[#2C1E16]">Vendors Directory</h2>
+                </div>
+                {directoryVendorsList.length === 0 ? (
+                  <div className="p-10 text-center text-gray-500 font-medium bg-[#FAF8F5]/30">No vendors found in directory.</div>
+                ) : (
+                  <div className="overflow-x-auto w-full">
+                    <table className="w-full text-left whitespace-nowrap">
+                      <thead className="bg-[#FAF8F5] text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+                        <tr>
+                          <th className="px-6 py-4 font-bold">Shop Details</th>
+                          <th className="px-6 py-4 font-bold">Contact Info</th>
+                          <th className="px-6 py-4 font-bold text-center">Status</th>
+                          <th className="px-6 py-4 font-bold text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {directoryVendorsList.map(v => {
+                          const isActive = v.is_active !== false; // FAILSAFE: Treat undefined as active
+                          return (
+                          <tr key={v.id} className="hover:bg-[#FAF8F5] transition-colors duration-150">
+                            <td className="px-6 py-4"><p className="font-bold text-[#2C1E16] text-base">{v.shop_name}</p><p className="text-sm text-gray-500 line-clamp-1 mt-0.5">{v.address}</p></td>
+                            <td className="px-6 py-4"><p className="text-sm text-[#2C1E16] font-medium">{v.email}</p><p className="text-sm text-gray-500 mt-1">{v.phone}</p></td>
+                            <td className="px-6 py-4 text-center">
+                              {isActive ? (
+                                <span className="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-wider rounded-md">Approved</span>
+                              ) : (
+                                <span className="px-3 py-1 bg-red-100 text-red-700 text-[10px] font-black uppercase tracking-wider rounded-md">Suspended</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 flex justify-end gap-3 items-center h-full">
+                              {isActive ? (
+                                <button onClick={() => handleAction('vendor', v.id, 'reject')} className="px-5 py-2 text-xs font-bold uppercase text-red-600 border border-red-200 hover:bg-red-50 rounded-lg transition-colors">Suspend</button>
+                              ) : (
+                                <button onClick={() => handleAction('vendor', v.id, 'approve')} className="px-5 py-2 text-xs font-bold uppercase text-gray-600 border border-gray-200 hover:bg-gray-50 rounded-lg transition-colors">Restore</button>
+                              )}
+                            </td>
+                          </tr>
+                        )})}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
-          {/* ── PRODUCTS TAB ── */}
+          {/* ── PRODUCTS TAB (GROUPS BOTH REQUESTS & DIRECTORY) ── */}
           {activeTab === 'products' && (
-            <div className="animate-fade-in bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-100 bg-white">
-                <h2 className="text-lg font-bold text-[#2C1E16]">Product Review Queue</h2>
-              </div>
-              {pendingProducts.length === 0
-                ? <div className="p-16 text-center text-gray-500 font-medium">No products awaiting review.</div>
-                : (
-                  <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 bg-[#FAF8F5]/30">
-                    {pendingProducts.map(p => (
-                      <div key={p.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden flex flex-col pt-4 hover:border-[#A87C51]/40 transition-colors">
-                        <div className="relative aspect-square bg-[#FAF8F5] p-2 mx-4 rounded-xl flex items-center justify-center">
-                          <img src={p.image} className="w-full h-full object-contain mix-blend-multiply" alt={p.name} />
-                        </div>
-                        <div className="p-5 flex-1 flex flex-col">
-                          <p className="text-[10px] font-black text-[#A87C51] uppercase tracking-widest mb-1 truncate">{p.vendor_shop}</p>
-                          <h3 className="font-bold text-[#2C1E16] text-lg truncate mb-1">{p.name}</h3>
-                          <p className="text-[#2C1E16] font-bold mb-5">₹{parseFloat(p.price).toLocaleString()}</p>
-                          <div className="mt-auto grid grid-cols-2 gap-3">
-                            <button onClick={() => handleAction('product', p.id, 'reject')} className="w-full py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Reject</button>
-                            <button onClick={() => handleAction('product', p.id, 'approve')} className="w-full py-2.5 text-xs font-bold text-white bg-[#5A3825] hover:bg-[#3E2723] rounded-lg transition-colors shadow-md">Approve</button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+            <div className="animate-fade-in flex flex-col gap-8">
+              
+              {/* Pending Products Section */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-6 py-5 border-b border-gray-100 bg-white">
+                  <h2 className="text-lg font-bold text-[#2C1E16]">Pending Product Reviews</h2>
+                </div>
+                {pendingProductsList.length === 0 ? (
+                  <div className="p-10 text-center text-gray-500 font-medium bg-[#FAF8F5]/30">No products awaiting review.</div>
+                ) : (
+                  <div className="overflow-x-auto w-full">
+                    <table className="w-full text-left whitespace-nowrap">
+                      <thead className="bg-[#FAF8F5] text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+                        <tr>
+                          <th className="px-6 py-4 font-bold">Product</th>
+                          <th className="px-6 py-4 font-bold">Vendor</th>
+                          <th className="px-6 py-4 font-bold">Price</th>
+                          <th className="px-6 py-4 font-bold text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {pendingProductsList.map(p => (
+                          <tr key={p.id} className="hover:bg-[#FAF8F5] transition-colors duration-150">
+                            <td className="px-6 py-4 flex items-center gap-4">
+                               <img src={p.image} className="w-12 h-12 object-contain bg-[#FAF8F5] rounded-lg border border-gray-100" alt={p.name} />
+                               <span className="font-bold text-[#2C1E16]">{p.name}</span>
+                            </td>
+                            <td className="px-6 py-4">
+                               <span className="text-xs font-bold text-[#A87C51] uppercase tracking-widest bg-[#A87C51]/10 px-2 py-1 rounded-md">{p.vendor_shop}</span>
+                            </td>
+                            <td className="px-6 py-4 font-bold text-[#2C1E16]">
+                               ₹{parseFloat(p.price).toLocaleString()}
+                            </td>
+                            <td className="px-6 py-4">
+                               <div className="flex justify-end gap-3">
+                                <button onClick={() => handleAction('product', p.id, 'reject')} className="px-5 py-2 text-xs font-bold uppercase text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Reject</button>
+                                <button onClick={() => handleAction('product', p.id, 'approve')} className="px-5 py-2 text-xs font-bold uppercase text-white bg-[#5A3825] hover:bg-[#3E2723] rounded-lg transition-colors shadow-md">Approve</button>
+                               </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
+              </div>
+
+              {/* Products Directory Section */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-6 py-5 border-b border-gray-100 bg-white">
+                  <h2 className="text-lg font-bold text-[#2C1E16]">Products Directory</h2>
+                </div>
+                {directoryProductsList.length === 0 ? (
+                  <div className="p-10 text-center text-gray-500 font-medium bg-[#FAF8F5]/30">No products in directory.</div>
+                ) : (
+                  <div className="overflow-x-auto w-full">
+                    <table className="w-full text-left whitespace-nowrap">
+                      <thead className="bg-[#FAF8F5] text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+                        <tr>
+                          <th className="px-6 py-4 font-bold">Product</th>
+                          <th className="px-6 py-4 font-bold">Vendor</th>
+                          <th className="px-6 py-4 font-bold">Price</th>
+                          <th className="px-6 py-4 font-bold text-center">Status</th>
+                          <th className="px-6 py-4 font-bold text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {directoryProductsList.map(p => {
+                          const pIsActive = p.is_active !== false; // FAILSAFE: Treat undefined as active
+                          return (
+                          <tr key={p.id} className="hover:bg-[#FAF8F5] transition-colors duration-150">
+                            <td className="px-6 py-4 flex items-center gap-4">
+                               <img src={p.image} className="w-12 h-12 object-contain bg-[#FAF8F5] rounded-lg border border-gray-100" alt={p.name} />
+                               <div>
+                                 <span className="font-bold text-[#2C1E16] block">{p.name}</span>
+                                 <span className="text-xs text-gray-500">₹{parseFloat(p.price).toLocaleString()}</span>
+                               </div>
+                            </td>
+                            <td className="px-6 py-4">
+                               <span className="text-xs font-bold text-[#A87C51] uppercase tracking-widest bg-[#A87C51]/10 px-2 py-1 rounded-md">{p.vendor_shop}</span>
+                            </td>
+                            <td className="px-6 py-4 font-bold text-[#2C1E16]">
+                               ₹{parseFloat(p.price).toLocaleString()}
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                               {pIsActive ? (
+                                 <span className="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-wider rounded-md">Active</span>
+                               ) : (
+                                 <span className="px-3 py-1 bg-red-100 text-red-700 text-[10px] font-black uppercase tracking-wider rounded-md">Archived</span>
+                               )}
+                            </td>
+                            <td className="px-6 py-4">
+                               <div className="flex justify-end gap-3">
+                                <button 
+                                  onClick={() => handleAction('product', p.id, pIsActive ? 'reject' : 'approve')} 
+                                  className={`px-5 py-2 text-xs font-bold uppercase rounded-lg transition-colors border ${pIsActive ? 'text-red-600 border-red-200 hover:bg-red-50' : 'text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                                >
+                                  {pIsActive ? 'Archive' : 'Restore'}
+                                </button>
+                               </div>
+                            </td>
+                          </tr>
+                        )})}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
             </div>
           )}
 
@@ -872,6 +973,101 @@ export const AdminDashboard = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+          
+          {/* ── SUBSCRIPTIONS TAB ── */}
+          {activeTab === 'subscriptions' && (
+            <div className="animate-fade-in flex flex-col gap-8">
+              
+              {/* Create / Edit Plan Form */}
+              <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
+                <h2 className="text-xl font-bold text-[#2C1E16] mb-6">{editingPlan ? "Edit Subscription Plan" : "Create Subscription Plan"}</h2>
+                <form onSubmit={handleSavePlan} className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Plan Name</label>
+                    <input type="text" required value={newPlan.name} onChange={e => setNewPlan({...newPlan, name: e.target.value})} className="w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors" placeholder="e.g. Pro Tier"/>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Price (₹)</label>
+                    <input type="number" required value={newPlan.price} onChange={e => setNewPlan({...newPlan, price: e.target.value})} className="w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors" placeholder="e.g. 999"/>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Product Limit</label>
+                    <input type="number" required value={newPlan.product_limit} onChange={e => setNewPlan({...newPlan, product_limit: e.target.value})} className="w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors" placeholder="e.g. 100"/>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Features (Comma Separated)</label>
+                    <input type="text" value={newPlan.features} onChange={e => setNewPlan({...newPlan, features: e.target.value})} className="w-full p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-xl outline-none focus:border-[#A87C51] transition-colors" placeholder="Priority support, Analytics"/>
+                  </div>
+                  <div className="md:col-span-2 flex gap-3 mt-2">
+                    <button type="submit" className="flex-1 bg-[#5A3825] text-white py-3.5 rounded-xl font-bold uppercase tracking-widest hover:bg-[#3E2723] shadow-md transition-colors">
+                      {editingPlan ? "Save Changes" : "Create Plan"}
+                    </button>
+                    {editingPlan && (
+                      <button type="button" onClick={() => {setEditingPlan(null); setNewPlan({ name: '', price: '', product_limit: '', duration_days: 30, features: '' });}} className="px-6 py-3.5 border border-gray-200 text-gray-600 rounded-xl font-bold uppercase tracking-widest hover:bg-gray-50 transition-colors">
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </div>
+
+              {/* Live Plans Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                 {subscriptionPlans.map(plan => (
+                    <div key={plan.id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all relative">
+                      <h4 className="text-xl font-bold text-[#2C1E16]">{plan.name}</h4>
+                      <p className="text-3xl font-bold text-[#A87C51] mt-2">₹{parseFloat(plan.price).toLocaleString()}<span className="text-sm text-gray-500 font-normal">/mo</span></p>
+                      <ul className="mt-4 space-y-2 text-sm text-gray-600 mb-6 border-t border-gray-50 pt-4">
+                         <li><strong>Limit:</strong> {plan.product_limit} Products</li>
+                         {plan.features && plan.features.split(',').map((f, idx) => <li key={idx}>• {f.trim()}</li>)}
+                      </ul>
+                      <div className="flex gap-2 absolute top-4 right-4">
+                         <button onClick={() => handleEditPlan(plan)} className="text-[#A87C51] hover:text-[#5A3825] text-xs font-bold uppercase bg-[#FAF8F5] px-3 py-1.5 rounded-md border border-[#A87C51]/20">Edit</button>
+                         <button onClick={() => handleDeletePlan(plan.id)} className="text-red-500 hover:text-red-700 text-xs font-bold uppercase bg-red-50 px-3 py-1.5 rounded-md border border-red-100">Delete</button>
+                      </div>
+                    </div>
+                 ))}
+              </div>
+
+              {/* Vendor Subscriptions Data Table */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-4">
+                <div className="px-6 py-5 border-b border-gray-100 bg-white">
+                  <h2 className="text-lg font-bold text-[#2C1E16]">Vendor Subscriptions Matrix</h2>
+                </div>
+                <div className="overflow-x-auto w-full">
+                  <table className="w-full text-left whitespace-nowrap">
+                    <thead className="bg-[#FAF8F5] text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+                      <tr>
+                        <th className="px-6 py-4 font-bold">Vendor ID</th>
+                        <th className="px-6 py-4 font-bold">Current Plan</th>
+                        <th className="px-6 py-4 font-bold">Start Date</th>
+                        <th className="px-6 py-4 font-bold">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {vendorSubscriptions.length === 0 ? (
+                         <tr><td colSpan="4" className="text-center py-10 text-gray-500 bg-[#FAF8F5]/30">No active subscriptions found.</td></tr>
+                      ) : (
+                        vendorSubscriptions.map(sub => (
+                          <tr key={sub.id} className="hover:bg-[#FAF8F5] transition-colors duration-150">
+                            <td className="px-6 py-4 font-bold text-[#2C1E16]">Vendor #{sub.vendor}</td>
+                            <td className="px-6 py-4 font-bold text-[#A87C51]">{sub.plan_details?.name || 'Unknown'}</td>
+                            <td className="px-6 py-4 text-gray-500">{new Date(sub.start_date).toLocaleDateString()}</td>
+                            <td className="px-6 py-4">
+                              {sub.is_active ? 
+                                <span className="bg-green-50 text-green-600 border border-green-100 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">Active</span> : 
+                                <span className="bg-red-50 text-red-600 border border-red-100 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">Expired</span>
+                              }
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -923,7 +1119,7 @@ export const AdminDashboard = () => {
                     </div>
                     <div className="divide-y divide-gray-50 flex-1 overflow-y-auto">
                       {categories.length === 0
-                        ? <p className="p-10 text-center text-gray-500">No categories active.</p>
+                        ? <p className="p-10 text-center text-gray-500 bg-[#FAF8F5]/30">No categories active.</p>
                         : categories.map(cat => (
                           <div key={cat.id} className="p-4 px-6 flex justify-between items-center hover:bg-[#FAF8F5] transition-colors">
                             <div className="flex items-center gap-5">
@@ -999,7 +1195,7 @@ export const AdminDashboard = () => {
                     </div>
                     <div className="divide-y divide-gray-50 flex-1 overflow-y-auto">
                       {offers.filter(o => o.status === 'approved').length === 0
-                        ? <p className="p-10 text-center text-gray-500">No live offers broadcasted.</p>
+                        ? <p className="p-10 text-center text-gray-500 bg-[#FAF8F5]/30">No live offers broadcasted.</p>
                         : offers.filter(o => o.status === 'approved').map(offer => (
                           <div key={offer.id} className="p-4 px-6 flex justify-between items-center hover:bg-[#FAF8F5] transition-colors">
                             <div className="flex items-center gap-5">
@@ -1078,7 +1274,7 @@ export const AdminDashboard = () => {
                 <h2 className="text-lg font-bold text-[#2C1E16]">Global Ledger</h2>
               </div>
               {orders.length === 0
-                ? <div className="p-16 text-center text-gray-500 font-medium">No orders recorded in ledger.</div>
+                ? <div className="p-16 text-center text-gray-500 font-medium bg-[#FAF8F5]/30">No orders recorded in ledger.</div>
                 : (
                   <div className="overflow-x-auto w-full">
                     <table className="w-full text-left whitespace-nowrap">
