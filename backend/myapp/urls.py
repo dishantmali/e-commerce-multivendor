@@ -1,8 +1,8 @@
-from django.urls import path
+from django.urls import path,include
 from rest_framework_simplejwt.views import (
     TokenObtainPairView, TokenRefreshView
 )
-
+from rest_framework.routers import DefaultRouter
 from .views import (
     # Auth
     RegisterView, MeView,
@@ -34,9 +34,15 @@ from .views import (
     # Reviews
     ProductReviewListCreateView, PlatformReviewListCreateView, VendorReviewListView ,
     SubscriptionPlanListView, CurrentSubscriptionView,
-    CreateSubscriptionOrderView, VerifySubscriptionPaymentView
+    CreateSubscriptionOrderView, VerifySubscriptionPaymentView,
+    UserProfileView,
+    AddressViewSet, 
+    ChangePasswordView, 
+    RequestContactOTPView, 
+    VerifyContactOTPView
 )
-
+router = DefaultRouter()
+router.register(r'addresses', AddressViewSet, basename='address')
 urlpatterns = [
 
     # ---------------- AUTH ---------------- #
@@ -181,4 +187,13 @@ urlpatterns = [
 
     path('admin/banners/', AdminBannerView.as_view()),
     path('admin/banners/<int:pk>/', AdminBannerView.as_view()),
+    
+    # Address URLs
+    path('', include(router.urls)),
+    path('profile/', UserProfileView.as_view(), name='user-profile'),
+    
+    # Security URLs
+    path('change-password/', ChangePasswordView.as_view(), name='change-password'),
+    path('request-contact-otp/', RequestContactOTPView.as_view(), name='request-otp'),
+    path('verify-contact-otp/', VerifyContactOTPView.as_view(), name='verify-otp'),
 ]

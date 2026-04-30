@@ -17,11 +17,13 @@ import { AdminDashboard } from './pages/AdminDashboard'
 import { Toaster } from 'react-hot-toast'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { WishlistPage } from './pages/WishlistPage';
+import ScrollToTop from './components/ScrollToTop';
 
 function App() {
   return (
     <Router>
       <AuthProvider>
+        <ScrollToTop />
         <Toaster position="top-right" toastOptions={{ duration: 3000, className: 'font-sans font-medium' }} />
         <div className="flex flex-col min-h-screen">
           <Navbar />

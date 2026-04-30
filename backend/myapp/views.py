@@ -1,17 +1,22 @@
 from re import search
 from django.core.cache import cache
 import razorpay
+from twilio.rest import Client
+from django.core.mail import send_mail
 from datetime import date, timedelta
 from django.conf import settings
 from django.utils import timezone
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status , viewsets
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from django.db import transaction , models
+from django.contrib.auth import update_session_auth_hash
+import requests # <--- ADDED: Needed for Fast2SMS
 from .models import (
-    CustomUser, Product, Order, VendorProfile, OrderItem,
+    CustomUser, Product, Order, VendorProfile, OrderItem, Address, UserProfile ,
     Category, Cart, CartItem, CategoryRequest, Offer , Wishlist,
     ProductReview, PlatformReview , Banner , SubscriptionPlan, VendorSubscription
 )
@@ -19,10 +24,10 @@ from .serializers import (
     RegisterSerializer, CustomUserSerializer, ProductSerializer,
     OrderSerializer,OrderItemSerializer, VendorOrderUpdateSerializer, CategorySerializer,
     CartSerializer, CategoryRequestSerializer, OfferSerializer, WishlistSerializer ,
-    ProductReviewSerializer, PlatformReviewSerializer , BannerSerializer ,
-    SubscriptionPlanSerializer, VendorSubscriptionSerializer
+    ProductReviewSerializer, PlatformReviewSerializer , BannerSerializer , UserSerializer ,
+    SubscriptionPlanSerializer, VendorSubscriptionSerializer , AddressSerializer
 )
-
+import random
 # Initialize Razorpay client
 razorpay_client = razorpay.Client(
     auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
@@ -1210,3 +1215,148 @@ class VerifySubscriptionPaymentView(APIView):
         )
 
         return Response({"message": "Subscription activated successfully!"})
+    
+# 1. Address ViewSet
+class AddressViewSet(viewsets.ModelViewSet):
+    serializer_class = AddressSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Only return addresses belonging to the logged-in user
+        return Address.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        # Attach the logged-in user to the address when creating
+        serializer.save(user=self.request.user)
+
+# 2. Change Password View
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+
+        if not user.check_password(current_password):
+            return Response({"error": "Wrong current password"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+        # Keep the user logged in after password change
+        update_session_auth_hash(request, user) 
+        return Response({"message": "Password updated successfully"})
+
+# 3. Request OTP View
+class RequestContactOTPView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        contact_type = request.data.get('type') # Will be 'email' or 'phone'
+        new_value = request.data.get('new_value')
+        
+        if not new_value:
+            return Response({"error": f"{contact_type} is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 1. Generate a universal 6-digit OTP
+        otp = str(random.randint(100000, 999999))
+        
+        # 2. Save it in the cache for 5 minutes
+        cache_key = f"otp_{request.user.id}_{contact_type}"
+        cache.set(cache_key, {'otp': otp, 'new_value': new_value}, timeout=300)
+
+        # --------------------------------------------------
+        # PATH A: The user requested a Phone OTP
+        # --------------------------------------------------
+        if contact_type == 'phone':
+            formatted_number = new_value.strip()
+            if not formatted_number.startswith('+'):
+                formatted_number = '+91' + formatted_number # Format for India
+
+            try:
+                # Use Twilio to send the SMS
+                client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+                client.messages.create(
+                    body=f"Your Gujju Ni Dukan verification code is: {otp}",
+                    from_=settings.TWILIO_PHONE_NUMBER,
+                    to=formatted_number
+                )
+                print(f"SMS sent successfully to {formatted_number}")
+                
+            except Exception as e:
+                print("TWILIO ERROR:", str(e))
+                return Response({"error": f"Failed to send SMS: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # --------------------------------------------------
+        # PATH B: The user requested an Email OTP
+        # --------------------------------------------------
+        elif contact_type == 'email':
+            try:
+                # Use Django's built-in SMTP to send the Email
+                send_mail(
+                    subject="Your Gujju Ni Dukan Verification Code",
+                    message=f"Hello!\n\nYour email verification code is: {otp}\n\nThis code will expire in 5 minutes.",
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[new_value], 
+                    fail_silently=False,
+                )
+                print(f"Email sent successfully to {new_value}")
+                
+            except Exception as e:
+                print("SMTP EMAIL ERROR:", str(e))
+                return Response({"error": "Failed to send email. Check your SMTP settings."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # 3. If everything succeeded, tell the frontend!
+        return Response({"message": f"OTP sent successfully to {new_value}"})
+            
+# 4. Verify OTP View
+class VerifyContactOTPView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        contact_type = request.data.get('type')
+        provided_otp = request.data.get('otp')
+        
+        cache_key = f"otp_{request.user.id}_{contact_type}"
+        cached_data = cache.get(cache_key)
+
+        if not cached_data or cached_data['otp'] != provided_otp:
+            return Response({"error": "Invalid or expired OTP"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # OTP is valid, update the user
+        user = request.user
+        if contact_type == 'email':
+            user.email = cached_data['new_value']
+            user.save()
+        elif contact_type == 'phone':
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            profile.phone = cached_data['new_value']
+            profile.save()
+
+        # Clear the cache
+        cache.delete(cache_key)
+
+        return Response({"message": f"{contact_type} updated successfully"})
+    
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        user = self.request.user
+        try:
+            # Attempt to safely get or create the profile
+            UserProfile.objects.get_or_create(user=user)
+            
+        except UserProfile.MultipleObjectsReturned:
+            # FIX: If duplicates exist, keep the first one and delete the rest
+            profiles = UserProfile.objects.filter(user=user)
+            for duplicate in profiles[1:]:
+                duplicate.delete()
+                
+        except Exception as e:
+            # If it's a migration error, print it clearly in the Django terminal
+            print(f"CRITICAL DATABASE ERROR: {str(e)}")
+            print("Did you forget to run 'python manage.py makemigrations' and 'migrate'?")
+            
+        return user

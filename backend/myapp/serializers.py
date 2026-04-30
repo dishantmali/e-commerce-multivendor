@@ -1,12 +1,13 @@
 import html
 from rest_framework import serializers
 from django.db import models
+from django.contrib.auth import get_user_model
 from .models import (
-    CustomUser, VendorProfile, Product, Order, OrderItem,
-    Category, Cart, CartItem, CategoryRequest, Offer , Wishlist ,
+    CustomUser, UserProfile , VendorProfile, Product, Order, OrderItem,
+    Category, Cart, CartItem, CategoryRequest, Offer , Wishlist , Address,
     ProductReview, PlatformReview , Banner , SubscriptionPlan, VendorSubscription
 )
-
+User = get_user_model()
 # ---------------- BASE SANITIZER (The Armor) ----------------
 class SanitizedSerializer(serializers.ModelSerializer):
     """
@@ -27,6 +28,47 @@ class CustomUserSerializer(SanitizedSerializer):
         model = CustomUser
         fields = ['id', 'name', 'email', 'role']
 
+# 1. Address Serializer
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ['id', 'street', 'city', 'state', 'pincode', 'is_default']
+
+# 2. Profile Serializer (Now ONLY contains 'phone')
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['phone']
+
+# 3. Main User Serializer
+class UserSerializer(serializers.ModelSerializer):
+    # required=False prevents errors if the user doesn't have a profile yet
+    profile = UserProfileSerializer(required=False) 
+    addresses = AddressSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'name', 'role', 'profile', 'addresses'] 
+        read_only_fields = ['email', 'role'] # Protect core login credentials
+
+    def update(self, instance, validated_data):
+        # 1. Extract profile data safely
+        profile_data = validated_data.pop('profile', {})
+
+        # 2. Update CustomUser fields
+        instance.name = validated_data.get('name', instance.name)
+        instance.save()
+
+        # 3. Safely get or create the profile to prevent RelatedObjectDoesNotExist crashes
+        profile, created = UserProfile.objects.get_or_create(user=instance)
+
+        # 4. Update Profile fields
+        if 'phone' in profile_data:
+            profile.phone = profile_data['phone']
+        
+        profile.save()
+
+        return instance
 
 # ---------------- REGISTER ----------------
 class RegisterSerializer(SanitizedSerializer):
@@ -78,6 +120,10 @@ class RegisterSerializer(SanitizedSerializer):
             role=role,
             username=validated_data['email']
         )
+
+        # --- FIX APPLIED: Save phone number to UserProfile upon registration ---
+        phone_number = validated_data.get('phone', '')
+        UserProfile.objects.create(user=user, phone=phone_number)
 
         if role == 'vendor':
             VendorProfile.objects.create(
