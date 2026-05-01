@@ -1,337 +1,53 @@
 /* src/index.css */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-@theme {
-  --color-primary: #5A3825;
-  --color-primary-hover: #3E2723;
-  --color-secondary: #A87C51;
-  --color-dark: #2C1E16;
-  --color-bg-light: #FAF8F5;
-  --color-gray-text: #6b6b6b;
-  --font-sans: 'Outfit', sans-serif;
+:root {
+  --coffee-brown: #3D2616;
+  --coffee-light: #5A3825;
+  --pure-white:   #FFFFFF;
+  --text-dark:    #2C1E16;
+  --bg-main:      #F7F7F7;
 }
 
 body {
-  font-family: var(--font-sans);
-  color: var(--color-dark);
-  background-color: #ffffff;
+  background-color: var(--bg-main);
+  color: var(--text-dark);
+  font-family: 'Outfit', sans-serif;
+  margin: 0;
+  padding: 0;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ─── Smooth Image Hover ─────────────────────────────── */
-.product-image-container img {
-  transition: transform 0.5s ease;
-}
-.product-card:hover .product-image-container img {
-  transform: scale(1.05);
-}
-
-/* ─── Custom Nav Link Hover ──────────────────────────── */
-.nav-link {
-  position: relative;
-}
-.nav-link::after {
-  content: '';
-  position: absolute;
-  width: 0;
-  height: 2px;
-  bottom: -4px;
-  left: 0;
-  background-color: var(--color-primary);
-  transition: width 0.3s ease;
-}
-.nav-link:hover::after {
+/* ─── Marquee ─── */
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
   width: 100%;
 }
 
-/* ─── Keyframes ──────────────────────────────────────── */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to   { opacity: 1; transform: translateY(0); }
+.marquee-content {
+  display: inline-flex;
+  animation: scrollMarquee 30s linear infinite;
 }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(22px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeInLeft {
-  from { opacity: 0; transform: translateX(-20px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes fadeInRight {
-  from { opacity: 0; transform: translateX(22px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes heroReveal {
-  from { opacity: 0; transform: translateY(30px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes shimmer {
-  0%   { background-position: -400px 0; }
-  100% { background-position:  400px 0; }
-}
-
-/* ─── Infinite Scroll Marquee ────────────────────────── */
-@keyframes scroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-.animate-scroll {
-  animation: scroll 25s linear infinite;
-}
-.hover-pause:hover {
+.marquee-container:hover .marquee-content {
   animation-play-state: paused;
 }
 
-/* ─── Entrance animations ────────────────────────────── */
-.animate-fade-in {
-  animation: fadeIn 0.6s ease-out forwards;
+@keyframes scrollMarquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
-.animate-fade-in-up {
-  animation: fadeInUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+/* ─── Line clamp ─── */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.animate-fade-in-left {
-  animation: fadeInLeft 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.animate-fade-in-right {
-  animation: fadeInRight 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 0.08s;
-}
-
-.animate-hero {
-  animation: heroReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
-}
-
-/* ─── Stagger delay helpers ──────────────────────────── */
-.delay-1 { animation-delay: 0.05s; }
-.delay-2 { animation-delay: 0.12s; }
-.delay-3 { animation-delay: 0.19s; }
-.delay-4 { animation-delay: 0.26s; }
-.delay-5 { animation-delay: 0.33s; }
-.delay-6 { animation-delay: 0.40s; }
-
-/* ─── Stagger children (product grids, card lists) ───── */
-.stagger-children > *:nth-child(1)  { animation-delay: 0.04s; }
-.stagger-children > *:nth-child(2)  { animation-delay: 0.09s; }
-.stagger-children > *:nth-child(3)  { animation-delay: 0.14s; }
-.stagger-children > *:nth-child(4)  { animation-delay: 0.19s; }
-.stagger-children > *:nth-child(5)  { animation-delay: 0.24s; }
-.stagger-children > *:nth-child(6)  { animation-delay: 0.29s; }
-.stagger-children > *:nth-child(7)  { animation-delay: 0.34s; }
-.stagger-children > *:nth-child(8)  { animation-delay: 0.39s; }
-.stagger-children > *:nth-child(n+9){ animation-delay: 0.44s; }
-
-/* ─── Skeleton shimmer ───────────────────────────────── */
-.skeleton-shimmer {
-  background: linear-gradient(90deg, #f0ebe4 25%, #faf8f5 50%, #f0ebe4 75%);
-  background-size: 400px 100%;
-  animation: shimmer 1.4s infinite linear;
-}
-
-/* ═══════════════════════════════════════════════════════
-   SHARED INTERACTIVE ELEMENTS
-   ═══════════════════════════════════════════════════════ */
-
-/* ─── Product card (HomePage, CategoryPage) ──────────── */
-.product-card-anim {
-  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
-}
-.product-card-anim:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 40px rgba(90, 56, 37, 0.12);
-  border-color: #5A3825;
-}
-.product-card-anim .product-thumb {
-  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.product-card-anim:hover .product-thumb {
-  transform: scale(1.06);
-}
-
-/* ─── Add-to-cart slide-up button ────────────────────── */
-.add-cart-btn {
-  opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.25s ease, transform 0.25s ease, background 0.2s;
-}
-.product-card-anim:hover .add-cart-btn {
-  opacity: 1;
-  transform: translateY(0);
-}
-.add-cart-btn:hover {
-  background: #3E2723;
-}
-
-/* ─── Wishlist heart button ──────────────────────────── */
-.wishlist-btn {
-  transition: transform 0.2s ease, background 0.2s;
-}
-.wishlist-btn:hover {
-  transform: scale(1.2);
-}
-.heart-icon {
-  transition: color 0.25s, fill 0.25s;
-}
-
-/* ─── Category circle (HomePage) ────────────────────── */
-.cat-item {
-  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.cat-item:hover {
-  transform: translateY(-6px);
-}
-.cat-item .cat-img {
-  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.cat-item:hover .cat-img {
-  transform: scale(1.12);
-}
-
-/* ─── Promo banners (HomePage) ───────────────────────── */
-.promo-banner {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.promo-banner:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
-}
-
-/* ─── Tab filter buttons (HomePage) ─────────────────── */
-.tab-btn {
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
-}
-.tab-btn:hover  { transform: translateY(-1px); }
-.tab-btn:active { transform: translateY(0); }
-
-/* ─── Testimonial cards (HomePage) ──────────────────── */
-.testimonial-card {
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
-}
-.testimonial-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(90, 56, 37, 0.10);
-}
-
-/* ─── CTA / primary buttons ──────────────────────────── */
-.btn-primary {
-  transition: background 0.22s ease, color 0.22s ease, transform 0.15s ease, box-shadow 0.22s ease;
-}
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(90, 56, 37, 0.30);
-}
-.btn-primary:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-/* ─── Cart table rows ────────────────────────────────── */
-.cart-row {
-  transition: background 0.18s ease;
-}
-.cart-row:hover {
-  background: #FAF8F5;
-}
-.cart-row .cart-product-img {
-  transition: transform 0.35s ease;
-}
-.cart-row:hover .cart-product-img {
-  transform: scale(1.06);
-}
-
-/* ─── Remove / trash button ──────────────────────────── */
-.remove-btn {
-  transition: color 0.2s, background 0.2s, transform 0.2s;
-}
-.remove-btn:hover {
-  transform: scale(1.15);
-}
-
-/* ─── Form inputs ────────────────────────────────────── */
-.input-animated {
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.input-animated:focus {
-  border-color: #A87C51;
-  box-shadow: 0 0 0 3px rgba(168, 124, 81, 0.15);
-}
-
-/* ─── Order card (BuyerDashboard) ────────────────────── */
-.order-card {
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
-}
-.order-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(90, 56, 37, 0.10);
-}
-.order-item-row {
-  transition: background 0.18s ease;
-  border-radius: 8px;
-}
-.order-item-row:hover {
-  background: #FAF8F5;
-}
-.order-item-row .order-item-img {
-  transition: transform 0.3s ease;
-}
-.order-item-row:hover .order-item-img {
-  transform: scale(1.06);
-}
-
-/* ─── Admin stat cards ───────────────────────────────── */
-.stat-card {
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
-}
-.stat-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 28px rgba(90, 56, 37, 0.10);
-}
-
-/* ─── Admin product review card ──────────────────────── */
-.review-card {
-  transition: box-shadow 0.25s ease, transform 0.22s ease;
-}
-.review-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(90, 56, 37, 0.09);
-}
-
-/* ─── Admin table rows ───────────────────────────────── */
-.admin-table-row {
-  transition: background 0.18s ease;
-}
-.admin-table-row:hover {
-  background: #FAF8F5;
-}
-
-/* ─── Admin list items (categories, offers) ──────────── */
-.admin-list-item {
-  transition: background 0.18s ease;
-}
-.admin-list-item:hover {
-  background: #FAF8F5;
-}
-
-/* ─── Admin action buttons ───────────────────────────── */
-.action-btn {
-  transition: background 0.18s ease, transform 0.15s ease, box-shadow 0.18s ease, opacity 0.18s ease;
-}
-.action-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-.action-btn:active {
-  transform: translateY(0);
-}
-
-/* ─── Admin sidebar nav ──────────────────────────────── */
-.admin-nav-item {
-  transition: background 0.2s ease, color 0.2s ease;
-}
+/* ─── Scrollbar hide ─── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
